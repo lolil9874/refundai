@@ -1,7 +1,6 @@
 import { RefundForm, RefundFormValues } from "@/components/RefundForm";
 import { ResultsDisplay, type PremiumContact } from "@/components/ResultsDisplay";
 import { ResultsSkeleton } from "@/components/ResultsSkeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useState } from "react";
 import { ShieldCheck, Banknote } from "lucide-react";
 import { format } from "date-fns";
@@ -176,17 +175,21 @@ const Index = () => {
       </section>
 
       <section className="mx-auto max-w-3xl w-full">
-        <Alert className="mb-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 bg-card/60 dark:bg-card/40 backdrop-blur-xl border-white/20 shadow-lg">
-          <ShieldCheck className="h-4 w-4" />
-          <AlertTitle>{t("indexPage.privacyTitle")}</AlertTitle>
-          <AlertDescription>{t("indexPage.privacyDescription")}</AlertDescription>
-        </Alert>
+        <div className="mb-4 flex items-center rounded-lg border border-white/20 bg-card/60 p-4 shadow-lg backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 dark:bg-card/40">
+          <ShieldCheck className="h-6 w-6 shrink-0 text-primary" />
+          <div className="ml-4">
+            <h3 className="font-semibold">{t("indexPage.privacyTitle")}</h3>
+            <p className="text-sm text-muted-foreground">{t("indexPage.privacyDescription")}</p>
+          </div>
+        </div>
 
-        <Alert className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 bg-card/60 dark:bg-card/40 backdrop-blur-xl border-white/20 shadow-lg">
-          <Banknote className="h-4 w-4" />
-          <AlertTitle>{t("indexPage.successTitle")}</AlertTitle>
-          <AlertDescription>{t("indexPage.successDescription")}</AlertDescription>
-        </Alert>
+        <div className="mb-8 flex items-center rounded-lg border border-white/20 bg-card/60 p-4 shadow-lg backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 dark:bg-card/40">
+          <Banknote className="h-6 w-6 shrink-0 text-primary" />
+          <div className="ml-4">
+            <h3 className="font-semibold">{t("indexPage.successTitle")}</h3>
+            <p className="text-sm text-muted-foreground">{t("indexPage.successDescription")}</p>
+          </div>
+        </div>
 
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
           <RefundForm onSubmit={handleFormSubmit} isLoading={isLoading} />
