@@ -121,6 +121,7 @@
     "notNow": "Plus tard",
     "ctaToast": "Bientôt disponible — la facturation arrive !",
     "yearsLabel_one": "1 an",
-    "yearsLabel_other": "{{count}} ans"
+    "yearsLabel_other": "{{count}} ans",
+    "atCompany": "chez"
   }
 }

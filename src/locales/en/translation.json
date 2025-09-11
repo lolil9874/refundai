@@ -121,6 +121,7 @@
     "notNow": "Not now",
     "ctaToast": "Coming soon — billing is on the way!",
     "yearsLabel_one": "1 year",
-    "yearsLabel_other": "{{count}} years"
+    "yearsLabel_other": "{{count}} years",
+    "atCompany": "at"
   }
 }

@@ -388,7 +388,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                                 <span className={TAG_CLASS}>{entry.title}</span>
                                 <span className={TAG_CLASS}>
                                   {t("premiumContacts.yearsLabel", { count: entry.yearsOfExperience })}{" "}
-                                  chez {entry.companyDisplayName} {entry.countryCode}
+                                  {t("premiumContacts.atCompany")} {entry.companyDisplayName} {entry.countryCode}
                                 </span>
                               </>
                             )}
@@ -541,7 +541,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                                 <span className={TAG_CLASS}>{entry.type}</span>
                                 <span className={TAG_CLASS}>
                                   {t("premiumContacts.yearsLabel", { count: entry.yearsOfExperience })}{" "}
-                                  chez {entry.companyDisplayName} {entry.countryCode}
+                                  {t("premiumContacts.atCompany")} {entry.companyDisplayName} {entry.countryCode}
                                 </span>
                               </>
                             )}
