@@ -29,6 +29,8 @@
     "orderDetailsSectionTitle": "Order Details",
     "productNameLabel": "Product/Service Name",
     "productNamePlaceholder": "e.g., Wireless Headphones",
+    "productValueLabel": "Product Value",
+    "productValuePlaceholder": "e.g., 49.99",
     "orderNumberLabel": "Order Number",
     "orderNumberPlaceholder": "e.g., 123-4567890-1234567",
     "purchaseDateLabel": "Purchase/Service Date",
@@ -68,6 +70,6 @@
   },
   "generatedEmail": {
     "subject": "Issue with Order #{{orderNumber}}",
-    "body": "Dear {{companyDisplayName}} Team,\n\nI am writing to you regarding an issue with my recent order.\n\nOrder Details:\n- Product: {{productName}}\n- Order Number: {{orderNumber}}\n- Purchase Date: {{purchaseDate}}\n\nThe issue is: {{issueType}}.\n\n{{description}}\n\nI would appreciate it if you could look into this matter and provide a resolution.\n\nThank you for your time and assistance.\n\nSincerely,\n{{firstName}} {{lastName}}"
+    "body": "Dear {{companyDisplayName}} Team,\n\nI am writing to you regarding an issue with my recent order.\n\nOrder Details:\n- Product: {{productName}}\n- Product Value: {{productValue}}\n- Order Number: {{orderNumber}}\n- Purchase Date: {{purchaseDate}}\n\nThe issue is: {{issueType}}.\n\n{{description}}\n\nI would appreciate it if you could look into this matter and provide a resolution.\n\nThank you for your time and assistance.\n\nSincerely,\n{{firstName}} {{lastName}}"
   }
 }

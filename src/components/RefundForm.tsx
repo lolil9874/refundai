@@ -32,27 +32,38 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { popularCompanies } from "@/lib/companies";
 
-const formSchema = z.object({
-  company: z.string().min(1, "Please select a company or 'Other'."),
-  otherCompany: z.string().optional(),
-  country: z.string().min(1, "Country is required."),
-  firstName: z.string().min(1, "First name is required."),
-  lastName: z.string().min(1, "Last name is required."),
-  productName: z.string().min(1, "Product/Service name is required."),
-  orderNumber: z.string().min(1, "Order number is required."),
-  purchaseDate: z.date({ required_error: "Purchase date is required." }),
-  issueType: z.string().min(1, "Issue type is required."),
-  description: z.string().min(10, "Please provide a short description (min. 10 characters)."),
-  image: z.any().optional(),
-}).refine(data => {
-    if (data.company === 'other') {
+const formSchema = z
+  .object({
+    company: z.string().min(1, "Please select a company or 'Other'."),
+    otherCompany: z.string().optional(),
+    country: z.string().min(1, "Country is required."),
+    firstName: z.string().min(1, "First name is required."),
+    lastName: z.string().min(1, "Last name is required."),
+    productName: z.string().min(1, "Product/Service name is required."),
+    productValue: z
+      .preprocess((a) => {
+        if (a === "" || a === undefined || a === null) return undefined;
+        const n = Number(a);
+        return Number.isNaN(n) ? undefined : n;
+      }, z.number().nonnegative().optional()),
+    orderNumber: z.string().min(1, "Order number is required."),
+    purchaseDate: z.date({ required_error: "Purchase date is required." }),
+    issueType: z.string().min(1, "Issue type is required."),
+    description: z.string().min(10, "Please provide a short description (min. 10 characters)."),
+    image: z.any().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.company === "other") {
         return !!data.otherCompany && data.otherCompany.length > 0;
-    }
-    return true;
-}, {
-    message: "Please enter the company domain.",
-    path: ["otherCompany"],
-});
+      }
+      return true;
+    },
+    {
+      message: "Please enter the company domain.",
+      path: ["otherCompany"],
+    },
+  );
 
 export type RefundFormValues = z.infer<typeof formSchema>;
 
@@ -68,7 +79,7 @@ const countries = [
 
 export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundFormValues) => void; isLoading: boolean }) {
   const { t } = useTranslation();
-  const issueTypes = Object.values(t('refundForm.issueTypes', { returnObjects: true }) as Record<string, string>);
+  const issueTypes = Object.values(t("refundForm.issueTypes", { returnObjects: true }) as Record<string, string>);
 
   const form = useForm<RefundFormValues>({
     resolver: zodResolver(formSchema),
@@ -79,6 +90,7 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
       firstName: "",
       lastName: "",
       productName: "",
+      productValue: undefined,
       orderNumber: "",
       issueType: "",
       description: "",
@@ -90,14 +102,14 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
   return (
     <div>
       <div className="text-center mb-10">
-        <h2 className="text-2xl font-bold tracking-tight">{t('refundForm.title')}</h2>
-        <p className="text-muted-foreground mt-2">{t('refundForm.subtitle')}</p>
+        <h2 className="text-2xl font-bold tracking-tight">{t("refundForm.title")}</h2>
+        <p className="text-muted-foreground mt-2">{t("refundForm.subtitle")}</p>
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-xl border-white/20 shadow-lg">
             <CardHeader>
-              <CardTitle>{t('refundForm.companySectionTitle')}</CardTitle>
+              <CardTitle>{t("refundForm.companySectionTitle")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <FormField
@@ -105,7 +117,7 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                 name="company"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('refundForm.companyLabel')}</FormLabel>
+                    <FormLabel>{t("refundForm.companyLabel")}</FormLabel>
                     <FormControl>
                       <div className="flex flex-wrap justify-center gap-2 pt-2">
                         {popularCompanies.map((company) => (
@@ -115,18 +127,17 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                             variant={field.value === company.name ? "default" : "outline"}
                             className={cn(
                               "flex items-center justify-center gap-2",
-                              field.value !== company.name && "bg-white/50 dark:bg-black/20"
+                              field.value !== company.name && "bg-white/50 dark:bg-black/20",
                             )}
                             onClick={() => field.onChange(company.name)}
                           >
-                            <img 
-                              src={`https://logo.clearbit.com/${company.domain}`} 
-                              alt={`${company.name} logo`} 
-                              className={cn(
-                                "h-5 w-5",
-                                field.value === company.name && "brightness-0 invert"
-                              )}
-                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                            <img
+                              src={`https://logo.clearbit.com/${company.domain}`}
+                              alt={`${company.name} logo`}
+                              className={cn("h-5 w-5", field.value === company.name && "brightness-0 invert")}
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = "none";
+                              }}
                             />
                             {company.name}
                           </Button>
@@ -134,13 +145,11 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                         <Button
                           key="other"
                           type="button"
-                          variant={field.value === 'other' ? "default" : "outline"}
-                          className={cn(
-                            field.value !== 'other' && "bg-white/50 dark:bg-black/20"
-                          )}
-                          onClick={() => field.onChange('other')}
+                          variant={field.value === "other" ? "default" : "outline"}
+                          className={cn(field.value !== "other" && "bg-white/50 dark:bg-black/20")}
+                          onClick={() => field.onChange("other")}
                         >
-                          {t('refundForm.otherButton')}
+                          {t("refundForm.otherButton")}
                         </Button>
                       </div>
                     </FormControl>
@@ -155,9 +164,9 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                   name="otherCompany"
                   render={({ field }) => (
                     <FormItem className="animate-in fade-in duration-300">
-                      <FormLabel>{t('refundForm.otherCompanyLabel')}</FormLabel>
+                      <FormLabel>{t("refundForm.otherCompanyLabel")}</FormLabel>
                       <FormControl>
-                        <Input placeholder={t('refundForm.otherCompanyPlaceholder')} {...field} />
+                        <Input placeholder={t("refundForm.otherCompanyPlaceholder")} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -169,21 +178,23 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                 control={form.control}
                 name="country"
                 render={({ field }) => {
-                  const selectedCountry = countries.find(c => c.code === field.value);
+                  const selectedCountry = countries.find((c) => c.code === field.value);
                   return (
                     <FormItem>
-                      <FormLabel>{t('refundForm.countryLabel')}</FormLabel>
+                      <FormLabel>{t("refundForm.countryLabel")}</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t('refundForm.countryPlaceholder')}>
+                            <SelectValue placeholder={t("refundForm.countryPlaceholder")}>
                               {selectedCountry ? (
                                 <div className="flex items-center gap-2">
                                   <span>{selectedCountry.flag}</span>
                                   <span>{selectedCountry.name}</span>
                                   <span className="text-muted-foreground">{selectedCountry.code}</span>
                                 </div>
-                              ) : t('refundForm.countryPlaceholder')}
+                              ) : (
+                                t("refundForm.countryPlaceholder")
+                              )}
                             </SelectValue>
                           </SelectTrigger>
                         </FormControl>
@@ -208,7 +219,7 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
 
           <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-xl border-white/20 shadow-lg">
             <CardHeader>
-              <CardTitle>{t('refundForm.personalInfoSectionTitle')}</CardTitle>
+              <CardTitle>{t("refundForm.personalInfoSectionTitle")}</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
@@ -216,9 +227,9 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                 name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('refundForm.firstNameLabel')}</FormLabel>
+                    <FormLabel>{t("refundForm.firstNameLabel")}</FormLabel>
                     <FormControl>
-                      <Input placeholder={t('refundForm.firstNamePlaceholder')} {...field} />
+                      <Input placeholder={t("refundForm.firstNamePlaceholder")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -229,9 +240,9 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('refundForm.lastNameLabel')}</FormLabel>
+                    <FormLabel>{t("refundForm.lastNameLabel")}</FormLabel>
                     <FormControl>
-                      <Input placeholder={t('refundForm.lastNamePlaceholder')} {...field} />
+                      <Input placeholder={t("refundForm.lastNamePlaceholder")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -242,7 +253,7 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
 
           <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-xl border-white/20 shadow-lg">
             <CardHeader>
-              <CardTitle>{t('refundForm.orderDetailsSectionTitle')}</CardTitle>
+              <CardTitle>{t("refundForm.orderDetailsSectionTitle")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -251,9 +262,28 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                   name="productName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('refundForm.productNameLabel')}</FormLabel>
+                      <FormLabel>{t("refundForm.productNameLabel")}</FormLabel>
                       <FormControl>
-                        <Input placeholder={t('refundForm.productNamePlaceholder')} {...field} />
+                        <Input placeholder={t("refundForm.productNamePlaceholder")} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="productValue"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("refundForm.productValueLabel")}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder={t("refundForm.productValuePlaceholder")}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -264,9 +294,9 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                   name="orderNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('refundForm.orderNumberLabel')}</FormLabel>
+                      <FormLabel>{t("refundForm.orderNumberLabel")}</FormLabel>
                       <FormControl>
-                        <Input placeholder={t('refundForm.orderNumberPlaceholder')} {...field} />
+                        <Input placeholder={t("refundForm.orderNumberPlaceholder")} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -277,7 +307,7 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                   name="purchaseDate"
                   render={({ field }) => (
                     <FormItem className="flex flex-col pt-2">
-                      <FormLabel>{t('refundForm.purchaseDateLabel')}</FormLabel>
+                      <FormLabel>{t("refundForm.purchaseDateLabel")}</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -285,11 +315,11 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                               variant={"outline"}
                               className={cn(
                                 "w-full justify-start text-left font-normal",
-                                !field.value && "text-muted-foreground"
+                                !field.value && "text-muted-foreground",
                               )}
                             >
                               <CalendarIcon className="mr-2 h-4 w-4" />
-                              {field.value ? format(field.value, "PPP") : <span>{t('refundForm.purchaseDatePlaceholder')}</span>}
+                              {field.value ? format(field.value, "PPP") : <span>{t("refundForm.purchaseDatePlaceholder")}</span>}
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
@@ -312,11 +342,11 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                   name="issueType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('refundForm.issueTypeLabel')}</FormLabel>
+                      <FormLabel>{t("refundForm.issueTypeLabel")}</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t('refundForm.issueTypePlaceholder')} />
+                            <SelectValue placeholder={t("refundForm.issueTypePlaceholder")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -337,14 +367,9 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('refundForm.descriptionLabel')}</FormLabel>
+                    <FormLabel>{t("refundForm.descriptionLabel")}</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder={t('refundForm.descriptionPlaceholder')}
-                        className="resize-none"
-                        rows={4}
-                        {...field}
-                      />
+                      <Textarea placeholder={t("refundForm.descriptionPlaceholder")} className="resize-none" rows={4} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -355,13 +380,11 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                 name="image"
                 render={({ field: { onChange, value, ...rest } }) => (
                   <FormItem>
-                    <FormLabel>{t('refundForm.imageLabel')}</FormLabel>
+                    <FormLabel>{t("refundForm.imageLabel")}</FormLabel>
                     <FormControl>
                       <Input type="file" accept="image/*" onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)} {...rest} />
                     </FormControl>
-                    <FormDescription>
-                      {t('refundForm.imageDescription')}
-                    </FormDescription>
+                    <FormDescription>{t("refundForm.imageDescription")}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -373,10 +396,10 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                {t('refundForm.submitButtonLoading')}
+                {t("refundForm.submitButtonLoading")}
               </>
             ) : (
-              t('refundForm.submitButton')
+              t("refundForm.submitButton")
             )}
           </Button>
         </form>

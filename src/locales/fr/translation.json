@@ -29,6 +29,8 @@
     "orderDetailsSectionTitle": "Détails de la commande",
     "productNameLabel": "Nom du produit/service",
     "productNamePlaceholder": "ex: Casque sans fil",
+    "productValueLabel": "Valeur du produit",
+    "productValuePlaceholder": "ex: 49.99",
     "orderNumberLabel": "Numéro de commande",
     "orderNumberPlaceholder": "ex: 123-4567890-1234567",
     "purchaseDateLabel": "Date d'achat/service",
@@ -68,6 +70,6 @@
   },
   "generatedEmail": {
     "subject": "Problème avec la commande n°{{orderNumber}}",
-    "body": "Chère équipe de {{companyDisplayName}},\n\nJe vous écris au sujet d'un problème avec ma récente commande.\n\nDétails de la commande :\n- Produit : {{productName}}\n- Numéro de commande : {{orderNumber}}\n- Date d'achat : {{purchaseDate}}\n\nLe problème est : {{issueType}}.\n\n{{description}}\n\nJe vous serais reconnaissant de bien vouloir examiner cette question et de proposer une solution.\n\nMerci pour votre temps et votre aide.\n\nCordialement,\n{{firstName}} {{lastName}}"
+    "body": "Chère équipe de {{companyDisplayName}},\n\nJe vous écris au sujet d'un problème avec ma récente commande.\n\nDétails de la commande :\n- Produit : {{productName}}\n- Valeur du produit : {{productValue}}\n- Numéro de commande : {{orderNumber}}\n- Date d'achat : {{purchaseDate}}\n\nLe problème est : {{issueType}}.\n\n{{description}}\n\nJe vous serais reconnaissant de bien vouloir examiner cette question et de proposer une solution.\n\nMerci pour votre temps et votre aide.\n\nCordialement,\n{{firstName}} {{lastName}}"
   }
 }

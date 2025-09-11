@@ -53,6 +53,11 @@ const Index = () => {
       const selectedIssueKey = Object.keys(issueTypes).find(key => issueTypes[key] === data.issueType);
       const translatedIssue = selectedIssueKey ? t(`refundForm.issueTypes.${selectedIssueKey}`) : data.issueType;
 
+      const productValueDisplay =
+        data.productValue !== undefined && data.productValue !== null
+          ? new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 2 }).format(data.productValue)
+          : "";
+
       const mockResults: RefundResult = {
         bestEmail: `support@${companyDomain.toLowerCase()}`,
         ranked: [`refunds@${companyDomain.toLowerCase()}`],
@@ -62,6 +67,7 @@ const Index = () => {
         body: t('generatedEmail.body', {
           companyDisplayName,
           productName: data.productName,
+          productValue: productValueDisplay,
           orderNumber: data.orderNumber,
           purchaseDate: format(data.purchaseDate, "PPP", { locale: dateLocale }),
           issueType: translatedIssue,
