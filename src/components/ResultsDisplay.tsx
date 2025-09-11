@@ -320,11 +320,149 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
         </CardHeader>
 
         <CardContent className="space-y-8">
-          {/* ... emails + generated email sections unchanged above ... */}
+          {emailEntries.length > 0 && (
+            <section>
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="font-semibold text-lg">{t("resultsDisplay.emailsToContactLabel")}</h3>
+                <label className="group flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+                  <Checkbox
+                    checked={allEmailsSelected ? true : noEmailsSelected ? false : "indeterminate"}
+                    onCheckedChange={toggleSelectAllEmails}
+                    className="h-4 w-4"
+                    aria-label={t("resultsDisplay.selectAll") as string}
+                  />
+                  <span className="bg-gradient-to-r from-primary via-sky-400 to-primary bg-clip-text text-transparent bg-[200%_auto] group-hover:animate-shine">
+                    {t("resultsDisplay.selectAll")}
+                  </span>
+                </label>
+              </div>
+
+              <div className="px-3 py-1">
+                <div className="grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2">
+                  <span />
+                  <span />
+                  <span />
+                  <span className={SCORE_BADGE_CLASS}>{successLabel}</span>
+                  <span />
+                </div>
+              </div>
+              <div className="rounded-md border bg-card/50">
+                <ul className="divide-y">
+                  {emailEntries.map((entry, idx) => {
+                    const checked = selectedEmails.has(entry.email);
+                    const displayEmail = entry.visible ? entry.email : obfuscateEmailKeepFirst(entry.email);
+                    const isPaid = !entry.visible;
+                    const rowTint = isPaid ? "bg-blue-50/40 dark:bg-blue-950/20" : "";
+                    const emailTint = isPaid ? "text-blue-700 dark:text-blue-300 font-medium" : "";
+
+                    return (
+                      <li
+                        key={`email-${idx}-${entry.email}`}
+                        className={`grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2 px-3 py-2 ${entry.visible ? "text-sm" : "text-xs"} ${rowTint}`}
+                        title={displayEmail}
+                        aria-label={displayEmail}
+                      >
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(v) => toggleOneEmail(entry.email, v)}
+                          className="h-4 w-4"
+                          aria-label={`Select ${entry.email}`}
+                        />
+
+                        {entry.visible ? (
+                          <User className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        ) : (
+                          <Avatar className="h-6 w-6 shrink-0 ring-1 ring-white/10">
+                            <AvatarImage src={entry.avatarUrl} alt={entry.title} />
+                            <AvatarFallback>U</AvatarFallback>
+                          </Avatar>
+                        )}
+
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                            <span className={`font-mono truncate ${emailTint}`}>{displayEmail}</span>
+                            {isPaid && (
+                              <>
+                                <span className={TAG_CLASS}>{entry.title}</span>
+                                <span className={TAG_CLASS}>
+                                  {t("premiumContacts.yearsLabel", { count: entry.yearsOfExperience })}{" "}
+                                  {t("premiumContacts.atCompany")} {entry.companyDisplayName} {entry.countryCode}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                          <div className={`truncate ${entry.visible ? "text-xs text-muted-foreground" : "text-[11px] text-muted-foreground"}`}>
+                            {entry.visible ? entry.title : entry.fullName}
+                          </div>
+                        </div>
+
+                        <span className={SCORE_BADGE_CLASS}>{entry.score}%</span>
+
+                        <div className="flex items-center gap-1 justify-self-end">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                            onClick={() => {
+                              if (entry.visible) {
+                                handleCopy(entry.email, "resultsDisplay.copySubject");
+                              } else {
+                                setUnlockOpen(true);
+                              }
+                            }}
+                            aria-label={entry.visible ? "Copy email" : "Unlock to copy"}
+                            title={entry.visible ? "Copy email" : "Unlock to copy"}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </section>
+          )}
 
           <section className="pt-2">
             <h3 className="font-semibold mb-4 text-lg">{t("resultsDisplay.generatedEmailLabel")}</h3>
-            {/* subject/body blocks unchanged */}
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">{t("resultsDisplay.subjectLabel")}</label>
+                <div className="relative mt-1">
+                  <p className="p-3 pr-10 bg-muted/50 rounded-md font-medium text-sm">{subject}</p>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-1/2 -translate-y-1/2 right-1 h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={() => handleCopy(subject, "resultsDisplay.copySubject")}
+                    aria-label={t("resultsDisplay.copySubject") as string}
+                    title={t("resultsDisplay.copySubject") as string}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">{t("resultsDisplay.bodyLabel")}</label>
+                <div className="relative mt-1">
+                  <div className="p-3 pr-10 h-56 overflow-y-auto bg-muted/50 rounded-md whitespace-pre-wrap text-sm leading-relaxed">
+                    {body}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-1 h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={() => handleCopy(body, "resultsDisplay.copyBody")}
+                    aria-label={t("resultsDisplay.copyBody") as string}
+                    title={t("resultsDisplay.copyBody") as string}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-3 mt-4">
               <OffsetButton
                 href={mailtoLink}
@@ -333,14 +471,161 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                 aria-disabled={recipients.length === 0}
                 disabled={recipients.length === 0}
                 title={recipients.length === 0 ? "Select at least one email" : undefined}
-                shineText
               >
                 {t("resultsDisplay.openInEmailAppButton")}
               </OffsetButton>
             </div>
           </section>
 
-          {/* phones + other sections unchanged below */}
+          {mockPhoneEntries.length > 0 && (
+            <section className="pt-2">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="font-semibold text-lg">{t("resultsDisplay.phoneNumbersLabel")}</h3>
+                <label className="group flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+                  <Checkbox
+                    checked={allPhonesSelected ? true : noPhonesSelected ? false : "indeterminate"}
+                    onCheckedChange={toggleSelectAllPhones}
+                    className="h-4 w-4"
+                    aria-label={t("resultsDisplay.selectAll") as string}
+                  />
+                  <span className="bg-gradient-to-r from-primary via-sky-400 to-primary bg-clip-text text-transparent bg-[200%_auto] group-hover:animate-shine">
+                    {t("resultsDisplay.selectAll")}
+                  </span>
+                </label>
+              </div>
+              <div className="px-3 py-1">
+                <div className="grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2">
+                  <span />
+                  <span />
+                  <span />
+                  <span className={SCORE_BADGE_CLASS}>{successLabel}</span>
+                  <span />
+                </div>
+              </div>
+              <div className="rounded-md border bg-card/50">
+                <ul className="divide-y">
+                  {mockPhoneEntries.map((entry, i) => {
+                    const checked = selectedPhones.has(entry.number);
+                    const isPaid = !entry.visible;
+                    const rowTint = isPaid ? "bg-blue-50/40 dark:bg-blue-950/20" : "";
+                    const numberTint = isPaid ? "text-blue-700 dark:text-blue-300 font-medium" : "";
+
+                    return (
+                      <li
+                        key={`phone-${i}-${entry.number}`}
+                        className={`grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2 px-3 py-2 ${entry.visible ? "text-sm" : "text-xs"} ${rowTint}`}
+                        title={entry.number}
+                        aria-label={entry.number}
+                      >
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(v) => toggleOnePhone(entry.number, v)}
+                          className="h-4 w-4"
+                          aria-label={`Select ${entry.number}`}
+                        />
+
+                        {entry.visible ? (
+                          <Phone className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        ) : (
+                          <Avatar className="h-6 w-6 shrink-0 ring-1 ring-white/10">
+                            <AvatarImage src={entry.avatarUrl} alt={entry.fullName} />
+                            <AvatarFallback>U</AvatarFallback>
+                          </Avatar>
+                        )}
+
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                            <span className={`font-mono truncate ${numberTint}`}>{entry.number}</span>
+                            {isPaid && (
+                              <>
+                                <span className={TAG_CLASS}>{entry.type}</span>
+                                <span className={TAG_CLASS}>
+                                  {t("premiumContacts.yearsLabel", { count: entry.yearsOfExperience })}{" "}
+                                  {t("premiumContacts.atCompany")} {entry.companyDisplayName} {entry.countryCode}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                          <div className={`truncate ${entry.visible ? "text-xs text-muted-foreground" : "text-[11px] text-muted-foreground"}`}>
+                            {entry.visible ? entry.type : entry.fullName}
+                          </div>
+                        </div>
+
+                        <span className={SCORE_BADGE_CLASS}>{entry.score}%</span>
+
+                        <div className="flex items-center gap-1 justify-self-end">
+                          {entry.visible ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              onClick={() => handleCopy(entry.number, "resultsDisplay.copyPhone")}
+                              aria-label={t("resultsDisplay.copyPhone") as string}
+                              title={t("resultsDisplay.copyPhone") as string}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              onClick={() => setUnlockOpen(true)}
+                              aria-label="Unlock to copy"
+                              title="Unlock to copy"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </section>
+          )}
+
+          {(forms.length > 0 || links.length > 0) && (
+            <section className="pt-2">
+              <h3 className="font-semibold mb-2 text-lg">{t("resultsDisplay.otherOptionsLabel")}</h3>
+              <ul className="space-y-2 text-sm">
+                {forms.map((form, i) => (
+                  <li key={`f-${i}`} className="flex items-center">
+                    <ExternalLink className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <a
+                      href={form}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline truncate"
+                    >
+                      {t("resultsDisplay.contactForm")}
+                    </a>
+                  </li>
+                ))}
+                {links.map((link, i) => (
+                  <li key={`l-${i}`} className="flex items-center">
+                    <ExternalLink className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <a
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline truncate"
+                    >
+                      {t("resultsDisplay.supportPage")}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {hasImage && (
+            <p
+              className="text-center text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-2 rounded-md"
+              dangerouslySetInnerHTML={{ __html: t("resultsDisplay.imageReminder") }}
+            />
+          )}
         </CardContent>
       </Card>
 
