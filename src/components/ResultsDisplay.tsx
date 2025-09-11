@@ -288,17 +288,6 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     });
   });
 
-  const [selectedPhones, setSelectedPhones] = React.useState<Set<string>>(new Set(currentVisiblePhones));
-
-  const toggleOnePhone = (number: string, checked: boolean | "indeterminate") => {
-    setSelectedPhones((prev) => {
-      const next = new Set(prev);
-      if (checked) next.add(number);
-      else next.delete(number);
-      return next;
-    });
-  };
-
   const successLabel = i18n.language === "fr" ? "% de succès" : "Success rate";
 
   return (
@@ -420,8 +409,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                 <h3 className="font-semibold text-lg">{t("resultsDisplay.phoneNumbersLabel")}</h3>
               </div>
               <div className="px-3 py-1">
-                <div className="grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2">
-                  <span />
+                <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2">
                   <span />
                   <span />
                   <span className={SCORE_BADGE_CLASS}>{successLabel}</span>
@@ -431,7 +419,6 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
               <div className="rounded-md border bg-card/50">
                 <ul className="divide-y">
                   {mockPhoneEntries.map((entry, i) => {
-                    const checked = selectedPhones.has(entry.number);
                     const isPaid = !entry.visible;
                     const rowTint = isPaid ? "bg-blue-50/40 dark:bg-blue-950/20" : "";
                     const numberTint = isPaid ? "text-blue-700 dark:text-blue-300 font-medium" : "";
@@ -439,17 +426,10 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                     return (
                       <li
                         key={`phone-${i}-${entry.number}`}
-                        className={`grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2 px-3 py-2 ${entry.visible ? "text-sm" : "text-xs"} ${rowTint}`}
+                        className={`grid grid-cols-[auto_1fr_auto_auto] items-center gap-2 px-3 py-2 ${entry.visible ? "text-sm" : "text-xs"} ${rowTint}`}
                         title={entry.number}
                         aria-label={entry.number}
                       >
-                        <Checkbox
-                          checked={checked}
-                          onCheckedChange={(v) => toggleOnePhone(entry.number, v)}
-                          className="h-4 w-4"
-                          aria-label={`Select ${entry.number}`}
-                        />
-
                         {entry.visible ? (
                           <Phone className="h-4 w-4 shrink-0 text-muted-foreground" />
                         ) : (
