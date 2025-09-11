@@ -154,7 +154,7 @@ const Index = () => {
   };
 
   const shineClass =
-    "bg-gradient-to-r from-primary via-sky-400 to-primary bg-[200%_auto] bg-clip-text text-transparent animate-shine";
+    "bg-gradient-to-r from-[#145295] via-[#78c4ff] to-[#145295] bg-[200%_auto] bg-clip-text text-transparent animate-shine";
 
   return (
     <div className="container relative">
