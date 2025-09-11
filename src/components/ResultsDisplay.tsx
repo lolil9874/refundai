@@ -5,10 +5,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import OffsetButton from "@/components/OffsetButton";
 import React from "react";
-import { cn } from "@/lib/utils";
 import UnlockPremiumDialog from "@/components/UnlockPremiumDialog";
-import { Badge } from "@/components/ui/badge";
-import PremiumContactCard, { type PremiumContact } from "@/components/PremiumContactCard";
 
 type RefundResult = {
   bestEmail: string;
@@ -19,10 +16,12 @@ type RefundResult = {
   body: string;
   hasImage: boolean;
   phones: string[];
-  premiumContacts?: PremiumContact[];
+  premiumContacts?: { phoneMasked?: string | undefined }[];
 };
 
-export type { PremiumContact };
+export type PremiumContact = {
+  phoneMasked?: string;
+};
 
 export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   const { t } = useTranslation();
@@ -34,7 +33,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     toast.success(t("resultsDisplay.copySuccess", { type }));
   };
 
-  // Construire la liste des 5 e-mails (1 meilleur + 4 suivants)
+  // Top 5 emails: 2 visibles + 3 "contacts" (verrouillés)
   const topFive = React.useMemo(() => {
     const uniq = new Set<string>();
     if (bestEmail) uniq.add(bestEmail);
@@ -47,15 +46,19 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   const visibleEmails = topFive.slice(0, 2);
   const lockedEmails = topFive.slice(2, 5);
 
-  // Scores: plus élevés pour visibles, plus bas pour verrouillés
-  const visibleScores = [92, 88];
-  const lockedScores = [74, 71, 68];
-
+  // Mailto avec les deux visibles
   const recipients = visibleEmails;
-
   const mailtoLink = `mailto:${encodeURIComponent(recipients.join(","))}?subject=${encodeURIComponent(
     subject
   )}&body=${encodeURIComponent(body)}`;
+
+  // Téléphones: 2 visibles + 3 "contacts" (restants + premium)
+  const visiblePhones = (phones || []).slice(0, 2);
+  const remainingPhonePool = (phones || []).slice(2);
+  const premiumPhonePool = (premiumContacts || [])
+    .map((c) => c.phoneMasked)
+    .filter((v): v is string => !!v);
+  const lockedPhones = Array.from(new Set([...remainingPhonePool, ...premiumPhonePool])).slice(0, 3);
 
   const [unlockOpen, setUnlockOpen] = React.useState(false);
 
@@ -68,165 +71,57 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
           </CardTitle>
           <CardDescription>{t("resultsDisplay.description")}</CardDescription>
         </CardHeader>
+
         <CardContent className="space-y-8">
-          {(topFive.length > 0 || forms.length > 0 || links.length > 0) && (
-            <div className="space-y-4">
-              {topFive.length > 0 && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-lg">
-                      {t("resultsDisplay.emailsToContactLabel")}
-                    </h3>
-                  </div>
-
-                  {/* Une seule ligne, responsive (scroll horizontal) */}
-                  <div className="overflow-x-auto">
-                    <div className="flex gap-2 whitespace-nowrap snap-x snap-mandatory pr-1">
-                      {visibleEmails.map((email, idx) => (
-                        <div
-                          key={`vis-${email}`}
-                          className={cn(
-                            "snap-start inline-flex items-center gap-2 rounded-full border px-3 py-2 bg-sky-50 text-sky-800 dark:bg-sky-950/30 dark:text-sky-200 border-sky-200 dark:border-sky-900",
-                            "shrink-0"
-                          )}
-                          title={email}
-                        >
-                          <Mail className="h-4 w-4" />
-                          <span className="font-mono text-sm truncate max-w-[180px] sm:max-w-[220px]">{email}</span>
-                          <Badge variant="secondary" className="text-[11px]">
-                            Score {visibleScores[idx] ?? 85}
-                          </Badge>
-                        </div>
-                      ))}
-
-                      {lockedEmails.map((email, idx) => (
-                        <button
-                          type="button"
-                          onClick={() => setUnlockOpen(true)}
-                          key={`lock-${email}`}
-                          className={cn(
-                            "snap-start inline-flex items-center gap-2 rounded-full border px-3 py-2 bg-muted/50 text-muted-foreground",
-                            "hover:bg-muted hover:text-foreground transition-colors",
-                            "shrink-0"
-                          )}
-                          title={email}
-                        >
-                          <Lock className="h-4 w-4" />
-                          <span className="font-mono text-sm truncate max-w-[180px] sm:max-w-[220px]">{email}</span>
-                          <Badge variant="outline" className="text-[11px]">
-                            Score {lockedScores[idx] ?? 70}
-                          </Badge>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {(forms.length > 0 || links.length > 0) && (
-                <div>
-                  <h3 className="font-semibold mb-3 text-lg">
-                    {t("resultsDisplay.otherOptionsLabel")}
-                  </h3>
-                  <ul className="space-y-2 text-sm">
-                    {forms.map((form, i) => (
-                      <li
-                        key={`f-${i}`}
-                        className="animate-in fade-in slide-in-from-bottom-2 flex items-center"
-                        style={{ animationDelay: `${i * 60}ms` }}
-                      >
-                        <ExternalLink className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <a
-                          href={form}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline"
-                        >
-                          {t("resultsDisplay.contactForm")}
-                        </a>
-                      </li>
-                    ))}
-                    {links.map((link, i) => (
-                      <li
-                        key={`l-${i}`}
-                        className="animate-in fade-in slide-in-from-bottom-2 flex items-center"
-                        style={{
-                          animationDelay: `${(forms.length + i) * 60}ms`,
-                        }}
-                      >
-                        <ExternalLink className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <a
-                          href={link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline"
-                        >
-                          {t("resultsDisplay.supportPage")}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-
-          {phones.length > 0 && (
-            <div className="pt-2">
-              <h3 className="font-semibold mb-3 text-lg">
-                {t("resultsDisplay.phoneNumbersLabel")}
+          {/* Emails: 2 visibles, puis 3 contacts (verrouillés), tous dans la même box, sur des lignes */}
+          {(visibleEmails.length > 0 || lockedEmails.length > 0) && (
+            <section>
+              <h3 className="font-semibold text-lg mb-3">
+                {t("resultsDisplay.emailsToContactLabel")}
               </h3>
-              <ul className="space-y-2">
-                {phones.map((num, i) => (
-                  <li
-                    key={`p-${i}`}
-                    className="flex items-center justify-between p-2 rounded-md border bg-muted/30"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <a href={`tel:${num.replace(/\s+/g, "")}`} className="hover:underline">
-                        {num}
-                      </a>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                      onClick={() => handleCopy(num, "resultsDisplay.copyPhone")}
-                      aria-label={t("resultsDisplay.copyPhone") as string}
-                      title={t("resultsDisplay.copyPhone") as string}
+              <div className="rounded-md border bg-card/50">
+                <ul className="divide-y">
+                  {visibleEmails.map((email, i) => (
+                    <li key={`vis-${email}`} className="flex items-center justify-between px-3 py-2 text-sm">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <span className="font-mono truncate">{email}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                          onClick={() => handleCopy(email, "resultsDisplay.copySubject")}
+                          aria-label="Copy email"
+                          title="Copy email"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                  {lockedEmails.map((email) => (
+                    <li
+                      key={`lock-${email}`}
+                      className="flex items-center justify-between px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 cursor-pointer"
+                      onClick={() => setUnlockOpen(true)}
+                      title={email}
+                      aria-label={email}
                     >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Lock className="h-4 w-4 shrink-0" />
+                        <span className="font-mono truncate">{email}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
           )}
 
-          {premiumContacts.length > 0 && (
-            <div className="pt-2">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-lg">
-                  {t("premiumContacts.title")}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {t("premiumContacts.subtitle")}
-                </p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {premiumContacts.map((c, idx) => (
-                  <PremiumContactCard
-                    key={`${c.emailMasked}-${idx}`}
-                    contact={c}
-                    onUnlock={() => setUnlockOpen(true)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="pt-6 border-t">
+          {/* Email généré + bouton */}
+          <section className="pt-2">
             <h3 className="font-semibold mb-4 text-lg">
               {t("resultsDisplay.generatedEmailLabel")}
             </h3>
@@ -236,7 +131,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                   {t("resultsDisplay.subjectLabel")}
                 </label>
                 <div className="relative mt-1">
-                  <p className="p-3 pr-12 bg-muted/50 rounded-md font-medium">
+                  <p className="p-3 pr-10 bg-muted/50 rounded-md font-medium text-sm">
                     {subject}
                   </p>
                   <Button
@@ -256,7 +151,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                   {t("resultsDisplay.bodyLabel")}
                 </label>
                 <div className="relative mt-1">
-                  <div className="p-3 pr-12 h-64 overflow-y-auto bg-muted/50 rounded-md whitespace-pre-wrap text-sm font-mono leading-relaxed">
+                  <div className="p-3 pr-10 h-56 overflow-y-auto bg-muted/50 rounded-md whitespace-pre-wrap text-sm leading-relaxed">
                     {body}
                   </div>
                   <Button
@@ -272,20 +167,105 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                 </div>
               </div>
             </div>
-          </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t">
-            <OffsetButton
-              href={mailtoLink}
-              className="w-full"
-              aria-disabled={recipients.length === 0}
-            >
-              {t("resultsDisplay.openInEmailAppButton")}
-            </OffsetButton>
-          </div>
+            <div className="flex flex-col sm:flex-row gap-3 mt-4">
+              <OffsetButton
+                href={mailtoLink}
+                className="w-full"
+                aria-disabled={recipients.length === 0}
+              >
+                {t("resultsDisplay.openInEmailAppButton")}
+              </OffsetButton>
+            </div>
+          </section>
+
+          {/* Numéros: 2 visibles, puis 3 contacts (verrouillés) */}
+          {(visiblePhones.length > 0 || lockedPhones.length > 0) && (
+            <section className="pt-2">
+              <h3 className="font-semibold mb-3 text-lg">
+                {t("resultsDisplay.phoneNumbersLabel")}
+              </h3>
+              <div className="rounded-md border bg-card/50">
+                <ul className="divide-y">
+                  {visiblePhones.map((num, i) => (
+                    <li key={`p-vis-${i}`} className="flex items-center justify-between px-3 py-2 text-sm">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <a href={`tel:${num.replace(/\s+/g, "")}`} className="hover:underline truncate">
+                          {num}
+                        </a>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                        onClick={() => handleCopy(num, "resultsDisplay.copyPhone")}
+                        aria-label={t("resultsDisplay.copyPhone") as string}
+                        title={t("resultsDisplay.copyPhone") as string}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </li>
+                  ))}
+                  {lockedPhones.map((num, i) => (
+                    <li
+                      key={`p-lock-${i}`}
+                      className="flex items-center justify-between px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 cursor-pointer"
+                      onClick={() => setUnlockOpen(true)}
+                      title={num}
+                      aria-label={num}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Lock className="h-4 w-4 shrink-0" />
+                        <span className="truncate">{num}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
+          )}
+
+          {/* Autres options (formulaires/liens) - on garde mais plus bas pour ne pas prendre trop de place */}
+          {(forms.length > 0 || links.length > 0) && (
+            <section className="pt-2">
+              <h3 className="font-semibold mb-2 text-lg">
+                {t("resultsDisplay.otherOptionsLabel")}
+              </h3>
+              <ul className="space-y-2 text-sm">
+                {forms.map((form, i) => (
+                  <li key={`f-${i}`} className="flex items-center">
+                    <ExternalLink className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <a
+                      href={form}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline truncate"
+                    >
+                      {t("resultsDisplay.contactForm")}
+                    </a>
+                  </li>
+                ))}
+                {links.map((link, i) => (
+                  <li key={`l-${i}`} className="flex items-center">
+                    <ExternalLink className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <a
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline truncate"
+                    >
+                      {t("resultsDisplay.supportPage")}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           {hasImage && (
             <p
-              className="text-center text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-md"
+              className="text-center text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-2 rounded-md"
               dangerouslySetInnerHTML={{ __html: t("resultsDisplay.imageReminder") }}
             />
           )}
