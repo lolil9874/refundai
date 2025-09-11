@@ -242,7 +242,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   const hasHiddenEmailSelected = emailEntries.some((e) => !e.visible && selectedEmails.has(e.email));
   const [unlockOpen, setUnlockOpen] = React.useState(false);
 
-  // Accepte les clics sur ancre ou bouton (OffsetButton)
+  // Accepte clics bouton ou lien (OffsetButton peut rendre <button> ou <a>)
   const handleOpenEmailApp = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
     if (hasHiddenEmailSelected) {
       e.preventDefault();
@@ -411,95 +411,6 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
             </section>
           )}
 
-          {mockPhoneEntries.length > 0 && (
-            <section className="pt-2">
-              <div className="mb-3">
-                <h3 className="font-semibold text-lg">{t("resultsDisplay.phoneNumbersLabel")}</h3>
-              </div>
-              <div className="px-3 py-1">
-                <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2">
-                  <span />
-                  <span />
-                  <span className={SCORE_BADGE_CLASS}>{successLabel}</span>
-                  <span />
-                </div>
-              </div>
-              <div className="rounded-md border bg-card/50">
-                <ul className="divide-y">
-                  {mockPhoneEntries.map((entry, i) => {
-                    const isPaid = !entry.visible;
-                    const rowTint = isPaid ? "bg-blue-50/40 dark:bg-blue-950/20" : "";
-                    const numberTint = isPaid ? "text-blue-700 dark:text-blue-300 font-medium" : "";
-
-                    return (
-                      <li
-                        key={`phone-${i}-${entry.number}`}
-                        className={`grid grid-cols-[auto_1fr_auto_auto] items-center gap-2 px-3 py-2 ${entry.visible ? "text-sm" : "text-xs"} ${rowTint}`}
-                        title={entry.number}
-                        aria-label={entry.number}
-                      >
-                        {entry.visible ? (
-                          <Phone className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        ) : (
-                          <Avatar className="h-6 w-6 shrink-0 ring-1 ring-white/10">
-                            <AvatarImage src={entry.avatarUrl} alt={entry.fullName} />
-                            <AvatarFallback>U</AvatarFallback>
-                          </Avatar>
-                        )}
-
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-                            <span className={`font-mono truncate ${numberTint}`}>{entry.number}</span>
-                            {isPaid && (
-                              <>
-                                <span className={TAG_CLASS}>{entry.type}</span>
-                                <span className={TAG_CLASS}>
-                                  {t("premiumContacts.yearsLabel", { count: entry.yearsOfExperience })}{" "}
-                                  {t("premiumContacts.atCompany")} {entry.companyDisplayName} {entry.countryCode}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                          <div className={`truncate ${entry.visible ? "text-xs text-muted-foreground" : "text-[11px] text-muted-foreground"}`}>
-                            {entry.visible ? entry.type : entry.fullName}
-                          </div>
-                        </div>
-
-                        <span className={SCORE_BADGE_CLASS}>{entry.score}%</span>
-
-                        <div className="flex items-center gap-1 justify-self-end">
-                          {entry.visible ? (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                              onClick={() => handleCopy(entry.number, "resultsDisplay.copyPhone")}
-                              aria-label={t("resultsDisplay.copyPhone") as string}
-                              title={t("resultsDisplay.copyPhone") as string}
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                              onClick={() => setUnlockOpen(true)}
-                              aria-label="Débloquer pour copier"
-                              title="Débloquer pour copier"
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            </section>
-          )}
-
           {(forms.length > 0 || links.length > 0) && (
             <section className="pt-2">
               <h3 className="font-semibold mb-2 text-lg">{t("resultsDisplay.otherOptionsLabel")}</h3>
@@ -589,6 +500,95 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
               className="text-center text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-2 rounded-md"
               dangerouslySetInnerHTML={{ __html: t("resultsDisplay.imageReminder") }}
             />
+          )}
+
+          {mockPhoneEntries.length > 0 && (
+            <section className="pt-2">
+              <div className="mb-3">
+                <h3 className="font-semibold text-lg">{t("resultsDisplay.phoneNumbersLabel")}</h3>
+              </div>
+              <div className="px-3 py-1">
+                <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2">
+                  <span />
+                  <span />
+                  <span className={SCORE_BADGE_CLASS}>{successLabel}</span>
+                  <span />
+                </div>
+              </div>
+              <div className="rounded-md border bg-card/50">
+                <ul className="divide-y">
+                  {mockPhoneEntries.map((entry, i) => {
+                    const isPaid = !entry.visible;
+                    const rowTint = isPaid ? "bg-blue-50/40 dark:bg-blue-950/20" : "";
+                    const numberTint = isPaid ? "text-blue-700 dark:text-blue-300 font-medium" : "";
+
+                    return (
+                      <li
+                        key={`phone-${i}-${entry.number}`}
+                        className={`grid grid-cols-[auto_1fr_auto_auto] items-center gap-2 px-3 py-2 ${entry.visible ? "text-sm" : "text-xs"} ${rowTint}`}
+                        title={entry.number}
+                        aria-label={entry.number}
+                      >
+                        {entry.visible ? (
+                          <Phone className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        ) : (
+                          <Avatar className="h-6 w-6 shrink-0 ring-1 ring-white/10">
+                            <AvatarImage src={entry.avatarUrl} alt={entry.fullName} />
+                            <AvatarFallback>U</AvatarFallback>
+                          </Avatar>
+                        )}
+
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                            <span className={`font-mono truncate ${numberTint}`}>{entry.number}</span>
+                            {isPaid && (
+                              <>
+                                <span className={TAG_CLASS}>{entry.type}</span>
+                                <span className={TAG_CLASS}>
+                                  {t("premiumContacts.yearsLabel", { count: entry.yearsOfExperience })}{" "}
+                                  {t("premiumContacts.atCompany")} {entry.companyDisplayName} {entry.countryCode}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                          <div className={`truncate ${entry.visible ? "text-xs text-muted-foreground" : "text-[11px] text-muted-foreground"}`}>
+                            {entry.visible ? entry.type : entry.fullName}
+                          </div>
+                        </div>
+
+                        <span className={SCORE_BADGE_CLASS}>{entry.score}%</span>
+
+                        <div className="flex items-center gap-1 justify-self-end">
+                          {entry.visible ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              onClick={() => handleCopy(entry.number, "resultsDisplay.copyPhone")}
+                              aria-label={t("resultsDisplay.copyPhone") as string}
+                              title={t("resultsDisplay.copyPhone") as string}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              onClick={() => setUnlockOpen(true)}
+                              aria-label="Débloquer pour copier"
+                              title="Débloquer pour copier"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </section>
           )}
         </CardContent>
       </Card>
