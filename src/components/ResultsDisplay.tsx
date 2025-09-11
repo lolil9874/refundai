@@ -19,8 +19,8 @@ type RefundResult = {
   hasImage: boolean;
   phones: string[];
   premiumContacts?: { phoneMasked?: string | undefined }[];
-  companyDisplayName: string; // Added
-  countryCode: string; // Added
+  companyDisplayName: string;
+  countryCode: string;
 };
 
 export type PremiumContact = {
@@ -31,7 +31,6 @@ function obfuscateEmailKeepFirst(email: string) {
   const [local, domain] = email.split("@");
   if (!local) return email;
   const first = local[0] || "*";
-  // Always use exactly 3 asterisks for masking
   const stars = "***";
   return `${first}${stars}@${domain || ""}`;
 }
@@ -63,21 +62,6 @@ function brandFromEmail(email: string) {
     return capitalize(parts[parts.length - 2]);
   }
   return "Support";
-}
-
-function fullNameFromEmail(email: string) {
-  const localRaw = email.split("@")[0] || "";
-  const local = localRaw.split("+")[0];
-  const parts = local.replace(/\d+/g, "").split(/[._-]+/).filter(Boolean);
-  if (parts.length >= 2) {
-    const first = capitalize(parts[0]);
-    const last = capitalize(parts[parts.length - 1]);
-    return `${first} ${last}`;
-  }
-  if (parts.length === 1) {
-    return capitalize(parts[0]);
-  }
-  return "";
 }
 
 function toEmailToken(s: string) {
@@ -112,6 +96,8 @@ function shortNameFromFullName(full: string) {
 const SCORE_BADGE_CLASS =
   "inline-flex items-center gap-1 text-[10px] leading-none rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5";
 
+const TAG_CLASS = "inline-flex items-center text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 whitespace-nowrap";
+
 type PhoneEntry = {
   number: string;
   visible: boolean;
@@ -120,9 +106,22 @@ type PhoneEntry = {
   fullName?: string;
   avatarUrl?: string;
   originalNumber?: string;
-  yearsOfExperience?: number; // New field
-  companyDisplayName?: string; // New field
-  countryCode?: string; // New field
+  yearsOfExperience?: number;
+  companyDisplayName?: string;
+  countryCode?: string;
+};
+
+type EmailEntry = {
+  email: string;
+  visible: boolean;
+  title: string;
+  score: number;
+  avatarUrl?: string;
+  brand?: string;
+  fullName?: string;
+  yearsOfExperience?: number;
+  companyDisplayName?: string;
+  countryCode?: string;
 };
 
 export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
@@ -135,7 +134,6 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     toast.success(t("resultsDisplay.copySuccess", { type }));
   };
 
-  // Top 5 emails: 2 visibles + 3 cachés (payants)
   const topFive = React.useMemo(() => {
     const uniq = new Set<string>();
     if (bestEmail) uniq.add(bestEmail);
@@ -146,8 +144,6 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   }, [bestEmail, ranked]);
 
   const visibleEmails = topFive.slice(0, 2);
-
-  // Generate invented personal contacts for paid rows using domain
   const domain = domainFromAny(bestEmail, ranked);
   const titlesHidden =
     i18n.language === "fr"
@@ -162,7 +158,6 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   const firstPool = i18n.language === "fr" ? firstNamesFR : firstNamesEN;
   const lastPool = i18n.language === "fr" ? lastNamesFR : lastNamesEN;
 
-  // seed from domain hash so it's stable per company
   let seed = 0;
   for (let i = 0; i < domain.length; i++) {
     seed = (seed * 31 + domain.charCodeAt(i)) >>> 0;
@@ -173,25 +168,18 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     const l = pickDeterministic(lastPool, seed + i * 5 + 2);
     const full = `${f} ${l}`;
     const email = `${toEmailToken(f)}.${toEmailToken(l)}@${domain}`;
-    return { 
-      email, 
-      fullName: shortNameFromFullName(full), // Apply shortening here
-      title: titlesHidden[i] || titlesHidden[titlesHidden.length - 1] 
+    return {
+      email,
+      fullName: shortNameFromFullName(full),
+      title: titlesHidden[i] || titlesHidden[titlesHidden.length - 1],
+      yearsOfExperience: Math.floor(Math.random() * 8) + 2, // 2-9 years
+      companyDisplayName,
+      countryCode,
     };
   });
 
   const scoresVisible = [72, 68];
   const scoresHidden = [95, 92, 89];
-
-  type EmailEntry = {
-    email: string;
-    visible: boolean;
-    title: string; // subtitle or job title
-    score: number;
-    avatarUrl?: string;
-    brand?: string;
-    fullName?: string; // for paid rows
-  };
 
   const emailEntries: EmailEntry[] = [
     ...visibleEmails.map((e, i) => {
@@ -214,11 +202,13 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
       title: p.title,
       score: scoresHidden[i] || 88,
       avatarUrl: avatarUrlFromEmail(p.email, i + 1),
-      fullName: p.fullName, // This is already shortened
+      fullName: p.fullName,
+      yearsOfExperience: p.yearsOfExperience,
+      companyDisplayName: p.companyDisplayName,
+      countryCode: p.countryCode,
     })),
   ];
 
-  // Email Selection (default: visibles)
   const [selectedEmails, setSelectedEmails] = React.useState<Set<string>>(new Set(visibleEmails));
   React.useEffect(() => {
     setSelectedEmails(new Set(visibleEmails));
@@ -245,14 +235,12 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     });
   };
 
-  // Mailto link generation
   const recipients = Array.from(selectedEmails);
   const mailtoLink =
     recipients.length > 0
       ? `mailto:${encodeURIComponent(recipients.join(","))}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
       : undefined;
 
-  // Paywall if any hidden email selected on generate
   const hasHiddenEmailSelected = emailEntries.some((e) => !e.visible && selectedEmails.has(e.email));
   const [unlockOpen, setUnlockOpen] = React.useState(false);
   const handleGenerateClick = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {
@@ -262,17 +250,13 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     }
   };
 
-  // Phone number generation and selection
   const phoneTypesFR = ["Support Général", "Service Client", "Assistance Technique", "Facturation"];
   const phoneTypesEN = ["General Support", "Customer Service", "Technical Assistance", "Billing Department"];
 
   const mockPhoneEntries: PhoneEntry[] = [];
-
   const currentVisiblePhones = (phones || []).slice(0, 2);
   const remainingPhonePool = (phones || []).slice(2);
-  const premiumPhonePool = (premiumContacts || [])
-    .map((c) => c.phoneMasked)
-    .filter((v): v is string => !!v);
+  const premiumPhonePool = (premiumContacts || []).map((c) => c.phoneMasked).filter((v): v is string => !!v);
   const currentLockedPhones = Array.from(new Set([...remainingPhonePool, ...premiumPhonePool])).slice(0, 3);
 
   currentVisiblePhones.forEach((num, i) => {
@@ -282,34 +266,33 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
       number: num,
       visible: true,
       type: pickDeterministic(i18n.language === "fr" ? phoneTypesFR : phoneTypesEN, i),
-      score: 70 + i * 5, // Mock score
+      score: 70 + i * 5,
       fullName: fullName,
-      avatarUrl: undefined, // No avatar for visible, use Phone icon
+      avatarUrl: undefined,
       companyDisplayName: companyDisplayName,
       countryCode: countryCode,
     });
   });
 
   currentLockedPhones.forEach((num, i) => {
-    const f = pickDeterministic(firstPool, seed + i * 7 + 3); // Different seed for phones
+    const f = pickDeterministic(firstPool, seed + i * 7 + 3);
     const l = pickDeterministic(lastPool, seed + i * 11 + 4);
     const full = `${f} ${l}`;
     mockPhoneEntries.push({
-      number: num, // This is already masked
+      number: num,
       visible: false,
       type: pickDeterministic(i18n.language === "fr" ? phoneTypesFR : phoneTypesEN, i + currentVisiblePhones.length),
-      score: 85 + i * 3, // Higher mock score for premium
+      score: 85 + i * 3,
       fullName: shortNameFromFullName(full),
-      avatarUrl: avatarUrlFromEmail(full, i + 10), // Different avatar index
-      originalNumber: "UNLOCKED_NUMBER_PLACEHOLDER", // Placeholder for actual number
-      yearsOfExperience: Math.floor(Math.random() * 10) + 3, // 3-12 years
+      avatarUrl: avatarUrlFromEmail(full, i + 10),
+      originalNumber: "UNLOCKED_NUMBER_PLACEHOLDER",
+      yearsOfExperience: Math.floor(Math.random() * 10) + 3,
       companyDisplayName: companyDisplayName,
       countryCode: countryCode,
     });
   });
 
   const [selectedPhones, setSelectedPhones] = React.useState<Set<string>>(new Set(currentVisiblePhones));
-
   const allPhonesSelected = selectedPhones.size === currentVisiblePhones.length && currentVisiblePhones.length > 0;
   const noPhonesSelected = selectedPhones.size === 0;
 
@@ -336,9 +319,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     <>
       <Card className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500 shadow-lg border-primary/20">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold tracking-tight">
-            {t("resultsDisplay.title")}
-          </CardTitle>
+          <CardTitle className="text-2xl font-bold tracking-tight">{t("resultsDisplay.title")}</CardTitle>
           <CardDescription>{t("resultsDisplay.description")}</CardDescription>
         </CardHeader>
 
@@ -401,20 +382,21 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                         )}
 
                         <div className="min-w-0">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className={`font-mono truncate ${emailTint}`}>
-                              {displayEmail}
-                            </span>
+                          <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                            <span className={`font-mono truncate ${emailTint}`}>{displayEmail}</span>
                             {isPaid && (
-                              <span className="inline-flex items-center text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5">
-                                {entry.title}
-                              </span>
+                              <>
+                                <span className={TAG_CLASS}>{entry.title}</span>
+                                <span className={TAG_CLASS}>
+                                  {entry.yearsOfExperience}{" "}
+                                  {t("premiumContacts.yearsLabel", { count: entry.yearsOfExperience })} chez{" "}
+                                  {entry.companyDisplayName} {entry.countryCode}
+                                </span>
+                              </>
                             )}
                           </div>
                           <div className={`truncate ${entry.visible ? "text-xs text-muted-foreground" : "text-[11px] text-muted-foreground"}`}>
-                            {entry.visible
-                              ? entry.title
-                              : entry.fullName}
+                            {entry.visible ? entry.title : entry.fullName}
                           </div>
                         </div>
 
@@ -447,18 +429,12 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
           )}
 
           <section className="pt-2">
-            <h3 className="font-semibold mb-4 text-lg">
-              {t("resultsDisplay.generatedEmailLabel")}
-            </h3>
+            <h3 className="font-semibold mb-4 text-lg">{t("resultsDisplay.generatedEmailLabel")}</h3>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  {t("resultsDisplay.subjectLabel")}
-                </label>
+                <label className="text-sm font-medium text-muted-foreground">{t("resultsDisplay.subjectLabel")}</label>
                 <div className="relative mt-1">
-                  <p className="p-3 pr-10 bg-muted/50 rounded-md font-medium text-sm">
-                    {subject}
-                  </p>
+                  <p className="p-3 pr-10 bg-muted/50 rounded-md font-medium text-sm">{subject}</p>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -472,9 +448,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  {t("resultsDisplay.bodyLabel")}
-                </label>
+                <label className="text-sm font-medium text-muted-foreground">{t("resultsDisplay.bodyLabel")}</label>
                 <div className="relative mt-1">
                   <div className="p-3 pr-10 h-56 overflow-y-auto bg-muted/50 rounded-md whitespace-pre-wrap text-sm leading-relaxed">
                     {body}
@@ -510,9 +484,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
           {mockPhoneEntries.length > 0 && (
             <section className="pt-2">
               <div className="mb-3 flex items-center justify-between">
-                <h3 className="font-semibold text-lg">
-                  {t("resultsDisplay.phoneNumbersLabel")}
-                </h3>
+                <h3 className="font-semibold text-lg">{t("resultsDisplay.phoneNumbersLabel")}</h3>
                 <label className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Checkbox
                     checked={allPhonesSelected ? true : noPhonesSelected ? false : "indeterminate"}
@@ -540,10 +512,6 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                     const rowTint = isPaid ? "bg-blue-50/40 dark:bg-blue-950/20" : "";
                     const numberTint = isPaid ? "text-blue-700 dark:text-blue-300 font-medium" : "";
 
-                    const detailedLabel = isPaid && entry.fullName && entry.type && entry.yearsOfExperience && entry.companyDisplayName && entry.countryCode
-                      ? `${entry.fullName} - ${entry.type} - ${entry.yearsOfExperience} ${t(i18n.language === 'fr' ? 'premiumContacts.yearsLabel' : 'premiumContacts.yearsLabel', { count: entry.yearsOfExperience })} chez ${entry.companyDisplayName} ${entry.countryCode}`
-                      : entry.type;
-
                     return (
                       <li
                         key={`phone-${i}-${entry.number}`}
@@ -568,18 +536,21 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                         )}
 
                         <div className="min-w-0">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className={`font-mono truncate ${numberTint}`}>
-                              {entry.number}
-                            </span>
+                          <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                            <span className={`font-mono truncate ${numberTint}`}>{entry.number}</span>
                             {isPaid && (
-                              <span className="inline-flex items-center text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5">
-                                {entry.type}
-                              </span>
+                              <>
+                                <span className={TAG_CLASS}>{entry.type}</span>
+                                <span className={TAG_CLASS}>
+                                  {entry.yearsOfExperience}{" "}
+                                  {t("premiumContacts.yearsLabel", { count: entry.yearsOfExperience })} chez{" "}
+                                  {entry.companyDisplayName} {entry.countryCode}
+                                </span>
+                              </>
                             )}
                           </div>
                           <div className={`truncate ${entry.visible ? "text-xs text-muted-foreground" : "text-[11px] text-muted-foreground"}`}>
-                            {detailedLabel}
+                            {entry.visible ? entry.type : entry.fullName}
                           </div>
                         </div>
 
@@ -620,9 +591,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
 
           {(forms.length > 0 || links.length > 0) && (
             <section className="pt-2">
-              <h3 className="font-semibold mb-2 text-lg">
-                {t("resultsDisplay.otherOptionsLabel")}
-              </h3>
+              <h3 className="font-semibold mb-2 text-lg">{t("resultsDisplay.otherOptionsLabel")}</h3>
               <ul className="space-y-2 text-sm">
                 {forms.map((form, i) => (
                   <li key={`f-${i}`} className="flex items-center">
