@@ -35,6 +35,7 @@ import { popularCompanies } from "@/lib/companies";
 import OffsetButton from "@/components/OffsetButton";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 const formSchema = z
   .object({
@@ -127,6 +128,30 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
   React.useEffect(() => {
     form.setValue("issueType", "");
   }, [watchCategory]);
+
+  // Remplir avec des données tests et soumettre
+  const fillAndGenerate = () => {
+    const values: RefundFormValues = {
+      company: "Amazon",
+      otherCompany: "",
+      country: "US",
+      firstName: "John",
+      lastName: "Doe",
+      productName: "Wireless Headphones",
+      productValue: 49.99,
+      orderNumber: "123-4567890-1234567",
+      purchaseDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12), // il y a ~12 jours
+      issueCategory: "product",
+      issueType: t("refundForm.issue.reasons.product.not_received"),
+      description:
+        "Package never arrived. Tracking shows no movement since dispatch. Requesting a full refund.",
+      image: undefined,
+    };
+    form.reset(values);
+    toast.info(t("refundForm.testFillToast"));
+    // Soumettre sur la frame suivante pour laisser le reset s'appliquer
+    requestAnimationFrame(() => form.handleSubmit(onSubmit)());
+  };
 
   return (
     <div>
@@ -462,6 +487,16 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
               t("refundForm.submitButton")
             )}
           </OffsetButton>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={fillAndGenerate}
+            disabled={isLoading}
+          >
+            {t("refundForm.testFillButton")}
+          </Button>
         </form>
       </Form>
     </div>

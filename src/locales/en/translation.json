@@ -72,7 +72,9 @@
     "imageLabel": "Upload Image (Optional)",
     "imageDescription": "A screenshot can help us find more details.",
     "submitButton": "Generate Email & Find Contacts",
-    "submitButtonLoading": "Generating..."
+    "submitButtonLoading": "Generating...",
+    "testFillButton": "Fill and generate (TEST)",
+    "testFillToast": "Filled with test data."
   },
   "resultsDisplay": {
     "title": "2. Your Refund Request",

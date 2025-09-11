@@ -72,7 +72,9 @@
     "imageLabel": "Télécharger une image (Facultatif)",
     "imageDescription": "Une capture d'écran peut nous aider à trouver plus de détails.",
     "submitButton": "Générer l'e-mail & Trouver les contacts",
-    "submitButtonLoading": "Génération en cours..."
+    "submitButtonLoading": "Génération en cours...",
+    "testFillButton": "Remplir et générer (TEST)",
+    "testFillToast": "Champs remplis automatiquement pour test."
   },
   "resultsDisplay": {
     "title": "2. Votre demande de remboursement",
