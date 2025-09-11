@@ -117,7 +117,10 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                             key={company.name}
                             type="button"
                             variant={field.value === company.name ? "default" : "outline"}
-                            className="flex items-center justify-center gap-2 bg-white/50 dark:bg-black/20"
+                            className={cn(
+                              "flex items-center justify-center gap-2",
+                              field.value !== company.name && "bg-white/50 dark:bg-black/20"
+                            )}
                             onClick={() => field.onChange(company.name)}
                           >
                             <img 
@@ -136,7 +139,9 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                           key="other"
                           type="button"
                           variant={field.value === 'other' ? "default" : "outline"}
-                          className="bg-white/50 dark:bg-black/20"
+                          className={cn(
+                            field.value !== 'other' && "bg-white/50 dark:bg-black/20"
+                          )}
                           onClick={() => field.onChange('other')}
                         >
                           Other
