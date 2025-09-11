@@ -114,6 +114,8 @@ type PhoneEntry = {
   visible: boolean;
   type: string;
   score: number;
+  fullName?: string; // Added for consistency with email entries
+  avatarUrl?: string; // Added for consistency with email entries
   originalNumber?: string; // For locked numbers, if we ever want to reveal it
 };
 
@@ -268,20 +270,29 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   const currentLockedPhones = Array.from(new Set([...remainingPhonePool, ...premiumPhonePool])).slice(0, 3);
 
   currentVisiblePhones.forEach((num, i) => {
+    const brand = brandFromEmail(bestEmail || ranked[0] || "example.com");
+    const fullName = i18n.language === "fr" ? `Agent IA ${brand}` : `AI Agent ${brand}`;
     mockPhoneEntries.push({
       number: num,
       visible: true,
       type: pickDeterministic(i18n.language === "fr" ? phoneTypesFR : phoneTypesEN, i),
       score: 70 + i * 5, // Mock score
+      fullName: fullName,
+      avatarUrl: undefined, // No avatar for visible, use Phone icon
     });
   });
 
   currentLockedPhones.forEach((num, i) => {
+    const f = pickDeterministic(firstPool, seed + i * 7 + 3); // Different seed for phones
+    const l = pickDeterministic(lastPool, seed + i * 11 + 4);
+    const full = `${f} ${l}`;
     mockPhoneEntries.push({
       number: num, // This is already masked
       visible: false,
       type: pickDeterministic(i18n.language === "fr" ? phoneTypesFR : phoneTypesEN, i + currentVisiblePhones.length),
       score: 85 + i * 3, // Higher mock score for premium
+      fullName: shortNameFromFullName(full),
+      avatarUrl: avatarUrlFromEmail(full, i + 10), // Different avatar index
       originalNumber: "UNLOCKED_NUMBER_PLACEHOLDER", // Placeholder for actual number
     });
   });
@@ -536,14 +547,30 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                           <span className="w-4 h-4" /> // Placeholder for alignment
                         )}
 
-                        <Phone className={`h-4 w-4 shrink-0 ${entry.visible ? "text-muted-foreground" : "text-blue-700 dark:text-blue-300"}`} />
+                        {entry.visible ? (
+                          <Phone className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        ) : (
+                          <Avatar className="h-6 w-6 shrink-0 ring-1 ring-white/10">
+                            <AvatarImage src={entry.avatarUrl} alt={entry.fullName} />
+                            <AvatarFallback>U</AvatarFallback>
+                          </Avatar>
+                        )}
 
                         <div className="min-w-0">
-                          <span className={`font-mono truncate ${numberTint}`}>
-                            {entry.number}
-                          </span>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className={`font-mono truncate ${numberTint}`}>
+                              {entry.number}
+                            </span>
+                            {isPaid && (
+                              <span className="inline-flex items-center text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5">
+                                {entry.type}
+                              </span>
+                            )}
+                          </div>
                           <div className={`truncate ${entry.visible ? "text-xs text-muted-foreground" : "text-[11px] text-muted-foreground"}`}>
-                            {entry.type}
+                            {entry.visible
+                              ? entry.fullName // Display AI Agent name for visible
+                              : entry.fullName} {/* Display generated name for locked */}
                           </div>
                         </div>
 
