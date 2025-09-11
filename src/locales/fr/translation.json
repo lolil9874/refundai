@@ -120,6 +120,7 @@
     "discoverPlans": "Découvrir les offres",
     "notNow": "Plus tard",
     "ctaToast": "Bientôt disponible — la facturation arrive !",
-    "yearsLabel": "{{count}} an | {{count}} ans"
+    "yearsLabel_one": "1 an",
+    "yearsLabel_other": "{{count}} ans"
   }
 }

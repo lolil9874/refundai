@@ -120,6 +120,7 @@
     "discoverPlans": "See plans",
     "notNow": "Not now",
     "ctaToast": "Coming soon — billing is on the way!",
-    "yearsLabel": "{{count}} year | {{count}} years"
+    "yearsLabel_one": "1 year",
+    "yearsLabel_other": "{{count}} years"
   }
 }
