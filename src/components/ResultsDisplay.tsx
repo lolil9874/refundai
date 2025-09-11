@@ -34,13 +34,43 @@ function obfuscateEmailKeepFirst(email: string) {
 }
 
 function avatarUrlFromEmail(email: string, fallbackIndex = 1) {
-  // Map email to a stable number between 1 and 70 pour pravatar
   let hash = 0;
   for (let i = 0; i < email.length; i++) {
     hash = (hash * 31 + email.charCodeAt(i)) >>> 0;
   }
   const id = (hash % 70) + 1;
   return `https://i.pravatar.cc/80?img=${id || fallbackIndex}`;
+}
+
+function capitalize(s: string) {
+  if (!s) return s;
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function brandFromEmail(email: string) {
+  const domain = email.split("@")[1] || "";
+  const parts = domain.split(".").filter(Boolean);
+  if (parts.length >= 3) {
+    // Gère co.uk, com.au, etc.
+    const penult = parts[parts.length - 2];
+    if (["co", "com", "org", "net", "gov", "edu"].includes(penult) && parts.length >= 3) {
+      return capitalize(parts[parts.length - 3]);
+    }
+  }
+  if (parts.length >= 2) {
+    return capitalize(parts[parts.length - 2]);
+  }
+  return "Support";
+}
+
+function displayNameFromEmail(email: string) {
+  const local = (email.split("@")[0] || "").replace(/\d+/g, "");
+  const parts = local.split(/[._-]+/).filter(Boolean);
+  if (parts.length === 0) return "";
+  const first = capitalize(parts[0]);
+  const last = parts[parts.length - 1];
+  const initial = last ? last[0].toUpperCase() : "";
+  return `${first} .${initial}`;
 }
 
 export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
@@ -53,7 +83,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     toast.success(t("resultsDisplay.copySuccess", { type }));
   };
 
-  // Top 5 emails: 2 visibles + 3 cachés
+  // Top 5 emails: 2 visibles + 3 cachés (payants)
   const topFive = React.useMemo(() => {
     const uniq = new Set<string>();
     if (bestEmail) uniq.add(bestEmail);
@@ -66,17 +96,11 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   const visibleEmails = topFive.slice(0, 2);
   const hiddenEmails = topFive.slice(2, 5);
 
-  // Titres (visibles vs cachés)
-  const titlesVisible =
-    i18n.language === "fr"
-      ? ["Conseiller Client", "Agent Support"]
-      : ["Support Advisor", "Support Agent"];
   const titlesHidden =
     i18n.language === "fr"
       ? ["Manager Support Client", "Responsable Customer Care", "Lead Facturation"]
       : ["Customer Support Manager", "Head of Customer Care", "Billing Operations Lead"];
 
-  // Scores: cachés plus élevés
   const scoresVisible = [72, 68];
   const scoresHidden = [95, 92, 89];
 
@@ -86,15 +110,24 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     title: string;
     score: number;
     avatarUrl?: string;
+    brand?: string;
   };
 
   const emailEntries: EmailEntry[] = [
-    ...visibleEmails.map((e, i) => ({
-      email: e,
-      visible: true,
-      title: titlesVisible[i] || titlesVisible[titlesVisible.length - 1],
-      score: scoresVisible[i] || 65,
-    })),
+    ...visibleEmails.map((e, i) => {
+      const brand = brandFromEmail(e);
+      const subtitle =
+        i18n.language === "fr"
+          ? `Agent IA ${brand} — Conseiller client automatique`
+          : `AI Agent ${brand} — Automated customer advisor`;
+      return {
+        email: e,
+        visible: true,
+        title: subtitle,
+        score: scoresVisible[i] || 65,
+        brand,
+      };
+    }),
     ...hiddenEmails.map((e, i) => ({
       email: e,
       visible: false,
@@ -104,7 +137,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     })),
   ];
 
-  // Sélection d'emails (par défaut tous les visibles)
+  // Sélection (par défaut: visibles)
   const [selectedEmails, setSelectedEmails] = React.useState<Set<string>>(new Set(visibleEmails));
   React.useEffect(() => {
     setSelectedEmails(new Set(visibleEmails));
@@ -131,17 +164,16 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     });
   };
 
-  // Mailto avec les emails sélectionnés
+  // Mailto
   const recipients = Array.from(selectedEmails);
   const mailtoLink =
     recipients.length > 0
       ? `mailto:${encodeURIComponent(recipients.join(","))}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
       : undefined;
 
-  // Si des emails cachés sont sélectionnés, on affiche le paywall au moment de générer
-  const hasHiddenSelected = emailEntries.some(
-    (e) => !e.visible && selectedEmails.has(e.email),
-  );
+  // Paywall si des cachés sont sélectionnés pour générer
+  const hasHiddenSelected = emailEntries.some((e) => !e.visible && selectedEmails.has(e.email));
+  const [unlockOpen, setUnlockOpen] = React.useState(false);
   const handleGenerateClick = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {
     if (hasHiddenSelected) {
       e.preventDefault();
@@ -149,15 +181,13 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     }
   };
 
-  // Téléphones: 2 visibles + 3 "contacts" (restants + premium)
+  // Téléphones
   const visiblePhones = (phones || []).slice(0, 2);
   const remainingPhonePool = (phones || []).slice(2);
   const premiumPhonePool = (premiumContacts || [])
     .map((c) => c.phoneMasked)
     .filter((v): v is string => !!v);
   const lockedPhones = Array.from(new Set([...remainingPhonePool, ...premiumPhonePool])).slice(0, 3);
-
-  const [unlockOpen, setUnlockOpen] = React.useState(false);
 
   const successLabel = i18n.language === "fr" ? "% de succès" : "Success rate";
 
@@ -188,16 +218,16 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
               </div>
 
               <div className="rounded-md border bg-card/50">
-                {/* En-tête de colonne pour le score (aligné avec la colonne des scores ci-dessous) */}
+                {/* En-tête de colonne pour le score */}
                 <div className="px-3 py-1">
                   <div className="grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2">
-                    <span /> {/* checkbox */}
-                    <span /> {/* avatar/icon */}
-                    <span /> {/* contenu principal */}
+                    <span />
+                    <span />
+                    <span />
                     <span className="inline-flex items-center text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5">
                       {successLabel}
                     </span>
-                    <span /> {/* actions */}
+                    <span />
                   </div>
                 </div>
 
@@ -205,11 +235,14 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                   {emailEntries.map((entry, idx) => {
                     const checked = selectedEmails.has(entry.email);
                     const displayEmail = entry.visible ? entry.email : obfuscateEmailKeepFirst(entry.email);
+                    const isPaid = !entry.visible;
+                    const rowTint = isPaid ? "bg-blue-50/40 dark:bg-blue-950/20" : "";
+                    const emailTint = isPaid ? "text-blue-700 dark:text-blue-300 font-medium" : "";
 
                     return (
                       <li
                         key={`email-${idx}-${entry.email}`}
-                        className={`grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2 px-3 py-2 ${entry.visible ? "text-sm" : "text-xs text-muted-foreground"}`}
+                        className={`grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2 px-3 py-2 ${entry.visible ? "text-sm" : "text-xs"} ${rowTint}`}
                         title={displayEmail}
                         aria-label={displayEmail}
                       >
@@ -233,38 +266,49 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
 
                         {/* Col 3: contenu principal */}
                         <div className="min-w-0">
-                          <div className="flex items-center min-w-0">
-                            <span className={`font-mono truncate ${entry.visible ? "" : "text-foreground/80"}`}>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className={`font-mono truncate ${emailTint}`}>
                               {displayEmail}
                             </span>
+                            {/* Titre de poste à côté pour payants */}
+                            {isPaid && (
+                              <span className="inline-flex items-center text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5">
+                                {entry.title}
+                              </span>
+                            )}
                           </div>
+                          {/* Sous-ligne:
+                              - payants: Prénom .Initiale
+                              - gratuits: libellé Agent IA {marque} */}
                           <div className={`truncate ${entry.visible ? "text-xs text-muted-foreground" : "text-[11px] text-muted-foreground"}`}>
-                            {entry.title}
+                            {entry.visible ? entry.title : displayNameFromEmail(entry.email)}
                           </div>
                         </div>
 
-                        {/* Col 4: score (aligné sous l’étiquette) */}
+                        {/* Col 4: score */}
                         <span className="justify-self-start inline-flex items-center gap-1 text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5">
                           {entry.score}%
                         </span>
 
-                        {/* Col 5: actions */}
-                        {entry.visible ? (
-                          <div className="flex items-center gap-1 justify-self-end">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                              onClick={() => handleCopy(entry.email, "resultsDisplay.copySubject")}
-                              aria-label="Copy email"
-                              title="Copy email"
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <span className="text-[11px] text-muted-foreground justify-self-end">****</span>
-                        )}
+                        {/* Col 5: actions - bouton copier partout; payants -> paywall */}
+                        <div className="flex items-center gap-1 justify-self-end">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                            onClick={() => {
+                              if (entry.visible) {
+                                handleCopy(entry.email, "resultsDisplay.copySubject");
+                              } else {
+                                setUnlockOpen(true);
+                              }
+                            }}
+                            aria-label={entry.visible ? "Copier l'email" : "Débloquer pour copier"}
+                            title={entry.visible ? "Copier l'email" : "Débloquer pour copier"}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </li>
                     );
                   })}
