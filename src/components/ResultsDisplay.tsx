@@ -107,7 +107,7 @@ function shortNameFromFullName(full: string) {
 }
 
 const SCORE_BADGE_CLASS =
-  "inline-flex items-center gap-1 text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5";
+  "inline-flex items-center gap-1 text-[10px] leading-none rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5";
 
 export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   const { t, i18n } = useTranslation();
@@ -338,7 +338,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                           <div className={`truncate ${entry.visible ? "text-xs text-muted-foreground" : "text-[11px] text-muted-foreground"}`}>
                             {entry.visible
                               ? entry.title
-                              : entry.fullName} {/* Now entry.fullName is already shortened */}
+                              : entry.fullName}
                           </div>
                         </div>
 
