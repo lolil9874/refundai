@@ -176,23 +176,31 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
             <section>
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="font-semibold text-lg">{t("resultsDisplay.emailsToContactLabel")}</h3>
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5">
-                    {successLabel}
-                  </span>
-                  <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Checkbox
-                      checked={allSelected ? true : noneSelected ? false : "indeterminate"}
-                      onCheckedChange={toggleSelectAll}
-                      className="h-4 w-4"
-                      aria-label={t("resultsDisplay.selectAll") as string}
-                    />
-                    <span>{t("resultsDisplay.selectAll")}</span>
-                  </label>
-                </div>
+                <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Checkbox
+                    checked={allSelected ? true : noneSelected ? false : "indeterminate"}
+                    onCheckedChange={toggleSelectAll}
+                    className="h-4 w-4"
+                    aria-label={t("resultsDisplay.selectAll") as string}
+                  />
+                  <span>{t("resultsDisplay.selectAll")}</span>
+                </label>
               </div>
 
               <div className="rounded-md border bg-card/50">
+                {/* En-tête de colonne pour le score (aligné avec la colonne des scores ci-dessous) */}
+                <div className="px-3 py-1">
+                  <div className="grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2">
+                    <span /> {/* checkbox */}
+                    <span /> {/* avatar/icon */}
+                    <span /> {/* contenu principal */}
+                    <span className="inline-flex items-center text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5">
+                      {successLabel}
+                    </span>
+                    <span /> {/* actions */}
+                  </div>
+                </div>
+
                 <ul className="divide-y">
                   {emailEntries.map((entry, idx) => {
                     const checked = selectedEmails.has(entry.email);
@@ -201,44 +209,48 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                     return (
                       <li
                         key={`email-${idx}-${entry.email}`}
-                        className={`flex items-center justify-between px-3 py-2 ${entry.visible ? "text-sm" : "text-xs text-muted-foreground"}`}
+                        className={`grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2 px-3 py-2 ${entry.visible ? "text-sm" : "text-xs text-muted-foreground"}`}
                         title={displayEmail}
                         aria-label={displayEmail}
                       >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Checkbox
-                            checked={checked}
-                            onCheckedChange={(v) => toggleOne(entry.email, v)}
-                            className="h-4 w-4"
-                            aria-label={`Select ${entry.email}`}
-                          />
+                        {/* Col 1: checkbox */}
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(v) => toggleOne(entry.email, v)}
+                          className="h-4 w-4"
+                          aria-label={`Select ${entry.email}`}
+                        />
 
-                          {entry.visible ? (
-                            <User className="h-4 w-4 shrink-0 text-muted-foreground" />
-                          ) : (
-                            <Avatar className="h-6 w-6 shrink-0 ring-1 ring-white/10">
-                              <AvatarImage src={entry.avatarUrl} alt={entry.title} />
-                              <AvatarFallback>U</AvatarFallback>
-                            </Avatar>
-                          )}
+                        {/* Col 2: avatar/icon */}
+                        {entry.visible ? (
+                          <User className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        ) : (
+                          <Avatar className="h-6 w-6 shrink-0 ring-1 ring-white/10">
+                            <AvatarImage src={entry.avatarUrl} alt={entry.title} />
+                            <AvatarFallback>U</AvatarFallback>
+                          </Avatar>
+                        )}
 
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <span className={`font-mono truncate ${entry.visible ? "" : "text-foreground/80"}`}>
-                                {displayEmail}
-                              </span>
-                              <span className="inline-flex items-center gap-1 text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5">
-                                {entry.score}%
-                              </span>
-                            </div>
-                            <div className={`truncate ${entry.visible ? "text-xs text-muted-foreground" : "text-[11px] text-muted-foreground"}`}>
-                              {entry.title}
-                            </div>
+                        {/* Col 3: contenu principal */}
+                        <div className="min-w-0">
+                          <div className="flex items-center min-w-0">
+                            <span className={`font-mono truncate ${entry.visible ? "" : "text-foreground/80"}`}>
+                              {displayEmail}
+                            </span>
+                          </div>
+                          <div className={`truncate ${entry.visible ? "text-xs text-muted-foreground" : "text-[11px] text-muted-foreground"}`}>
+                            {entry.title}
                           </div>
                         </div>
 
+                        {/* Col 4: score (aligné sous l’étiquette) */}
+                        <span className="justify-self-start inline-flex items-center gap-1 text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5">
+                          {entry.score}%
+                        </span>
+
+                        {/* Col 5: actions */}
                         {entry.visible ? (
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 justify-self-end">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -251,7 +263,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                             </Button>
                           </div>
                         ) : (
-                          <span className="text-[11px] text-muted-foreground">****</span>
+                          <span className="text-[11px] text-muted-foreground justify-self-end">****</span>
                         )}
                       </li>
                     );
