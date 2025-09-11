@@ -37,6 +37,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
+import LiquidGlassButton from "./LiquidGlassButton";
 
 const formSchema = z
   .object({
@@ -560,15 +561,14 @@ export function RefundForm({
             )}
           </OffsetButton>
 
-          <Button
+          <LiquidGlassButton
             type="button"
-            variant="outline"
             className="w-full"
             onClick={fillAndGenerate}
             disabled={isLoading}
           >
             {t("refundForm.testFillButton")}
-          </Button>
+          </LiquidGlassButton>
         </form>
       </Form>
     </div>
