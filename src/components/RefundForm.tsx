@@ -549,7 +549,7 @@ export function RefundForm({
             </CardContent>
           </Card>
 
-          <OffsetButton type="submit" className="w-full text-lg" loading={isLoading} disabled={isLoading}>
+          <OffsetButton type="submit" className="w-full text-lg" loading={isLoading} disabled={isLoading} shineBg>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-6 w-6 animate-spin" />

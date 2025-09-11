@@ -21,7 +21,7 @@ const baseRoot =
   "disabled:opacity-60 disabled:pointer-events-none " +
   "hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[4px_4px_0_#000]";
 
-const bgDefault = "bg-[#93C5FD]"; // bleu léger
+const bgDefault = "bg-primary"; // use the same blue as the title (theme primary)
 const bgShine = "bg-gradient-to-r from-primary via-sky-400 to-primary bg-[200%_auto] animate-shine";
 
 export default function OffsetButton(props: GlassButtonProps) {
