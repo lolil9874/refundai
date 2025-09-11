@@ -8,6 +8,8 @@ type OffsetButtonProps = {
   loading?: boolean;
   className?: string;
   children: React.ReactNode;
+  shineText?: boolean;     // animate gradient on text
+  gradientBg?: boolean;    // animate gradient on background
 } & React.ButtonHTMLAttributes<HTMLButtonElement> &
   React.AnchorHTMLAttributes<HTMLAnchorElement>;
 
@@ -21,8 +23,22 @@ const base =
   "hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[4px_4px_0_#000]";
 
 export default function OffsetButton(props: OffsetButtonProps) {
-  const { href, loading, className, children, ...rest } = props;
-  const classes = cn(base, className);
+  const { href, loading, className, children, shineText = false, gradientBg = false, ...rest } = props;
+
+  const classes = cn(
+    base,
+    gradientBg &&
+      "bg-gradient-to-r from-primary via-sky-400 to-primary text-black dark:text-white bg-[length:200%_auto] animate-shine",
+    className
+  );
+
+  const content = shineText ? (
+    <span className="bg-gradient-to-r from-primary via-sky-400 to-primary bg-clip-text text-transparent bg-[200%_auto] animate-shine">
+      {children}
+    </span>
+  ) : (
+    children
+  );
 
   if (href) {
     const { target, rel, ...anchorRest } = rest as React.AnchorHTMLAttributes<HTMLAnchorElement>;
@@ -34,7 +50,7 @@ export default function OffsetButton(props: OffsetButtonProps) {
         className={classes}
         {...anchorRest}
       >
-        {children}
+        {content}
       </a>
     );
   }
@@ -47,7 +63,7 @@ export default function OffsetButton(props: OffsetButtonProps) {
       aria-busy={loading ? "true" : "false"}
       {...buttonRest}
     >
-      {children}
+      {content}
     </button>
   );
 }
