@@ -1,14 +1,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Copy, ExternalLink, Phone } from "lucide-react";
+import { Copy, ExternalLink, Lock, Mail, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import OffsetButton from "@/components/OffsetButton";
 import React from "react";
 import { cn } from "@/lib/utils";
-import PremiumContactCard, { type PremiumContact } from "@/components/PremiumContactCard";
 import UnlockPremiumDialog from "@/components/UnlockPremiumDialog";
+import { Badge } from "@/components/ui/badge";
+import PremiumContactCard, { type PremiumContact } from "@/components/PremiumContactCard";
 
 type RefundResult = {
   bestEmail: string;
@@ -34,39 +34,24 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     toast.success(t("resultsDisplay.copySuccess", { type }));
   };
 
-  const allEmails = React.useMemo(() => {
+  // Construire la liste des 5 e-mails (1 meilleur + 4 suivants)
+  const topFive = React.useMemo(() => {
     const uniq = new Set<string>();
     if (bestEmail) uniq.add(bestEmail);
-    ranked.forEach((e) => uniq.add(e));
-    return Array.from(uniq);
+    ranked.forEach((e) => {
+      if (uniq.size < 5) uniq.add(e);
+    });
+    return Array.from(uniq).slice(0, 5);
   }, [bestEmail, ranked]);
 
-  const [selectedEmails, setSelectedEmails] = React.useState<string[]>(
-    bestEmail ? [bestEmail] : []
-  );
+  const visibleEmails = topFive.slice(0, 2);
+  const lockedEmails = topFive.slice(2, 5);
 
-  const toggleEmail = (email: string, checked: boolean) => {
-    setSelectedEmails((prev) => {
-      if (checked) {
-        if (prev.includes(email)) return prev;
-        return [...prev, email];
-      }
-      return prev.filter((e) => e !== email);
-    });
-  };
+  // Scores: plus élevés pour visibles, plus bas pour verrouillés
+  const visibleScores = [92, 88];
+  const lockedScores = [74, 71, 68];
 
-  const allSelected = selectedEmails.length === allEmails.length && allEmails.length > 0;
-  const toggleAll = () => {
-    setSelectedEmails((prev) =>
-      prev.length === allEmails.length ? [] : allEmails
-    );
-  };
-
-  const recipients = selectedEmails.length
-    ? selectedEmails
-    : bestEmail
-      ? [bestEmail]
-      : [];
+  const recipients = visibleEmails;
 
   const mailtoLink = `mailto:${encodeURIComponent(recipients.join(","))}?subject=${encodeURIComponent(
     subject
@@ -84,58 +69,57 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
           <CardDescription>{t("resultsDisplay.description")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-8">
-          {(allEmails.length > 0 || forms.length > 0 || links.length > 0) && (
+          {(topFive.length > 0 || forms.length > 0 || links.length > 0) && (
             <div className="space-y-4">
-              {allEmails.length > 0 && (
+              {topFive.length > 0 && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold text-lg">
                       {t("resultsDisplay.emailsToContactLabel")}
                     </h3>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={toggleAll}
-                    >
-                      {allSelected
-                        ? t("resultsDisplay.unselectAll")
-                        : t("resultsDisplay.selectAll")}
-                    </Button>
                   </div>
-                  <ul className="space-y-2">
-                    {allEmails.map((email, i) => {
-                      const checked = selectedEmails.includes(email);
-                      const isBest = email === bestEmail;
-                      return (
-                        <li
-                          key={email}
+
+                  {/* Une seule ligne, responsive (scroll horizontal) */}
+                  <div className="overflow-x-auto">
+                    <div className="flex gap-2 whitespace-nowrap snap-x snap-mandatory pr-1">
+                      {visibleEmails.map((email, idx) => (
+                        <div
+                          key={`vis-${email}`}
                           className={cn(
-                            "flex items-center gap-3 p-2 rounded-md border transition-colors",
-                            isBest
-                              ? "bg-sky-50 border-sky-200 text-sky-700 dark:bg-sky-950/30 dark:border-sky-900 dark:text-sky-300"
-                              : "bg-muted/30"
+                            "snap-start inline-flex items-center gap-2 rounded-full border px-3 py-2 bg-sky-50 text-sky-800 dark:bg-sky-950/30 dark:text-sky-200 border-sky-200 dark:border-sky-900",
+                            "shrink-0"
                           )}
-                          style={{ animationDelay: `${i * 60}ms` }}
+                          title={email}
                         >
-                          <Checkbox
-                            id={`chk-${i}`}
-                            checked={checked}
-                            onCheckedChange={(v) => toggleEmail(email, !!v)}
-                          />
-                          <label
-                            htmlFor={`chk-${i}`}
-                            className={cn(
-                              "text-sm font-mono cursor-pointer",
-                              isBest && "text-sky-700 dark:text-sky-300"
-                            )}
-                          >
-                            {email}
-                          </label>
-                        </li>
-                      );
-                    })}
-                  </ul>
+                          <Mail className="h-4 w-4" />
+                          <span className="font-mono text-sm truncate max-w-[180px] sm:max-w-[220px]">{email}</span>
+                          <Badge variant="secondary" className="text-[11px]">
+                            Score {visibleScores[idx] ?? 85}
+                          </Badge>
+                        </div>
+                      ))}
+
+                      {lockedEmails.map((email, idx) => (
+                        <button
+                          type="button"
+                          onClick={() => setUnlockOpen(true)}
+                          key={`lock-${email}`}
+                          className={cn(
+                            "snap-start inline-flex items-center gap-2 rounded-full border px-3 py-2 bg-muted/50 text-muted-foreground",
+                            "hover:bg-muted hover:text-foreground transition-colors",
+                            "shrink-0"
+                          )}
+                          title={email}
+                        >
+                          <Lock className="h-4 w-4" />
+                          <span className="font-mono text-sm truncate max-w-[180px] sm:max-w-[220px]">{email}</span>
+                          <Badge variant="outline" className="text-[11px]">
+                            Score {lockedScores[idx] ?? 70}
+                          </Badge>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
 
