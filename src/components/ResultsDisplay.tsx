@@ -176,15 +176,20 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
             <section>
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="font-semibold text-lg">{t("resultsDisplay.emailsToContactLabel")}</h3>
-                <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Checkbox
-                    checked={allSelected ? true : noneSelected ? false : "indeterminate"}
-                    onCheckedChange={toggleSelectAll}
-                    className="h-4 w-4"
-                    aria-label={t("resultsDisplay.selectAll") as string}
-                  />
-                  <span>{t("resultsDisplay.selectAll")}</span>
-                </label>
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex items-center text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5">
+                    {successLabel}
+                  </span>
+                  <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Checkbox
+                      checked={allSelected ? true : noneSelected ? false : "indeterminate"}
+                      onCheckedChange={toggleSelectAll}
+                      className="h-4 w-4"
+                      aria-label={t("resultsDisplay.selectAll") as string}
+                    />
+                    <span>{t("resultsDisplay.selectAll")}</span>
+                  </label>
+                </div>
               </div>
 
               <div className="rounded-md border bg-card/50">
@@ -222,14 +227,9 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                               <span className={`font-mono truncate ${entry.visible ? "" : "text-foreground/80"}`}>
                                 {displayEmail}
                               </span>
-                              <div className="flex flex-col items-start">
-                                <span className="text-[9px] leading-none text-muted-foreground">
-                                  {successLabel}
-                                </span>
-                                <span className="inline-flex items-center gap-1 text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5">
-                                  {entry.score}%
-                                </span>
-                              </div>
+                              <span className="inline-flex items-center gap-1 text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5">
+                                {entry.score}%
+                              </span>
                             </div>
                             <div className={`truncate ${entry.visible ? "text-xs text-muted-foreground" : "text-[11px] text-muted-foreground"}`}>
                               {entry.title}
