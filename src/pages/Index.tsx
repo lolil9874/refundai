@@ -17,6 +17,7 @@ type RefundResult = {
   subject: string;
   body: string;
   hasImage: boolean;
+  phones: string[];
 };
 
 const Index = () => {
@@ -25,6 +26,26 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const dateLocale = i18n.language === 'fr' ? fr : enUS;
+
+  const getMockPhones = (country: string) => {
+    switch (country) {
+      case "US":
+      case "CA":
+        return ["+1 800 123 4567", "+1 415 555 0101"];
+      case "FR":
+        return ["+33 1 23 45 67 89", "+33 9 70 00 00 00"];
+      case "GB":
+        return ["+44 20 1234 5678"];
+      case "DE":
+        return ["+49 30 123456"];
+      case "ES":
+        return ["+34 91 123 45 67"];
+      case "IT":
+        return ["+39 02 1234 5678"];
+      default:
+        return ["+1 800 000 0000"];
+    }
+  };
 
   const handleFormSubmit = async (data: RefundFormValues) => {
     setIsLoading(true);
@@ -58,10 +79,19 @@ const Index = () => {
           ? new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 2 }).format(data.productValue)
           : "";
 
+      const domain = companyDomain.toLowerCase();
+      const bestEmail = `support@${domain}`;
+      const additionalEmails = [
+        `help@${domain}`,
+        `refunds@${domain}`,
+        `contact@${domain}`,
+        `customerservice@${domain}`,
+      ];
+
       const mockResults: RefundResult = {
-        bestEmail: `support@${companyDomain.toLowerCase()}`,
-        ranked: [`refunds@${companyDomain.toLowerCase()}`],
-        forms: [`https://www.${companyDomain.toLowerCase()}/contact`],
+        bestEmail,
+        ranked: additionalEmails,
+        forms: [`https://www.${domain}/contact`],
         links: [],
         subject: t('generatedEmail.subject', { orderNumber: data.orderNumber }),
         body: t('generatedEmail.body', {
@@ -76,6 +106,7 @@ const Index = () => {
           lastName: data.lastName,
         }),
         hasImage: !!data.image,
+        phones: getMockPhones(data.country),
       };
       setResults(mockResults);
       setIsLoading(false);
