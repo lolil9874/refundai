@@ -31,6 +31,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { popularCompanies } from "@/lib/companies";
+import GlassButton from "@/components/GlassButton";
 
 const formSchema = z
   .object({
@@ -392,7 +393,7 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
             </CardContent>
           </Card>
 
-          <Button type="submit" className="w-full text-lg transition-transform active:scale-[0.98] font-semibold" size="lg" disabled={isLoading}>
+          <GlassButton type="submit" className="w-full text-lg" loading={isLoading} disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-6 w-6 animate-spin" />
@@ -401,7 +402,7 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
             ) : (
               t("refundForm.submitButton")
             )}
-          </Button>
+          </GlassButton>
         </form>
       </Form>
     </div>

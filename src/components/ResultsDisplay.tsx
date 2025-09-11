@@ -1,8 +1,9 @@
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Copy, Mail, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import GlassButton from "@/components/GlassButton";
 
 type RefundResult = {
   bestEmail: string;
@@ -100,11 +101,9 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t">
-          <Button asChild className="w-full transition-transform active:scale-[0.98] font-semibold" size="lg">
-            <a href={mailtoLink}>
-              <Mail className="mr-2 h-5 w-5" /> {t('resultsDisplay.openInEmailAppButton')}
-            </a>
-          </Button>
+          <GlassButton href={mailtoLink} className="w-full">
+            <Mail className="mr-2 h-5 w-5" /> {t('resultsDisplay.openInEmailAppButton')}
+          </GlassButton>
         </div>
         {hasImage && (
           <p 
