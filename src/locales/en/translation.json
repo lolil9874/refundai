@@ -119,6 +119,7 @@
     "dialogDescription": "Get access to work emails and direct numbers of relevant managers (Support, Billing, Customer Care) to maximize your chances of getting a response.",
     "discoverPlans": "See plans",
     "notNow": "Not now",
-    "ctaToast": "Coming soon — billing is on the way!"
+    "ctaToast": "Coming soon — billing is on the way!",
+    "yearsLabel": "{{count}} year | {{count}} years"
   }
 }

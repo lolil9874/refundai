@@ -19,6 +19,8 @@ type RefundResult = {
   hasImage: boolean;
   phones: string[];
   premiumContacts?: { phoneMasked?: string | undefined }[];
+  companyDisplayName: string; // Added
+  countryCode: string; // Added
 };
 
 export type PremiumContact = {
@@ -29,7 +31,8 @@ function obfuscateEmailKeepFirst(email: string) {
   const [local, domain] = email.split("@");
   if (!local) return email;
   const first = local[0] || "*";
-  const stars = "*".repeat(Math.max(3, (local.length || 1) - 1));
+  // Always use exactly 3 asterisks for masking
+  const stars = "***";
   return `${first}${stars}@${domain || ""}`;
 }
 
@@ -101,7 +104,7 @@ function shortNameFromFullName(full: string) {
   const parts = full.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "";
   const first = parts[0];
-  const last = parts[parts.length - 1] || "";
+  const last = parts.length > 1 ? parts[parts.length - 1] : "";
   const initial = last ? `${last[0].toUpperCase()}.` : "";
   return `${first} ${initial}`.trim();
 }
@@ -114,14 +117,17 @@ type PhoneEntry = {
   visible: boolean;
   type: string;
   score: number;
-  fullName?: string; // Added for consistency with email entries
-  avatarUrl?: string; // Added for consistency with email entries
-  originalNumber?: string; // For locked numbers, if we ever want to reveal it
+  fullName?: string;
+  avatarUrl?: string;
+  originalNumber?: string;
+  yearsOfExperience?: number; // New field
+  companyDisplayName?: string; // New field
+  countryCode?: string; // New field
 };
 
 export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   const { t, i18n } = useTranslation();
-  const { bestEmail, ranked, forms, links, subject, body, hasImage, phones, premiumContacts = [] } = results;
+  const { bestEmail, ranked, forms, links, subject, body, hasImage, phones, premiumContacts = [], companyDisplayName, countryCode } = results;
 
   const handleCopy = (text: string, typeKey: string) => {
     navigator.clipboard.writeText(text);
@@ -279,6 +285,8 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
       score: 70 + i * 5, // Mock score
       fullName: fullName,
       avatarUrl: undefined, // No avatar for visible, use Phone icon
+      companyDisplayName: companyDisplayName,
+      countryCode: countryCode,
     });
   });
 
@@ -294,6 +302,9 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
       fullName: shortNameFromFullName(full),
       avatarUrl: avatarUrlFromEmail(full, i + 10), // Different avatar index
       originalNumber: "UNLOCKED_NUMBER_PLACEHOLDER", // Placeholder for actual number
+      yearsOfExperience: Math.floor(Math.random() * 10) + 3, // 3-12 years
+      companyDisplayName: companyDisplayName,
+      countryCode: countryCode,
     });
   });
 
@@ -529,6 +540,10 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                     const rowTint = isPaid ? "bg-blue-50/40 dark:bg-blue-950/20" : "";
                     const numberTint = isPaid ? "text-blue-700 dark:text-blue-300 font-medium" : "";
 
+                    const detailedLabel = isPaid && entry.fullName && entry.type && entry.yearsOfExperience && entry.companyDisplayName && entry.countryCode
+                      ? `${entry.fullName} - ${entry.type} - ${entry.yearsOfExperience} ${t(i18n.language === 'fr' ? 'premiumContacts.yearsLabel' : 'premiumContacts.yearsLabel', { count: entry.yearsOfExperience })} chez ${entry.companyDisplayName} ${entry.countryCode}`
+                      : entry.type;
+
                     return (
                       <li
                         key={`phone-${i}-${entry.number}`}
@@ -536,16 +551,12 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                         title={entry.number}
                         aria-label={entry.number}
                       >
-                        {entry.visible ? (
-                          <Checkbox
-                            checked={checked}
-                            onCheckedChange={(v) => toggleOnePhone(entry.number, v)}
-                            className="h-4 w-4"
-                            aria-label={`Select ${entry.number}`}
-                          />
-                        ) : (
-                          <span className="w-4 h-4" /> // Placeholder for alignment
-                        )}
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(v) => toggleOnePhone(entry.number, v)}
+                          className="h-4 w-4"
+                          aria-label={`Select ${entry.number}`}
+                        />
 
                         {entry.visible ? (
                           <Phone className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -568,9 +579,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                             )}
                           </div>
                           <div className={`truncate ${entry.visible ? "text-xs text-muted-foreground" : "text-[11px] text-muted-foreground"}`}>
-                            {entry.visible
-                              ? entry.fullName // Display AI Agent name for visible
-                              : entry.fullName} {/* Display generated name for locked */}
+                            {detailedLabel}
                           </div>
                         </div>
 

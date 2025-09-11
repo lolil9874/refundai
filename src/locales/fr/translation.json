@@ -119,6 +119,7 @@
     "dialogDescription": "Accédez aux emails professionnels et numéros directs de responsables pertinents (SAV, facturation, customer care) pour maximiser vos chances de réponse.",
     "discoverPlans": "Découvrir les offres",
     "notNow": "Plus tard",
-    "ctaToast": "Bientôt disponible — la facturation arrive !"
+    "ctaToast": "Bientôt disponible — la facturation arrive !",
+    "yearsLabel": "{{count}} an | {{count}} ans"
   }
 }

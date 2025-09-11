@@ -19,6 +19,8 @@ type RefundResult = {
   hasImage: boolean;
   phones: string[];
   premiumContacts?: PremiumContact[];
+  companyDisplayName: string; // Added for detailed labels
+  countryCode: string; // Added for detailed labels
 };
 
 const Index = () => {
@@ -145,6 +147,8 @@ const Index = () => {
         hasImage: !!data.image,
         phones: getMockPhones(data.country),
         premiumContacts: mockPremium,
+        companyDisplayName: companyDisplayName, // Pass company display name
+        countryCode: data.country, // Pass country code
       };
       setResults(mockResults);
       setIsLoading(false);
