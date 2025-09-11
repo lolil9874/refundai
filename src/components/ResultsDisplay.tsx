@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Copy, ExternalLink, Phone, User } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -24,9 +25,22 @@ export type PremiumContact = {
   phoneMasked?: string;
 };
 
-function obfuscateEmail(email: string) {
+function obfuscateEmailKeepFirst(email: string) {
   const [local, domain] = email.split("@");
-  return `****@${domain || ""}`;
+  if (!local) return email;
+  const first = local[0] || "*";
+  const stars = "*".repeat(Math.max(3, (local.length || 1) - 1));
+  return `${first}${stars}@${domain || ""}`;
+}
+
+function avatarUrlFromEmail(email: string, fallbackIndex = 1) {
+  // Map email to a stable number between 1 and 70 for pravatar
+  let hash = 0;
+  for (let i = 0; i < email.length; i++) {
+    hash = (hash * 31 + email.charCodeAt(i)) >>> 0;
+  }
+  const id = (hash % 70) + 1;
+  return `https://i.pravatar.cc/80?img=${id || fallbackIndex}`;
 }
 
 export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
@@ -52,7 +66,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   const visibleEmails = topFive.slice(0, 2);
   const hiddenEmails = topFive.slice(2, 5);
 
-  // Titres de poste simples (visibles vs cachés)
+  // Titres (visibles vs cachés)
   const titlesVisible =
     i18n.language === "fr"
       ? ["Conseiller Client", "Agent Support"]
@@ -66,7 +80,14 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   const scoresVisible = [72, 68];
   const scoresHidden = [95, 92, 89];
 
-  type EmailEntry = { email: string; visible: boolean; title: string; score: number };
+  type EmailEntry = {
+    email: string;
+    visible: boolean;
+    title: string;
+    score: number;
+    avatarUrl?: string;
+  };
+
   const emailEntries: EmailEntry[] = [
     ...visibleEmails.map((e, i) => ({
       email: e,
@@ -79,16 +100,15 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
       visible: false,
       title: titlesHidden[i] || titlesHidden[titlesHidden.length - 1],
       score: scoresHidden[i] || 88,
+      avatarUrl: avatarUrlFromEmail(e, i + 1),
     })),
   ];
 
   // Sélection d'emails (par défaut tous les visibles)
-  const [selectedEmails, setSelectedEmails] = React.useState<Set<string>>(
-    new Set(visibleEmails),
-  );
+  const [selectedEmails, setSelectedEmails] = React.useState<Set<string>>(new Set(visibleEmails));
   React.useEffect(() => {
     setSelectedEmails(new Set(visibleEmails));
-  }, [visibleEmails.join(",")]); // se met à jour si la liste change
+  }, [visibleEmails.join(",")]);
 
   const allSelected = selectedEmails.size === visibleEmails.length && visibleEmails.length > 0;
   const noneSelected = selectedEmails.size === 0;
@@ -127,6 +147,8 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
 
   const [unlockOpen, setUnlockOpen] = React.useState(false);
 
+  const successLabel = i18n.language === "fr" ? "% de succès" : "Success rate";
+
   return (
     <>
       <Card className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500 shadow-lg border-primary/20">
@@ -157,7 +179,8 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                 <ul className="divide-y">
                   {emailEntries.map((entry, idx) => {
                     const checked = entry.visible && selectedEmails.has(entry.email);
-                    const displayEmail = entry.visible ? entry.email : obfuscateEmail(entry.email);
+                    const displayEmail = entry.visible ? entry.email : obfuscateEmailKeepFirst(entry.email);
+
                     return (
                       <li
                         key={`email-${idx}-${entry.email}`}
@@ -175,19 +198,35 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                               onCheckedChange={(v) => toggleOne(entry.email, v)}
                               className="h-4 w-4"
                               aria-label={`Select ${entry.email}`}
+                              onClick={(e) => e.stopPropagation()}
                             />
                           ) : (
+                            // espace réservé pour l'alignement
                             <span className="w-4" />
                           )}
-                          <User className={`shrink-0 ${entry.visible ? "h-4 w-4" : "h-3.5 w-3.5"}`} />
+
+                          {entry.visible ? (
+                            <User className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          ) : (
+                            <Avatar className="h-6 w-6 shrink-0 ring-1 ring-white/10">
+                              <AvatarImage src={entry.avatarUrl} alt={entry.title} />
+                              <AvatarFallback>U</AvatarFallback>
+                            </Avatar>
+                          )}
+
                           <div className="min-w-0">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className={`font-mono truncate ${entry.visible ? "" : "text-muted-foreground"}`}>
+                            <div className="flex items-center gap-3 min-w-0">
+                              <span className={`font-mono truncate ${entry.visible ? "" : "text-foreground/80"}`}>
                                 {displayEmail}
                               </span>
-                              <span className="inline-flex items-center gap-1 text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5">
-                                {entry.score}
-                              </span>
+                              <div className="flex flex-col items-start">
+                                <span className="text-[9px] leading-none text-muted-foreground">
+                                  {successLabel}
+                                </span>
+                                <span className="inline-flex items-center gap-1 text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5">
+                                  {entry.score}%
+                                </span>
+                              </div>
                             </div>
                             <div className={`truncate ${entry.visible ? "text-xs text-muted-foreground" : "text-[11px] text-muted-foreground"}`}>
                               {entry.title}
