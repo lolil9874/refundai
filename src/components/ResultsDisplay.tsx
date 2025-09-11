@@ -34,7 +34,7 @@ function obfuscateEmailKeepFirst(email: string) {
 }
 
 function avatarUrlFromEmail(email: string, fallbackIndex = 1) {
-  // Map email to a stable number between 1 and 70 for pravatar
+  // Map email to a stable number between 1 and 70 pour pravatar
   let hash = 0;
   for (let i = 0; i < email.length; i++) {
     hash = (hash * 31 + email.charCodeAt(i)) >>> 0;
@@ -53,7 +53,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     toast.success(t("resultsDisplay.copySuccess", { type }));
   };
 
-  // Top 5 emails: 2 visibles + 3 cachés (contacts)
+  // Top 5 emails: 2 visibles + 3 cachés
   const topFive = React.useMemo(() => {
     const uniq = new Set<string>();
     if (bestEmail) uniq.add(bestEmail);
@@ -110,12 +110,13 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     setSelectedEmails(new Set(visibleEmails));
   }, [visibleEmails.join(",")]);
 
-  const allSelected = selectedEmails.size === visibleEmails.length && visibleEmails.length > 0;
+  const allSelected = selectedEmails.size === emailEntries.length && emailEntries.length > 0;
   const noneSelected = selectedEmails.size === 0;
 
   const toggleSelectAll = (checked: boolean | "indeterminate") => {
+    const allEmails = emailEntries.map((e) => e.email);
     if (checked) {
-      setSelectedEmails(new Set(visibleEmails));
+      setSelectedEmails(new Set(allEmails));
     } else {
       setSelectedEmails(new Set());
     }
@@ -136,6 +137,17 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     recipients.length > 0
       ? `mailto:${encodeURIComponent(recipients.join(","))}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
       : undefined;
+
+  // Si des emails cachés sont sélectionnés, on affiche le paywall au moment de générer
+  const hasHiddenSelected = emailEntries.some(
+    (e) => !e.visible && selectedEmails.has(e.email),
+  );
+  const handleGenerateClick = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {
+    if (hasHiddenSelected) {
+      e.preventDefault();
+      setUnlockOpen(true);
+    }
+  };
 
   // Téléphones: 2 visibles + 3 "contacts" (restants + premium)
   const visiblePhones = (phones || []).slice(0, 2);
@@ -160,7 +172,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
         </CardHeader>
 
         <CardContent className="space-y-8">
-          {(emailEntries.length > 0) && (
+          {emailEntries.length > 0 && (
             <section>
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="font-semibold text-lg">{t("resultsDisplay.emailsToContactLabel")}</h3>
@@ -178,32 +190,23 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
               <div className="rounded-md border bg-card/50">
                 <ul className="divide-y">
                   {emailEntries.map((entry, idx) => {
-                    const checked = entry.visible && selectedEmails.has(entry.email);
+                    const checked = selectedEmails.has(entry.email);
                     const displayEmail = entry.visible ? entry.email : obfuscateEmailKeepFirst(entry.email);
 
                     return (
                       <li
                         key={`email-${idx}-${entry.email}`}
-                        className={`flex items-center justify-between px-3 py-2 ${entry.visible ? "text-sm" : "text-xs text-muted-foreground hover:bg-muted/50 cursor-pointer"}`}
-                        onClick={() => {
-                          if (!entry.visible) setUnlockOpen(true);
-                        }}
+                        className={`flex items-center justify-between px-3 py-2 ${entry.visible ? "text-sm" : "text-xs text-muted-foreground"}`}
                         title={displayEmail}
                         aria-label={displayEmail}
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          {entry.visible ? (
-                            <Checkbox
-                              checked={checked}
-                              onCheckedChange={(v) => toggleOne(entry.email, v)}
-                              className="h-4 w-4"
-                              aria-label={`Select ${entry.email}`}
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          ) : (
-                            // espace réservé pour l'alignement
-                            <span className="w-4" />
-                          )}
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(v) => toggleOne(entry.email, v)}
+                            className="h-4 w-4"
+                            aria-label={`Select ${entry.email}`}
+                          />
 
                           {entry.visible ? (
                             <User className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -240,10 +243,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleCopy(entry.email, "resultsDisplay.copySubject");
-                              }}
+                              onClick={() => handleCopy(entry.email, "resultsDisplay.copySubject")}
                               aria-label="Copy email"
                               title="Copy email"
                             >
@@ -311,6 +311,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
             <div className="flex flex-col sm:flex-row gap-3 mt-4">
               <OffsetButton
                 href={mailtoLink}
+                onClick={handleGenerateClick}
                 className="w-full"
                 aria-disabled={recipients.length === 0}
                 disabled={recipients.length === 0}
