@@ -473,6 +473,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                 aria-disabled={recipients.length === 0}
                 disabled={recipients.length === 0}
                 title={recipients.length === 0 ? "Select at least one email" : undefined}
+                shineBg
               >
                 {t("resultsDisplay.openInEmailAppButton")}
               </OffsetButton>
