@@ -320,7 +320,7 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full text-lg" size="lg" disabled={isLoading}>
+            <Button type="submit" className="w-full text-lg transition-transform active:scale-[0.98]" size="lg" disabled={isLoading}>
               {isLoading ? (
                 <Loader2 className="mr-2 h-6 w-6 animate-spin" />
               ) : (

@@ -1,8 +1,10 @@
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { RefundForm, RefundFormValues } from "@/components/RefundForm";
 import { ResultsDisplay } from "@/components/ResultsDisplay";
+import { ResultsSkeleton } from "@/components/ResultsSkeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
 
 type RefundResult = {
@@ -24,7 +26,6 @@ const Index = () => {
     setResults(null);
 
     // This is a mock of the server functions.
-    // In the next step, we can replace this with real calls.
     console.log("Form Data:", data);
 
     setTimeout(() => {
@@ -46,27 +47,31 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col items-center p-4 sm:p-6 md:p-8">
       <main className="w-full max-w-2xl mx-auto">
-        <header className="text-center mb-8">
+        <header className="text-center mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">REFUNDAI</h1>
           <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">
             Generate refund or complaint emails to companies, hassle-free.
           </p>
         </header>
 
-        <RefundForm onSubmit={handleFormSubmit} isLoading={isLoading} />
+        <Alert className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+          <ShieldCheck className="h-4 w-4" />
+          <AlertDescription>
+            Your data is processed in your browser and is not stored on our servers.
+          </AlertDescription>
+        </Alert>
 
-        {isLoading && (
-          <div className="text-center p-8 flex flex-col items-center gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Generating your email and finding contacts...</p>
-          </div>
-        )}
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
+            <RefundForm onSubmit={handleFormSubmit} isLoading={isLoading} />
+        </div>
+
+        {isLoading && <ResultsSkeleton />}
 
         {results && <ResultsDisplay results={results} />}
 
       </main>
       <footer className="w-full max-w-2xl mx-auto mt-8 text-center text-sm text-gray-500">
-        <p>Your data is not stored. © REFUNDAI</p>
+        <p>© REFUNDAI</p>
         <MadeWithDyad />
       </footer>
     </div>
