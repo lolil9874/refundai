@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Copy, ExternalLink, Lock, Mail, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -46,11 +47,38 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   const visibleEmails = topFive.slice(0, 2);
   const lockedEmails = topFive.slice(2, 5);
 
-  // Mailto avec les deux visibles
-  const recipients = visibleEmails;
-  const mailtoLink = `mailto:${encodeURIComponent(recipients.join(","))}?subject=${encodeURIComponent(
-    subject
-  )}&body=${encodeURIComponent(body)}`;
+  // Sélection d'emails (par défaut tous les visibles)
+  const [selectedEmails, setSelectedEmails] = React.useState<Set<string>>(new Set(visibleEmails));
+  React.useEffect(() => {
+    setSelectedEmails(new Set(visibleEmails));
+  }, [visibleEmails.join(",")]); // se met à jour si la liste change
+
+  const allSelected = selectedEmails.size === visibleEmails.length && visibleEmails.length > 0;
+  const noneSelected = selectedEmails.size === 0;
+
+  const toggleSelectAll = (checked: boolean | "indeterminate") => {
+    if (checked) {
+      setSelectedEmails(new Set(visibleEmails));
+    } else {
+      setSelectedEmails(new Set());
+    }
+  };
+
+  const toggleOne = (email: string, checked: boolean | "indeterminate") => {
+    setSelectedEmails((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(email);
+      else next.delete(email);
+      return next;
+    });
+  };
+
+  // Mailto avec les emails sélectionnés
+  const recipients = Array.from(selectedEmails);
+  const mailtoLink =
+    recipients.length > 0
+      ? `mailto:${encodeURIComponent(recipients.join(","))}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+      : undefined;
 
   // Téléphones: 2 visibles + 3 "contacts" (restants + premium)
   const visiblePhones = (phones || []).slice(0, 2);
@@ -73,44 +101,63 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
         </CardHeader>
 
         <CardContent className="space-y-8">
-          {/* Emails: 2 visibles, puis 3 contacts (verrouillés), tous dans la même box, sur des lignes */}
           {(visibleEmails.length > 0 || lockedEmails.length > 0) && (
             <section>
-              <h3 className="font-semibold text-lg mb-3">
-                {t("resultsDisplay.emailsToContactLabel")}
-              </h3>
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="font-semibold text-lg">{t("resultsDisplay.emailsToContactLabel")}</h3>
+                <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Checkbox
+                    checked={allSelected ? true : noneSelected ? false : "indeterminate"}
+                    onCheckedChange={toggleSelectAll}
+                    className="h-4 w-4"
+                    aria-label={t("resultsDisplay.selectAll") as string}
+                  />
+                  <span>{t("resultsDisplay.selectAll")}</span>
+                </label>
+              </div>
+
               <div className="rounded-md border bg-card/50">
                 <ul className="divide-y">
-                  {visibleEmails.map((email, i) => (
-                    <li key={`vis-${email}`} className="flex items-center justify-between px-3 py-2 text-sm">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
-                        <span className="font-mono truncate">{email}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                          onClick={() => handleCopy(email, "resultsDisplay.copySubject")}
-                          aria-label="Copy email"
-                          title="Copy email"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </li>
-                  ))}
+                  {visibleEmails.map((email) => {
+                    const checked = selectedEmails.has(email);
+                    return (
+                      <li key={`vis-${email}`} className="flex items-center justify-between px-3 py-2 text-sm">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(v) => toggleOne(email, v)}
+                            className="h-4 w-4"
+                            aria-label={`Select ${email}`}
+                          />
+                          <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <span className="font-mono truncate">{email}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                            onClick={() => handleCopy(email, "resultsDisplay.copySubject")}
+                            aria-label="Copy email"
+                            title="Copy email"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </li>
+                    );
+                  })}
                   {lockedEmails.map((email) => (
                     <li
                       key={`lock-${email}`}
-                      className="flex items-center justify-between px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 cursor-pointer"
+                      className="flex items-center justify-between px-3 py-2 text-xs text-muted-foreground hover:bg-muted/50 cursor-pointer"
                       onClick={() => setUnlockOpen(true)}
                       title={email}
                       aria-label={email}
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <Lock className="h-4 w-4 shrink-0" />
+                        {/* Pas de checkbox pour les contacts verrouillés */}
+                        <Lock className="h-3.5 w-3.5 shrink-0" />
                         <span className="font-mono truncate">{email}</span>
                       </div>
                     </li>
@@ -120,7 +167,6 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
             </section>
           )}
 
-          {/* Email généré + bouton */}
           <section className="pt-2">
             <h3 className="font-semibold mb-4 text-lg">
               {t("resultsDisplay.generatedEmailLabel")}
@@ -173,13 +219,14 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                 href={mailtoLink}
                 className="w-full"
                 aria-disabled={recipients.length === 0}
+                disabled={recipients.length === 0}
+                title={recipients.length === 0 ? "Sélectionnez au moins un email" : undefined}
               >
                 {t("resultsDisplay.openInEmailAppButton")}
               </OffsetButton>
             </div>
           </section>
 
-          {/* Numéros: 2 visibles, puis 3 contacts (verrouillés) */}
           {(visiblePhones.length > 0 || lockedPhones.length > 0) && (
             <section className="pt-2">
               <h3 className="font-semibold mb-3 text-lg">
@@ -210,13 +257,13 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                   {lockedPhones.map((num, i) => (
                     <li
                       key={`p-lock-${i}`}
-                      className="flex items-center justify-between px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 cursor-pointer"
+                      className="flex items-center justify-between px-3 py-2 text-xs text-muted-foreground hover:bg-muted/50 cursor-pointer"
                       onClick={() => setUnlockOpen(true)}
                       title={num}
                       aria-label={num}
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <Lock className="h-4 w-4 shrink-0" />
+                        <Lock className="h-3.5 w-3.5 shrink-0" />
                         <span className="truncate">{num}</span>
                       </div>
                     </li>
@@ -226,7 +273,6 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
             </section>
           )}
 
-          {/* Autres options (formulaires/liens) - on garde mais plus bas pour ne pas prendre trop de place */}
           {(forms.length > 0 || links.length > 0) && (
             <section className="pt-2">
               <h3 className="font-semibold mb-2 text-lg">
