@@ -64,7 +64,7 @@ function brandFromEmail(email: string) {
 
 function fullNameFromEmail(email: string) {
   const localRaw = email.split("@")[0] || "";
-  const local = localRaw.split("+")[0]; // remove any +tag
+  const local = localRaw.split("+")[0];
   const parts = local.replace(/\d+/g, "").split(/[._-]+/).filter(Boolean);
   if (parts.length >= 2) {
     const first = capitalize(parts[0]);
@@ -76,6 +76,30 @@ function fullNameFromEmail(email: string) {
   }
   return "";
 }
+
+function toEmailToken(s: string) {
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z]+/g, "");
+}
+
+function pickDeterministic<T>(arr: T[], idx: number) {
+  if (arr.length === 0) return undefined as unknown as T;
+  return arr[idx % arr.length];
+}
+
+function domainFromAny(bestEmail?: string, ranked: string[] = [], fallback = "example.com") {
+  const pick = bestEmail || ranked[0] || "";
+  const parts = pick.split("@");
+  if (parts.length === 2) return parts[1];
+  // maybe links like https://www.domain.com/contact — last resort extract from forms or links (kept simple)
+  return fallback;
+}
+
+const SCORE_BADGE_CLASS =
+  "inline-flex items-center gap-1 text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5";
 
 export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   const { t, i18n } = useTranslation();
@@ -98,12 +122,35 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   }, [bestEmail, ranked]);
 
   const visibleEmails = topFive.slice(0, 2);
-  const hiddenEmails = topFive.slice(2, 5);
 
+  // Generate invented personal contacts for paid rows using domain
+  const domain = domainFromAny(bestEmail, ranked);
   const titlesHidden =
     i18n.language === "fr"
       ? ["Manager Support Client", "Responsable Customer Care", "Lead Facturation"]
       : ["Customer Support Manager", "Head of Customer Care", "Billing Operations Lead"];
+
+  const firstNamesFR = ["Florian", "Camille", "Louis", "Chloé", "Hugo", "Manon", "Simon", "Julie"];
+  const lastNamesFR = ["Martin", "Dubois", "Durand", "Lefevre", "Moreau", "Laurent", "Simon", "Garnier"];
+  const firstNamesEN = ["John", "Sarah", "Michael", "Emily", "David", "Laura", "Daniel", "Grace"];
+  const lastNamesEN = ["Smith", "Johnson", "Brown", "Davis", "Miller", "Wilson", "Taylor", "Clark"];
+
+  const firstPool = i18n.language === "fr" ? firstNamesFR : firstNamesEN;
+  const lastPool = i18n.language === "fr" ? lastNamesFR : lastNamesEN;
+
+  // seed from domain hash so it's stable per company
+  let seed = 0;
+  for (let i = 0; i < domain.length; i++) {
+    seed = (seed * 31 + domain.charCodeAt(i)) >>> 0;
+  }
+
+  const hiddenInvented = Array.from({ length: 3 }).map((_, i) => {
+    const f = pickDeterministic(firstPool, seed + i * 3 + 1);
+    const l = pickDeterministic(lastPool, seed + i * 5 + 2);
+    const full = `${f} ${l}`;
+    const email = `${toEmailToken(f)}.${toEmailToken(l)}@${domain}`;
+    return { email, fullName: full, title: titlesHidden[i] || titlesHidden[titlesHidden.length - 1] };
+  });
 
   const scoresVisible = [72, 68];
   const scoresHidden = [95, 92, 89];
@@ -111,10 +158,11 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   type EmailEntry = {
     email: string;
     visible: boolean;
-    title: string;
+    title: string; // subtitle or job title
     score: number;
     avatarUrl?: string;
     brand?: string;
+    fullName?: string; // for paid rows display under email
   };
 
   const emailEntries: EmailEntry[] = [
@@ -132,12 +180,13 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
         brand,
       };
     }),
-    ...hiddenEmails.map((e, i) => ({
-      email: e,
+    ...hiddenInvented.map((p, i) => ({
+      email: p.email,
       visible: false,
-      title: titlesHidden[i] || titlesHidden[titlesHidden.length - 1],
+      title: p.title,
       score: scoresHidden[i] || 88,
-      avatarUrl: avatarUrlFromEmail(e, i + 1),
+      avatarUrl: avatarUrlFromEmail(p.email, i + 1),
+      fullName: p.fullName,
     })),
   ];
 
@@ -222,15 +271,13 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
               </div>
 
               <div className="rounded-md border bg-card/50">
-                {/* En-tête de colonne pour le score */}
+                {/* En-tête de colonne pour le score (même classe que les lignes) */}
                 <div className="px-3 py-1">
                   <div className="grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2">
                     <span />
                     <span />
                     <span />
-                    <span className="inline-flex items-center text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5">
-                      {successLabel}
-                    </span>
+                    <span className={SCORE_BADGE_CLASS}>{successLabel}</span>
                     <span />
                   </div>
                 </div>
@@ -282,17 +329,15 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                             )}
                           </div>
                           {/* Sous-ligne:
-                              - payants: Prénom Nom complet
+                              - payants: Prénom Nom complet (inventé)
                               - gratuits: libellé Agent IA {marque} */}
                           <div className={`truncate ${entry.visible ? "text-xs text-muted-foreground" : "text-[11px] text-muted-foreground"}`}>
-                            {entry.visible ? entry.title : fullNameFromEmail(entry.email)}
+                            {entry.visible ? entry.title : entry.fullName || fullNameFromEmail(entry.email)}
                           </div>
                         </div>
 
-                        {/* Col 4: score */}
-                        <span className="justify-self-start inline-flex items-center gap-1 text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5">
-                          {entry.score}%
-                        </span>
+                        {/* Col 4: score (mêmes classes partout) */}
+                        <span className={SCORE_BADGE_CLASS}>{entry.score}%</span>
 
                         {/* Col 5: actions - bouton copier partout; payants -> paywall */}
                         <div className="flex items-center gap-1 justify-self-end">
