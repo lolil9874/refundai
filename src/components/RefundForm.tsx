@@ -31,7 +31,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { popularCompanies } from "@/lib/companies";
-import GlassButton from "@/components/GlassButton";
+import OffsetButton from "@/components/OffsetButton";
 
 const formSchema = z
   .object({
@@ -393,7 +393,7 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
             </CardContent>
           </Card>
 
-          <GlassButton type="submit" className="w-full text-lg" loading={isLoading} disabled={isLoading}>
+          <OffsetButton type="submit" className="w-full text-lg" loading={isLoading} disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-6 w-6 animate-spin" />
@@ -402,7 +402,7 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
             ) : (
               t("refundForm.submitButton")
             )}
-          </GlassButton>
+          </OffsetButton>
         </form>
       </Form>
     </div>

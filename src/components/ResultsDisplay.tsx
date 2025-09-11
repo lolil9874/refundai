@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Copy, Mail, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import GlassButton from "@/components/GlassButton";
+import OffsetButton from "@/components/OffsetButton";
 
 type RefundResult = {
   bestEmail: string;
@@ -101,9 +101,9 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t">
-          <GlassButton href={mailtoLink} className="w-full">
+          <OffsetButton href={mailtoLink} className="w-full">
             <Mail className="mr-2 h-5 w-5" /> {t('resultsDisplay.openInEmailAppButton')}
-          </GlassButton>
+          </OffsetButton>
         </div>
         {hasImage && (
           <p 
