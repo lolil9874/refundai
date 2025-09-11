@@ -433,15 +433,15 @@ export function RefundForm({
                           value={field.value}
                           className="grid grid-cols-1 sm:grid-cols-3 gap-3"
                         >
-                          <div className="flex items-center space-x-2 rounded-md border p-3">
+                          <div className="flex items-center space-x-2 rounded-md border p-2">
                             <RadioGroupItem id="cat-product" value="product" />
                             <Label htmlFor="cat-product">{t("refundForm.issue.categories.product")}</Label>
                           </div>
-                          <div className="flex items-center space-x-2 rounded-md border p-3">
+                          <div className="flex items-center space-x-2 rounded-md border p-2">
                             <RadioGroupItem id="cat-service" value="service" />
                             <Label htmlFor="cat-service">{t("refundForm.issue.categories.service")}</Label>
                           </div>
-                          <div className="flex items-center space-x-2 rounded-md border p-3">
+                          <div className="flex items-center space-x-2 rounded-md border p-2">
                             <RadioGroupItem id="cat-subscription" value="subscription" />
                             <Label htmlFor="cat-subscription">{t("refundForm.issue.categories.subscription")}</Label>
                           </div>
