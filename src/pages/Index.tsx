@@ -28,7 +28,7 @@ const Index = () => {
     console.log("Form Data:", data);
 
     setTimeout(() => {
-      const companyName = data.company === 'other' ? data.otherCompany : data.company;
+      const companyName = data.company;
       const mockResults: RefundResult = {
         bestEmail: `support@${(companyName || 'example').toLowerCase().replace(/\s+/g, '')}.com`,
         ranked: [`refunds@${(companyName || 'example').toLowerCase().replace(/\s+/g, '')}.com`],
@@ -55,7 +55,7 @@ const Index = () => {
       </section>
 
       <section className="mx-auto max-w-3xl w-full">
-        <Alert className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+        <Alert className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 bg-card/60 dark:bg-card/40 backdrop-blur-xl border-white/20 shadow-lg">
           <ShieldCheck className="h-4 w-4" />
           <AlertTitle>Privacy First</AlertTitle>
           <AlertDescription>

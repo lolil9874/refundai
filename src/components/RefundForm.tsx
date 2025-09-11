@@ -31,8 +31,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 const formSchema = z.object({
-  company: z.string().min(1, "Company is required."),
-  otherCompany: z.string().optional(),
+  company: z.string().min(1, "Company name or domain is required."),
   country: z.string().min(1, "Country is required."),
   firstName: z.string().min(1, "First name is required."),
   lastName: z.string().min(1, "Last name is required."),
@@ -42,29 +41,31 @@ const formSchema = z.object({
   issueType: z.string().min(1, "Issue type is required."),
   description: z.string().min(10, "Please provide a short description (min. 10 characters)."),
   image: z.any().optional(),
-}).refine(data => {
-    if (data.company === 'other') {
-        return !!data.otherCompany && data.otherCompany.length > 0;
-    }
-    return true;
-}, {
-    message: "Please specify the company website/domain.",
-    path: ["otherCompany"],
 });
-
 
 export type RefundFormValues = z.infer<typeof formSchema>;
 
-const popularCompanies = ["Amazon", "eBay", "PayPal", "Walmart", "Target"];
-const countries = [
-  { code: "FR", name: "France" },
-  { code: "US", name: "United States" },
-  { code: "GB", name: "United Kingdom" },
-  { code: "CA", name: "Canada" },
-  { code: "DE", name: "Germany" },
-  { code: "ES", name: "Spain" },
-  { code: "IT", name: "Italy" },
+const popularCompanies = [
+  { name: "Amazon", domain: "amazon.com" },
+  { name: "eBay", domain: "ebay.com" },
+  { name: "PayPal", domain: "paypal.com" },
+  { name: "Foot Locker", domain: "footlocker.com" },
+  { name: "Nike", domain: "nike.com" },
+  { name: "Adidas", domain: "adidas.com" },
+  { name: "Apple", domain: "apple.com" },
+  { name: "Microsoft", domain: "microsoft.com" },
 ];
+
+const countries = [
+  { code: "US", name: "United States", flag: "🇺🇸" },
+  { code: "FR", name: "France", flag: "🇫🇷" },
+  { code: "GB", name: "United Kingdom", flag: "🇬🇧" },
+  { code: "CA", name: "Canada", flag: "🇨🇦" },
+  { code: "DE", name: "Germany", flag: "🇩🇪" },
+  { code: "ES", name: "Spain", flag: "🇪🇸" },
+  { code: "IT", name: "Italy", flag: "🇮🇹" },
+];
+
 const issueTypes = [
   "Didn't arrive",
   "Quality issue",
@@ -78,7 +79,6 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
     resolver: zodResolver(formSchema),
     defaultValues: {
       company: "",
-      otherCompany: "",
       country: "",
       firstName: "",
       lastName: "",
@@ -99,109 +99,121 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <Card>
+          <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-xl border-white/20 shadow-lg">
             <CardHeader>
-              <CardTitle>Company & Personal Info</CardTitle>
+              <CardTitle>Company & Region</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="company"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Company</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a company" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {popularCompanies.map((company) => (
-                            <SelectItem key={company} value={company}>
-                              {company}
-                            </SelectItem>
-                          ))}
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="country"
-                  render={({ field }) => (
+              <FormField
+                control={form.control}
+                name="company"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Enter domain name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                {popularCompanies.map((company) => (
+                  <Button
+                    key={company.name}
+                    type="button"
+                    variant={watchCompany === company.name ? "default" : "outline"}
+                    className="flex items-center justify-center gap-2 bg-white/50 dark:bg-black/20"
+                    onClick={() => form.setValue('company', company.name, { shouldValidate: true })}
+                  >
+                    <img 
+                      src={`https://logo.clearbit.com/${company.domain}`} 
+                      alt={`${company.name} logo`} 
+                      className="h-4 w-4"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                    {company.name}
+                  </Button>
+                ))}
+              </div>
+
+              <FormField
+                control={form.control}
+                name="country"
+                render={({ field }) => {
+                  const selectedCountry = countries.find(c => c.code === field.value);
+                  return (
                     <FormItem>
                       <FormLabel>Country/Region</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a country" />
+                            <SelectValue placeholder="Select a country">
+                              {selectedCountry ? (
+                                <div className="flex items-center gap-2">
+                                  <span>{selectedCountry.flag}</span>
+                                  <span>{selectedCountry.name}</span>
+                                  <span className="text-muted-foreground">{selectedCountry.code}</span>
+                                </div>
+                              ) : "Select a country"}
+                            </SelectValue>
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {countries.map((country) => (
                             <SelectItem key={country.code} value={country.code}>
-                              {country.name}
+                              <div className="flex items-center gap-2">
+                                <span>{country.flag}</span>
+                                <span>{country.name}</span>
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
                     </FormItem>
-                  )}
-                />
-              </div>
-              {watchCompany === "other" && (
-                <FormField
-                  control={form.control}
-                  name="otherCompany"
-                  render={({ field }) => (
-                    <FormItem className="animate-in fade-in duration-300">
-                      <FormLabel>Company Website/Domain</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>First Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="John" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Last Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Doe" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                  );
+                }}
+              />
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-xl border-white/20 shadow-lg">
+            <CardHeader>
+              <CardTitle>Personal Info</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-xl border-white/20 shadow-lg">
             <CardHeader>
               <CardTitle>Order Details</CardTitle>
             </CardHeader>
