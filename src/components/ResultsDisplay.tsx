@@ -242,7 +242,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   const hasHiddenEmailSelected = emailEntries.some((e) => !e.visible && selectedEmails.has(e.email));
   const [unlockOpen, setUnlockOpen] = React.useState(false);
 
-  // Accept both anchor and button click events so it matches OffsetButton's onClick type
+  // Accepte les clics sur ancre ou bouton (OffsetButton)
   const handleOpenEmailApp = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
     if (hasHiddenEmailSelected) {
       e.preventDefault();
@@ -397,8 +397,8 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                                 setUnlockOpen(true);
                               }
                             }}
-                            aria-label={entry.visible ? "Copy email" : "Unlock to copy"}
-                            title={entry.visible ? "Copy email" : "Unlock to copy"}
+                            aria-label={entry.visible ? "Copier l'email" : "Débloquer pour copier"}
+                            title={entry.visible ? "Copier l'email" : "Débloquer pour copier"}
                           >
                             <Copy className="h-4 w-4" />
                           </Button>
@@ -485,8 +485,8 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                               size="icon"
                               className="h-7 w-7 text-muted-foreground hover:text-foreground"
                               onClick={() => setUnlockOpen(true)}
-                              aria-label="Unlock to copy"
-                              title="Unlock to copy"
+                              aria-label="Débloquer pour copier"
+                              title="Débloquer pour copier"
                             >
                               <Copy className="h-4 w-4" />
                             </Button>
@@ -540,37 +540,36 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
             <div className="space-y-4">
               <div>
                 <div className="mb-1 text-sm font-medium">{t("resultsDisplay.subjectLabel")}</div>
-                <div className="grid grid-cols-[1fr_auto] items-center gap-2">
-                  <Input readOnly value={subject} className="font-mono" />
+                <div className="flex justify-end pb-1">
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => handleCopy(subject, "resultsDisplay.copySubject")}
                     aria-label={t("resultsDisplay.copySubject") as string}
                     title={t("resultsDisplay.copySubject") as string}
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
                   >
-                    <Copy className="h-4 w-4 mr-2" />
-                    {t("resultsDisplay.copySubject")}
+                    <Copy className="h-4 w-4" />
                   </Button>
                 </div>
+                <Input readOnly value={subject} className="font-mono w-full" />
               </div>
 
               <div>
                 <div className="mb-1 text-sm font-medium">{t("resultsDisplay.bodyLabel")}</div>
-                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                  <Textarea readOnly value={body} rows={10} className="font-mono" />
+                <div className="flex justify-end pb-1">
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => handleCopy(body, "resultsDisplay.copyBody")}
                     aria-label={t("resultsDisplay.copyBody") as string}
                     title={t("resultsDisplay.copyBody") as string}
-                    className="self-start"
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
                   >
-                    <Copy className="h-4 w-4 mr-2" />
-                    {t("resultsDisplay.copyBody")}
+                    <Copy className="h-4 w-4" />
                   </Button>
                 </div>
+                <Textarea readOnly value={body} rows={10} className="font-mono w-full" />
               </div>
 
               <div className="flex justify-end">
