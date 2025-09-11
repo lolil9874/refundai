@@ -14,7 +14,7 @@ type OffsetButtonProps = {
 const base =
   "inline-flex items-center justify-center gap-2 whitespace-nowrap overflow-hidden " +
   "rounded-[4px] px-4 py-3 text-base leading-[1.5] " +
-  "border border-black bg-[#93C5FD] text-black " +
+  "border border-black bg-primary text-primary-foreground " +
   "transition-all duration-150 ease-out transform-gpu " +
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-black focus-visible:outline-offset-1 " +
   "disabled:opacity-60 disabled:pointer-events-none " +

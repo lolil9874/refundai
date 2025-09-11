@@ -45,7 +45,7 @@ export default function PremiumContactCard({ contact, onUnlock, className }: Pro
       )}
     >
       {/* Ruban verrouillé */}
-      <div className="absolute top-2 right-2 flex items-center gap-1 text-xs text-blue-700 dark:text-blue-300">
+      <div className="absolute top-2 right-2 flex items-center gap-1 text-xs text-primary dark:text-primary">
         <Lock className="h-3.5 w-3.5" />
         <span>{t("premiumContacts.lockedBadge")}</span>
       </div>
@@ -61,7 +61,7 @@ export default function PremiumContactCard({ contact, onUnlock, className }: Pro
         <div className="flex flex-wrap items-center gap-2">
           <p className="font-semibold truncate">{contact.name}</p>
           {typeof contact.score === "number" && (
-            <span className="inline-flex items-center gap-1 text-xs rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5">
+            <span className="inline-flex items-center gap-1 text-xs rounded-md bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary px-2 py-0.5">
               <ShieldCheck className="h-3.5 w-3.5" />
               {contact.score}
             </span>
