@@ -5,6 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useState } from "react";
 import { ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
+import { popularCompanies } from "@/lib/companies";
 
 type RefundResult = {
   bestEmail: string;
@@ -24,18 +25,34 @@ const Index = () => {
     setIsLoading(true);
     setResults(null);
 
-    // This is a mock of the server functions.
     console.log("Form Data:", data);
 
     setTimeout(() => {
-      const companyName = data.company;
+      let companyDomain: string | undefined;
+      let companyDisplayName: string;
+
+      if (data.company === 'other') {
+        companyDomain = data.otherCompany;
+        const domainName = companyDomain?.split('.')[0] || 'the company';
+        companyDisplayName = domainName.charAt(0).toUpperCase() + domainName.slice(1);
+      } else {
+        const selectedCompany = popularCompanies.find(c => c.name === data.company);
+        companyDomain = selectedCompany?.domain;
+        companyDisplayName = data.company;
+      }
+
+      if (!companyDomain) {
+        companyDomain = 'example.com';
+        companyDisplayName = 'The Company';
+      }
+
       const mockResults: RefundResult = {
-        bestEmail: `support@${(companyName || 'example').toLowerCase().replace(/\s+/g, '')}.com`,
-        ranked: [`refunds@${(companyName || 'example').toLowerCase().replace(/\s+/g, '')}.com`],
-        forms: [`https://www.${(companyName || 'example').toLowerCase().replace(/\s+/g, '')}.com/contact`],
+        bestEmail: `support@${companyDomain.toLowerCase()}`,
+        ranked: [`refunds@${companyDomain.toLowerCase()}`],
+        forms: [`https://www.${companyDomain.toLowerCase()}/contact`],
         links: [],
         subject: `Issue with Order #${data.orderNumber}`,
-        body: `Dear ${companyName} Team,\n\nI am writing to you regarding an issue with my recent order.\n\nOrder Details:\n- Product: ${data.productName}\n- Order Number: ${data.orderNumber}\n- Purchase Date: ${format(data.purchaseDate, "PPP")}\n\nThe issue is: ${data.issueType}.\n\n${data.description}\n\nI would appreciate it if you could look into this matter and provide a resolution.\n\nThank you for your time and assistance.\n\nSincerely,\n${data.firstName} ${data.lastName}`,
+        body: `Dear ${companyDisplayName} Team,\n\nI am writing to you regarding an issue with my recent order.\n\nOrder Details:\n- Product: ${data.productName}\n- Order Number: ${data.orderNumber}\n- Purchase Date: ${format(data.purchaseDate, "PPP")}\n\nThe issue is: ${data.issueType}.\n\n${data.description}\n\nI would appreciate it if you could look into this matter and provide a resolution.\n\nThank you for your time and assistance.\n\nSincerely,\n${data.firstName} ${data.lastName}`,
         hasImage: !!data.image,
       };
       setResults(mockResults);
