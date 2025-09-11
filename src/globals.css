@@ -99,3 +99,10 @@
      background-color: var(--lang-btn-hover);
    }
  }
+
+ @layer utilities {
+   .backdrop-filter-liquid {
+     -webkit-backdrop-filter: url(#liquid-glass);
+     backdrop-filter: url(#liquid-glass);
+   }
+ }
