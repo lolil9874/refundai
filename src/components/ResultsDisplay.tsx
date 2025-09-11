@@ -109,6 +109,14 @@ function shortNameFromFullName(full: string) {
 const SCORE_BADGE_CLASS =
   "inline-flex items-center gap-1 text-[10px] leading-none rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5";
 
+type PhoneEntry = {
+  number: string;
+  visible: boolean;
+  type: string;
+  score: number;
+  originalNumber?: string; // For locked numbers, if we ever want to reveal it
+};
+
 export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   const { t, i18n } = useTranslation();
   const { bestEmail, ranked, forms, links, subject, body, hasImage, phones, premiumContacts = [] } = results;
@@ -202,16 +210,16 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     })),
   ];
 
-  // Selection (default: visibles)
+  // Email Selection (default: visibles)
   const [selectedEmails, setSelectedEmails] = React.useState<Set<string>>(new Set(visibleEmails));
   React.useEffect(() => {
     setSelectedEmails(new Set(visibleEmails));
   }, [visibleEmails.join(",")]);
 
-  const allSelected = selectedEmails.size === emailEntries.length && emailEntries.length > 0;
-  const noneSelected = selectedEmails.size === 0;
+  const allEmailsSelected = selectedEmails.size === emailEntries.length && emailEntries.length > 0;
+  const noEmailsSelected = selectedEmails.size === 0;
 
-  const toggleSelectAll = (checked: boolean | "indeterminate") => {
+  const toggleSelectAllEmails = (checked: boolean | "indeterminate") => {
     const allEmails = emailEntries.map((e) => e.email);
     if (checked) {
       setSelectedEmails(new Set(allEmails));
@@ -220,7 +228,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     }
   };
 
-  const toggleOne = (email: string, checked: boolean | "indeterminate") => {
+  const toggleOneEmail = (email: string, checked: boolean | "indeterminate") => {
     setSelectedEmails((prev) => {
       const next = new Set(prev);
       if (checked) next.add(email);
@@ -229,30 +237,76 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     });
   };
 
-  // Mailto
+  // Mailto link generation
   const recipients = Array.from(selectedEmails);
   const mailtoLink =
     recipients.length > 0
       ? `mailto:${encodeURIComponent(recipients.join(","))}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
       : undefined;
 
-  // Paywall if any hidden selected on generate
-  const hasHiddenSelected = emailEntries.some((e) => !e.visible && selectedEmails.has(e.email));
+  // Paywall if any hidden email selected on generate
+  const hasHiddenEmailSelected = emailEntries.some((e) => !e.visible && selectedEmails.has(e.email));
   const [unlockOpen, setUnlockOpen] = React.useState(false);
   const handleGenerateClick = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {
-    if (hasHiddenSelected) {
+    if (hasHiddenEmailSelected) {
       e.preventDefault();
       setUnlockOpen(true);
     }
   };
 
-  // Phones
-  const visiblePhones = (phones || []).slice(0, 2);
+  // Phone number generation and selection
+  const phoneTypesFR = ["Support Général", "Service Client", "Assistance Technique", "Facturation"];
+  const phoneTypesEN = ["General Support", "Customer Service", "Technical Assistance", "Billing Department"];
+
+  const mockPhoneEntries: PhoneEntry[] = [];
+
+  const currentVisiblePhones = (phones || []).slice(0, 2);
   const remainingPhonePool = (phones || []).slice(2);
   const premiumPhonePool = (premiumContacts || [])
     .map((c) => c.phoneMasked)
     .filter((v): v is string => !!v);
-  const lockedPhones = Array.from(new Set([...remainingPhonePool, ...premiumPhonePool])).slice(0, 3);
+  const currentLockedPhones = Array.from(new Set([...remainingPhonePool, ...premiumPhonePool])).slice(0, 3);
+
+  currentVisiblePhones.forEach((num, i) => {
+    mockPhoneEntries.push({
+      number: num,
+      visible: true,
+      type: pickDeterministic(i18n.language === "fr" ? phoneTypesFR : phoneTypesEN, i),
+      score: 70 + i * 5, // Mock score
+    });
+  });
+
+  currentLockedPhones.forEach((num, i) => {
+    mockPhoneEntries.push({
+      number: num, // This is already masked
+      visible: false,
+      type: pickDeterministic(i18n.language === "fr" ? phoneTypesFR : phoneTypesEN, i + currentVisiblePhones.length),
+      score: 85 + i * 3, // Higher mock score for premium
+      originalNumber: "UNLOCKED_NUMBER_PLACEHOLDER", // Placeholder for actual number
+    });
+  });
+
+  const [selectedPhones, setSelectedPhones] = React.useState<Set<string>>(new Set(currentVisiblePhones));
+
+  const allPhonesSelected = selectedPhones.size === currentVisiblePhones.length && currentVisiblePhones.length > 0;
+  const noPhonesSelected = selectedPhones.size === 0;
+
+  const toggleSelectAllPhones = (checked: boolean | "indeterminate") => {
+    if (checked) {
+      setSelectedPhones(new Set(currentVisiblePhones));
+    } else {
+      setSelectedPhones(new Set());
+    }
+  };
+
+  const toggleOnePhone = (number: string, checked: boolean | "indeterminate") => {
+    setSelectedPhones((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(number);
+      else next.delete(number);
+      return next;
+    });
+  };
 
   const successLabel = i18n.language === "fr" ? "% de succès" : "Success rate";
 
@@ -273,8 +327,8 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                 <h3 className="font-semibold text-lg">{t("resultsDisplay.emailsToContactLabel")}</h3>
                 <label className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Checkbox
-                    checked={allSelected ? true : noneSelected ? false : "indeterminate"}
-                    onCheckedChange={toggleSelectAll}
+                    checked={allEmailsSelected ? true : noEmailsSelected ? false : "indeterminate"}
+                    onCheckedChange={toggleSelectAllEmails}
                     className="h-4 w-4"
                     aria-label={t("resultsDisplay.selectAll") as string}
                   />
@@ -310,7 +364,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                       >
                         <Checkbox
                           checked={checked}
-                          onCheckedChange={(v) => toggleOne(entry.email, v)}
+                          onCheckedChange={(v) => toggleOneEmail(entry.email, v)}
                           className="h-4 w-4"
                           aria-label={`Select ${entry.email}`}
                         />
@@ -431,48 +485,98 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
             </div>
           </section>
 
-          {(visiblePhones.length > 0 || lockedPhones.length > 0) && (
+          {mockPhoneEntries.length > 0 && (
             <section className="pt-2">
-              <h3 className="font-semibold mb-3 text-lg">
-                {t("resultsDisplay.phoneNumbersLabel")}
-              </h3>
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="font-semibold text-lg">
+                  {t("resultsDisplay.phoneNumbersLabel")}
+                </h3>
+                <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Checkbox
+                    checked={allPhonesSelected ? true : noPhonesSelected ? false : "indeterminate"}
+                    onCheckedChange={toggleSelectAllPhones}
+                    className="h-4 w-4"
+                    aria-label={t("resultsDisplay.selectAll") as string}
+                  />
+                  <span>{t("resultsDisplay.selectAll")}</span>
+                </label>
+              </div>
               <div className="rounded-md border bg-card/50">
+                <div className="px-3 py-1">
+                  <div className="grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2">
+                    <span />
+                    <span />
+                    <span />
+                    <span className={SCORE_BADGE_CLASS}>{successLabel}</span>
+                    <span />
+                  </div>
+                </div>
                 <ul className="divide-y">
-                  {visiblePhones.map((num, i) => (
-                    <li key={`p-vis-${i}`} className="flex items-center justify-between px-3 py-2 text-sm">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
-                        <a href={`tel:${num.replace(/\s+/g, "")}`} className="hover:underline truncate">
-                          {num}
-                        </a>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                        onClick={() => handleCopy(num, "resultsDisplay.copyPhone")}
-                        aria-label={t("resultsDisplay.copyPhone") as string}
-                        title={t("resultsDisplay.copyPhone") as string}
+                  {mockPhoneEntries.map((entry, i) => {
+                    const checked = selectedPhones.has(entry.number);
+                    const isPaid = !entry.visible;
+                    const rowTint = isPaid ? "bg-blue-50/40 dark:bg-blue-950/20" : "";
+                    const numberTint = isPaid ? "text-blue-700 dark:text-blue-300 font-medium" : "";
+
+                    return (
+                      <li
+                        key={`phone-${i}-${entry.number}`}
+                        className={`grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2 px-3 py-2 ${entry.visible ? "text-sm" : "text-xs"} ${rowTint}`}
+                        title={entry.number}
+                        aria-label={entry.number}
                       >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </li>
-                  ))}
-                  {lockedPhones.map((num, i) => (
-                    <li
-                      key={`p-lock-${i}`}
-                      className="flex items-center justify-between px-3 py-2 text-xs text-muted-foreground hover:bg-muted/50 cursor-pointer"
-                      onClick={() => setUnlockOpen(true)}
-                      title={num}
-                      aria-label={num}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <User className="h-3.5 w-3.5 shrink-0" />
-                        <span className="truncate">{num}</span>
-                      </div>
-                      <span className="text-[11px] text-muted-foreground">****</span>
-                    </li>
-                  ))}
+                        {entry.visible ? (
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(v) => toggleOnePhone(entry.number, v)}
+                            className="h-4 w-4"
+                            aria-label={`Select ${entry.number}`}
+                          />
+                        ) : (
+                          <span className="w-4 h-4" /> // Placeholder for alignment
+                        )}
+
+                        <Phone className={`h-4 w-4 shrink-0 ${entry.visible ? "text-muted-foreground" : "text-blue-700 dark:text-blue-300"}`} />
+
+                        <div className="min-w-0">
+                          <span className={`font-mono truncate ${numberTint}`}>
+                            {entry.number}
+                          </span>
+                          <div className={`truncate ${entry.visible ? "text-xs text-muted-foreground" : "text-[11px] text-muted-foreground"}`}>
+                            {entry.type}
+                          </div>
+                        </div>
+
+                        <span className={SCORE_BADGE_CLASS}>{entry.score}%</span>
+
+                        <div className="flex items-center gap-1 justify-self-end">
+                          {entry.visible ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              onClick={() => handleCopy(entry.number, "resultsDisplay.copyPhone")}
+                              aria-label={t("resultsDisplay.copyPhone") as string}
+                              title={t("resultsDisplay.copyPhone") as string}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              onClick={() => setUnlockOpen(true)}
+                              aria-label="Unlock to copy"
+                              title="Unlock to copy"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             </section>
