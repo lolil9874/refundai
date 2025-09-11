@@ -8,7 +8,6 @@ import { format } from "date-fns";
 import { popularCompanies } from "@/lib/companies";
 import { useTranslation, Trans } from "react-i18next";
 import { fr, enUS } from "date-fns/locale";
-import UiverseButton from "@/components/UiverseButton";
 
 type RefundResult = {
   bestEmail: string;
@@ -174,10 +173,6 @@ const Index = () => {
         <p className="max-w-[750px] text-center text-lg text-muted-foreground sm:text-xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
           {t("indexPage.subtitle")}
         </p>
-
-        <div className="mt-4">
-          <UiverseButton>CSS Button</UiverseButton>
-        </div>
       </section>
 
       <section className="mx-auto max-w-3xl w-full">
