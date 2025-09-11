@@ -77,5 +77,16 @@
   "generatedEmail": {
     "subject": "Issue with Order #{{orderNumber}}",
     "body": "Dear {{companyDisplayName}} Team,\n\nI am writing to you regarding an issue with my recent order.\n\nOrder Details:\n- Product: {{productName}}\n- Product Value: {{productValue}}\n- Order Number: {{orderNumber}}\n- Purchase Date: {{purchaseDate}}\n\nThe issue is: {{issueType}}.\n\n{{description}}\n\nI would appreciate it if you could look into this matter and provide a resolution.\n\nThank you for your time and assistance.\n\nSincerely,\n{{firstName}} {{lastName}}"
+  },
+  "premiumContacts": {
+    "title": "Premium contacts (locked)",
+    "subtitle": "Managers in Support, Billing, Customer Care, etc.",
+    "lockedBadge": "Locked",
+    "unlockCta": "Unlock",
+    "dialogTitle": "Unlock verified individual contacts",
+    "dialogDescription": "Get access to work emails and direct numbers of relevant managers (Support, Billing, Customer Care) to maximize your chances of getting a response.",
+    "discoverPlans": "See plans",
+    "notNow": "Not now",
+    "ctaToast": "Coming soon — billing is on the way!"
   }
 }

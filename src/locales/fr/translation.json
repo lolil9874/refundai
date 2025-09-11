@@ -77,5 +77,16 @@
   "generatedEmail": {
     "subject": "Problème avec la commande n°{{orderNumber}}",
     "body": "Chère équipe de {{companyDisplayName}},\n\nJe vous écris au sujet d'un problème avec ma récente commande.\n\nDétails de la commande :\n- Produit : {{productName}}\n- Valeur du produit : {{productValue}}\n- Numéro de commande : {{orderNumber}}\n- Date d'achat : {{purchaseDate}}\n\nLe problème est : {{issueType}}.\n\n{{description}}\n\nJe vous serais reconnaissant de bien vouloir examiner cette question et de proposer une solution.\n\nMerci pour votre temps et votre aide.\n\nCordialement,\n{{firstName}} {{lastName}}"
+  },
+  "premiumContacts": {
+    "title": "Contacts premium (verrouillés)",
+    "subtitle": "Des responsables SAV, facturation, customer care, etc.",
+    "lockedBadge": "Verrouillé",
+    "unlockCta": "Débloquer",
+    "dialogTitle": "Débloquez des contacts individuels vérifiés",
+    "dialogDescription": "Accédez aux emails professionnels et numéros directs de responsables pertinents (SAV, facturation, customer care) pour maximiser vos chances de réponse.",
+    "discoverPlans": "Découvrir les offres",
+    "notNow": "Plus tard",
+    "ctaToast": "Bientôt disponible — la facturation arrive !"
   }
 }

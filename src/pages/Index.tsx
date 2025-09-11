@@ -1,5 +1,5 @@
 import { RefundForm, RefundFormValues } from "@/components/RefundForm";
-import { ResultsDisplay } from "@/components/ResultsDisplay";
+import { ResultsDisplay, type PremiumContact } from "@/components/ResultsDisplay";
 import { ResultsSkeleton } from "@/components/ResultsSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useState } from "react";
@@ -18,6 +18,7 @@ type RefundResult = {
   body: string;
   hasImage: boolean;
   phones: string[];
+  premiumContacts?: PremiumContact[];
 };
 
 const Index = () => {
@@ -45,6 +46,41 @@ const Index = () => {
       default:
         return ["+1 800 000 0000"];
     }
+  };
+
+  const maskLocalPart = (local: string) => {
+    if (local.length <= 2) return `${local[0] || "*"}***`;
+    const showFirst = 1;
+    const showLast = Math.min(2, local.length - 1);
+    const start = local.slice(0, showFirst);
+    const end = local.slice(-showLast);
+    return `${start}${"*".repeat(Math.max(3, local.length - showFirst - showLast))}${end}`;
+  };
+
+  const makePremiumContacts = (companyDisplayName: string, domain: string, country: string): PremiumContact[] => {
+    const base = [
+      { name: i18n.language === "fr" ? "Fiona Trotter" : "Fiona Trotter", title: i18n.language === "fr" ? "Manager Support Client" : "Customer Support Manager", local: "ftr", img: "12", dept: "SAV", score: 86 },
+      { name: i18n.language === "fr" ? "Marc Dubois" : "Marc Dubois", title: i18n.language === "fr" ? "Lead Service Client" : "Customer Care Lead", local: "mdubois", img: "28", dept: "Customer Care", score: 82 },
+      { name: i18n.language === "fr" ? "Sara Kim" : "Sara Kim", title: i18n.language === "fr" ? "Responsable Facturation" : "Billing Operations", local: "skim", img: "47", dept: "Billing", score: 78 },
+    ];
+    const countryTag = country || "INTL";
+    return base.map((p) => ({
+      name: p.name,
+      title: p.title,
+      department: p.dept,
+      company: companyDisplayName,
+      emailMasked: `${maskLocalPart(p.local)}@${domain}`,
+      phoneMasked:
+        country === "FR"
+          ? "+33 •• •• •• •• 89"
+          : country === "US" || country === "CA"
+            ? "+1 ••• ••• ••01"
+            : "+44 •• •• •• •• 78",
+      avatarUrl: `https://i.pravatar.cc/150?img=${p.img}`,
+      location: countryTag,
+      score: p.score,
+      tags: [p.dept, countryTag],
+    }));
   };
 
   const handleFormSubmit = async (data: RefundFormValues) => {
@@ -88,6 +124,8 @@ const Index = () => {
         `customerservice@${domain}`,
       ];
 
+      const mockPremium = makePremiumContacts(companyDisplayName, domain, data.country);
+
       const mockResults: RefundResult = {
         bestEmail,
         ranked: additionalEmails,
@@ -107,6 +145,7 @@ const Index = () => {
         }),
         hasImage: !!data.image,
         phones: getMockPhones(data.country),
+        premiumContacts: mockPremium,
       };
       setResults(mockResults);
       setIsLoading(false);
