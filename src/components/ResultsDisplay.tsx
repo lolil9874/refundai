@@ -339,17 +339,16 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                 </label>
               </div>
 
-              <div className="rounded-md border bg-card/50">
-                <div className="px-3 py-1">
-                  <div className="grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2">
-                    <span />
-                    <span />
-                    <span />
-                    <span className={SCORE_BADGE_CLASS}>{successLabel}</span>
-                    <span />
-                  </div>
+              <div className="px-3 py-1">
+                <div className="grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2">
+                  <span />
+                  <span />
+                  <span />
+                  <span className={SCORE_BADGE_CLASS}>{successLabel}</span>
+                  <span />
                 </div>
-
+              </div>
+              <div className="rounded-md border bg-card/50">
                 <ul className="divide-y">
                   {emailEntries.map((entry, idx) => {
                     const checked = selectedEmails.has(entry.email);
@@ -494,16 +493,16 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                   <span>{t("resultsDisplay.selectAll")}</span>
                 </label>
               </div>
-              <div className="rounded-md border bg-card/50">
-                <div className="px-3 py-1">
-                  <div className="grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2">
-                    <span />
-                    <span />
-                    <span />
-                    <span className={SCORE_BADGE_CLASS}>{successLabel}</span>
-                    <span />
-                  </div>
+              <div className="px-3 py-1">
+                <div className="grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2">
+                  <span />
+                  <span />
+                  <span />
+                  <span className={SCORE_BADGE_CLASS}>{successLabel}</span>
+                  <span />
                 </div>
+              </div>
+              <div className="rounded-md border bg-card/50">
                 <ul className="divide-y">
                   {mockPhoneEntries.map((entry, i) => {
                     const checked = selectedPhones.has(entry.number);
