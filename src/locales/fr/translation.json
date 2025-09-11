@@ -48,7 +48,8 @@
     "issue": {
       "categories": {
         "product": "Produit",
-        "service": "Service"
+        "service": "Service",
+        "subscription": "Abonnement"
       },
       "reasons": {
         "product": {
@@ -63,6 +64,13 @@
           "delayed_or_rescheduled": "Retard / reprogrammation",
           "not_as_described_or_poor_quality": "Non conforme / qualité insuffisante",
           "access_issues": "Accès impossible (numérique)",
+          "other": "Autre"
+        },
+        "subscription": {
+          "unwanted_renewal": "Renouvellement non désiré / Annulation ignorée",
+          "service_inaccessible": "Service inaccessible / ne fonctionne pas",
+          "features_missing": "Fonctionnalités non conformes / manquantes",
+          "incorrect_billing": "Montant facturé incorrect",
           "other": "Autre"
         }
       }

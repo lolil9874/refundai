@@ -54,7 +54,9 @@ const formSchema = z
     }, z.number().nonnegative().optional()),
     orderNumber: z.string().min(1, "Order number is required."),
     purchaseDate: z.date({ required_error: "Purchase date is required." }),
-    issueCategory: z.enum(["product", "service"], { required_error: "Please choose a category." }),
+    issueCategory: z.enum(["product", "service", "subscription"], {
+      required_error: "Please choose a category.",
+    }),
     issueType: z.string().min(1, "Issue type is required."),
     description: z.string().min(10, "Please provide a short description (min. 10 characters)."),
     image: z.any().optional(),
@@ -92,7 +94,7 @@ export function RefundForm({
   onSubmit: (values: RefundFormValues) => void;
   isLoading: boolean;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   // Motifs par catégorie
   const productReasons = [
@@ -108,6 +110,13 @@ export function RefundForm({
     t("refundForm.issue.reasons.service.not_as_described_or_poor_quality"),
     t("refundForm.issue.reasons.service.access_issues"),
     t("refundForm.issue.reasons.service.other"),
+  ];
+  const subscriptionReasons = [
+    t("refundForm.issue.reasons.subscription.unwanted_renewal"),
+    t("refundForm.issue.reasons.subscription.service_inaccessible"),
+    t("refundForm.issue.reasons.subscription.features_missing"),
+    t("refundForm.issue.reasons.subscription.incorrect_billing"),
+    t("refundForm.issue.reasons.subscription.other"),
   ];
 
   const form = useForm<RefundFormValues>({
@@ -132,7 +141,17 @@ export function RefundForm({
   const watchCompany = form.watch("company");
   const watchCategory = form.watch("issueCategory");
   const watchTone = form.watch("tone");
-  const currentReasons = watchCategory === "service" ? serviceReasons : productReasons;
+
+  const currentReasons = React.useMemo(() => {
+    switch (watchCategory) {
+      case "service":
+        return serviceReasons;
+      case "subscription":
+        return subscriptionReasons;
+      default:
+        return productReasons;
+    }
+  }, [watchCategory, i18n.language]);
 
   React.useEffect(() => {
     form.setValue("issueType", "");
@@ -406,13 +425,13 @@ export function RefundForm({
                   control={form.control}
                   name="issueCategory"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="md:col-span-2">
                       <FormLabel>{t("refundForm.issueCategoryLabel")}</FormLabel>
                       <FormControl>
                         <RadioGroup
                           onValueChange={field.onChange}
                           value={field.value}
-                          className="grid grid-cols-2 gap-3"
+                          className="grid grid-cols-1 sm:grid-cols-3 gap-3"
                         >
                           <div className="flex items-center space-x-2 rounded-md border p-3">
                             <RadioGroupItem id="cat-product" value="product" />
@@ -421,6 +440,10 @@ export function RefundForm({
                           <div className="flex items-center space-x-2 rounded-md border p-3">
                             <RadioGroupItem id="cat-service" value="service" />
                             <Label htmlFor="cat-service">{t("refundForm.issue.categories.service")}</Label>
+                          </div>
+                          <div className="flex items-center space-x-2 rounded-md border p-3">
+                            <RadioGroupItem id="cat-subscription" value="subscription" />
+                            <Label htmlFor="cat-subscription">{t("refundForm.issue.categories.subscription")}</Label>
                           </div>
                         </RadioGroup>
                       </FormControl>

@@ -48,7 +48,8 @@
     "issue": {
       "categories": {
         "product": "Product",
-        "service": "Service"
+        "service": "Service",
+        "subscription": "Subscription"
       },
       "reasons": {
         "product": {
@@ -63,6 +64,13 @@
           "delayed_or_rescheduled": "Delayed / rescheduled",
           "not_as_described_or_poor_quality": "Not as described / poor quality",
           "access_issues": "Access issues (digital)",
+          "other": "Other"
+        },
+        "subscription": {
+          "unwanted_renewal": "Unwanted renewal / Cancellation ignored",
+          "service_inaccessible": "Service inaccessible / not working",
+          "features_missing": "Features not as described / missing",
+          "incorrect_billing": "Billed incorrect amount",
           "other": "Other"
         }
       }
