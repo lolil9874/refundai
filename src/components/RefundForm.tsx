@@ -419,13 +419,15 @@ export function RefundForm({
                     </FormItem>
                   )}
                 />
+              </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Catégorie Produit/Service */}
                 <FormField
                   control={form.control}
                   name="issueCategory"
                   render={({ field }) => (
-                    <FormItem className="md:col-span-2">
+                    <FormItem>
                       <FormLabel>{t("refundForm.issueCategoryLabel")}</FormLabel>
                       <FormControl>
                         <RadioGroup
