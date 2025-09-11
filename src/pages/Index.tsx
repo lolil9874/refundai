@@ -3,7 +3,7 @@ import { ResultsDisplay, type PremiumContact } from "@/components/ResultsDisplay
 import { ResultsSkeleton } from "@/components/ResultsSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useState } from "react";
-import { ShieldCheck, Banknote } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
 import { popularCompanies } from "@/lib/companies";
 import { useTranslation, Trans } from "react-i18next";
@@ -182,10 +182,16 @@ const Index = () => {
           <AlertDescription>{t("indexPage.privacyDescription")}</AlertDescription>
         </Alert>
 
-        <Alert className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 bg-card/60 dark:bg-card/40 backdrop-blur-xl border-white/20 shadow-lg">
-          <Banknote className="h-4 w-4" />
-          <AlertTitle>{t("indexPage.successTitle")}</AlertTitle>
-          <AlertDescription>{t("indexPage.successDescription")}</AlertDescription>
+        <Alert className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 bg-card/60 dark:bg-card/40 backdrop-blur-xl border-white/20 shadow-lg text-center flex flex-col items-center">
+          <div className="mb-2 inline-flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary md:h-20 md:w-20">
+            <span className="text-3xl md:text-4xl font-extrabold">$</span>
+          </div>
+          <AlertTitle className="text-xl md:text-2xl font-bold">
+            {t("indexPage.successTitle")}
+          </AlertTitle>
+          <AlertDescription className="text-sm md:text-base text-muted-foreground">
+            {t("indexPage.successDescription")}
+          </AlertDescription>
         </Alert>
 
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
