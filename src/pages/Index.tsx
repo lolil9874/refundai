@@ -157,7 +157,7 @@ const Index = () => {
     "bg-gradient-to-r from-[#145295] via-[#78c4ff] to-[#145295] bg-[200%_auto] bg-clip-text text-transparent animate-shine";
 
   return (
-    <div className="relative px-2 sm:px-3 md:px-4">
+    <div className="relative px-0 md:px-2">
       <section className="mx-auto flex max-w-[980px] flex-col items-center gap-2 py-8 md:py-12 md:pb-8 lg:py-24 lg:pb-20">
         <h1 className="text-center text-3xl font-bold leading-tight tracking-tighter md:text-6xl lg:leading-[1.1] animate-in fade-in slide-in-from-bottom-4 duration-700">
           <Trans
@@ -174,8 +174,8 @@ const Index = () => {
         </p>
       </section>
 
-      {/* Form/results section now full-width with minimal side padding */}
-      <section className="mx-auto w-full max-w-none">
+      {/* Form/results section widened by ~50% with minimal side padding */}
+      <section className="mx-auto w-full max-w-[1470px] px-2 sm:px-3 md:px-4">
         <div className="mb-4 flex items-center rounded-lg border border-white/20 bg-card/60 p-4 shadow-lg backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 dark:bg-card/40">
           <ShieldCheck className="h-6 w-6 shrink-0 text-primary" />
           <div className="ml-4">
