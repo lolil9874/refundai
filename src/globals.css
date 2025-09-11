@@ -13,8 +13,8 @@
      --popover: 0 0% 100%;
      --popover-foreground: 222.2 84% 4.9%;
  
-     --primary: 217 86% 45%;
-     --primary-foreground: 210 40% 98%;
+     --primary: 205 70% 60%; /* blue plus doux */
+     --primary-foreground: 235 60% 98%; /* clair pour texte sur primary */
  
      --secondary: 210 40% 96.1%;
      --secondary-foreground: 222.2 47.4% 11.2%;
@@ -35,8 +35,8 @@
      --radius: 1rem;
  
      /* Language button colors (glass/blue) - light mode */
-     --lang-btn-bg: hsl(217, 86%, 95%);
-     --lang-btn-hover: hsl(217, 86%, 90%);
+     --lang-btn-bg: #cbdfff;
+     --lang-btn-hover: #b9d6ff;
    }
  
    .dark {
@@ -49,7 +49,7 @@
      --popover: 224 71.4% 4.1%;
      --popover-foreground: 210 40% 98%;
  
-     --primary: 217 86% 55%;
+     --primary: 205 60% 60%; /* bleu doux en dark aussi */
      --primary-foreground: 210 40% 98%;
  
      --secondary: 217.2 32.6% 17.5%;
@@ -69,8 +69,8 @@
      --ring: 217.2 91.2% 59.8%;
  
      /* Language button colors (glass/blue) - dark mode */
-     --lang-btn-bg: hsl(217, 86%, 20%);
-     --lang-btn-hover: hsl(217, 86%, 15%);
+     --lang-btn-bg: #4a6bd6;
+     --lang-btn-hover: #3b5ac0;
    }
  }
  

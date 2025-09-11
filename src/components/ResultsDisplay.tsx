@@ -96,10 +96,10 @@ function shortNameFromFullName(full: string) {
 }
 
 const SCORE_BADGE_CLASS =
-  "inline-flex items-center gap-1 text-[10px] leading-none rounded bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary px-1.5 py-0.5";
+  "inline-flex items-center gap-1 text-[10px] leading-none rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5";
 
 const TAG_CLASS =
-  "inline-flex items-center text-[10px] rounded bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary px-1.5 py-0.5 whitespace-nowrap";
+  "inline-flex items-center text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 whitespace-nowrap";
 
 type PhoneEntry = {
   number: string;
@@ -346,8 +346,8 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                     const checked = selectedEmails.has(entry.email);
                     const displayEmail = entry.visible ? entry.email : obfuscateEmailKeepFirst(entry.email);
                     const isPaid = !entry.visible;
-                    const rowTint = isPaid ? "bg-primary/10 dark:bg-primary/20" : "";
-                    const emailTint = isPaid ? "text-primary dark:text-primary font-medium" : "";
+                    const rowTint = isPaid ? "bg-blue-50/40 dark:bg-blue-950/20" : "";
+                    const emailTint = isPaid ? "text-blue-700 dark:text-blue-300 font-medium" : "";
 
                     return (
                       <li
@@ -492,8 +492,8 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                 <ul className="divide-y">
                   {mockPhoneEntries.map((entry, i) => {
                     const isPaid = !entry.visible;
-                    const rowTint = isPaid ? "bg-primary/10 dark:bg-primary/20" : "";
-                    const numberTint = isPaid ? "text-primary dark:text-primary font-medium" : "";
+                    const rowTint = isPaid ? "bg-blue-50/40 dark:bg-blue-950/20" : "";
+                    const numberTint = isPaid ? "text-blue-700 dark:text-blue-300 font-medium" : "";
 
                     return (
                       <li

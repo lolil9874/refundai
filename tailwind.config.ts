@@ -19,7 +19,6 @@ export default {
     },
     extend: {
       colors: {
-        "logo-light-blue": "#56abf2",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
