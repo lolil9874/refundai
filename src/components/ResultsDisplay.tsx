@@ -51,7 +51,6 @@ function brandFromEmail(email: string) {
   const domain = email.split("@")[1] || "";
   const parts = domain.split(".").filter(Boolean);
   if (parts.length >= 3) {
-    // Gère co.uk, com.au, etc.
     const penult = parts[parts.length - 2];
     if (["co", "com", "org", "net", "gov", "edu"].includes(penult) && parts.length >= 3) {
       return capitalize(parts[parts.length - 3]);
@@ -63,14 +62,19 @@ function brandFromEmail(email: string) {
   return "Support";
 }
 
-function displayNameFromEmail(email: string) {
-  const local = (email.split("@")[0] || "").replace(/\d+/g, "");
-  const parts = local.split(/[._-]+/).filter(Boolean);
-  if (parts.length === 0) return "";
-  const first = capitalize(parts[0]);
-  const last = parts[parts.length - 1];
-  const initial = last ? last[0].toUpperCase() : "";
-  return `${first} .${initial}`;
+function fullNameFromEmail(email: string) {
+  const localRaw = email.split("@")[0] || "";
+  const local = localRaw.split("+")[0]; // remove any +tag
+  const parts = local.replace(/\d+/g, "").split(/[._-]+/).filter(Boolean);
+  if (parts.length >= 2) {
+    const first = capitalize(parts[0]);
+    const last = capitalize(parts[parts.length - 1]);
+    return `${first} ${last}`;
+  }
+  if (parts.length === 1) {
+    return capitalize(parts[0]);
+  }
+  return "";
 }
 
 export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
@@ -278,10 +282,10 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                             )}
                           </div>
                           {/* Sous-ligne:
-                              - payants: Prénom .Initiale
+                              - payants: Prénom Nom complet
                               - gratuits: libellé Agent IA {marque} */}
                           <div className={`truncate ${entry.visible ? "text-xs text-muted-foreground" : "text-[11px] text-muted-foreground"}`}>
-                            {entry.visible ? entry.title : displayNameFromEmail(entry.email)}
+                            {entry.visible ? entry.title : fullNameFromEmail(entry.email)}
                           </div>
                         </div>
 
@@ -303,8 +307,8 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                                 setUnlockOpen(true);
                               }
                             }}
-                            aria-label={entry.visible ? "Copier l'email" : "Débloquer pour copier"}
-                            title={entry.visible ? "Copier l'email" : "Débloquer pour copier"}
+                            aria-label={entry.visible ? "Copy email" : "Unlock to copy"}
+                            title={entry.visible ? "Copy email" : "Unlock to copy"}
                           >
                             <Copy className="h-4 w-4" />
                           </Button>
@@ -371,7 +375,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                 className="w-full"
                 aria-disabled={recipients.length === 0}
                 disabled={recipients.length === 0}
-                title={recipients.length === 0 ? "Sélectionnez au moins un email" : undefined}
+                title={recipients.length === 0 ? "Select at least one email" : undefined}
               >
                 {t("resultsDisplay.openInEmailAppButton")}
               </OffsetButton>
