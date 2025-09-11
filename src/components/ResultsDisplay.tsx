@@ -311,6 +311,10 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
 
   const successLabel = i18n.language === "fr" ? "% de succès" : "Success rate";
 
+  const selectAllPill =
+    "relative inline-flex items-center rounded-full px-2.5 py-1 font-medium text-black " +
+    "bg-gradient-to-r from-primary via-sky-400 to-primary bg-[200%_auto] animate-shine shadow-sm";
+
   return (
     <>
       <Card className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500 shadow-lg border-primary/20">
@@ -331,9 +335,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                     className="h-4 w-4"
                     aria-label={t("resultsDisplay.selectAll") as string}
                   />
-                  <span className="bg-gradient-to-r from-primary via-sky-400 to-primary bg-clip-text text-transparent bg-[200%_auto] group-hover:animate-shine">
-                    {t("resultsDisplay.selectAll")}
-                  </span>
+                  <span className={selectAllPill}>{t("resultsDisplay.selectAll")}</span>
                 </label>
               </div>
 
@@ -488,9 +490,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                     className="h-4 w-4"
                     aria-label={t("resultsDisplay.selectAll") as string}
                   />
-                  <span className="bg-gradient-to-r from-primary via-sky-400 to-primary bg-clip-text text-transparent bg-[200%_auto] group-hover:animate-shine">
-                    {t("resultsDisplay.selectAll")}
-                  </span>
+                  <span className={selectAllPill}>{t("resultsDisplay.selectAll")}</span>
                 </label>
               </div>
               <div className="px-3 py-1">
