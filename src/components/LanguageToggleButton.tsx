@@ -1,9 +1,8 @@
 "use client";
 
-import React from "react";
-import { Globe } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
+import { Globe } from "lucide-react";
 
 export const LanguageToggleButton = () => {
   const { i18n } = useTranslation();
@@ -21,7 +20,8 @@ export const LanguageToggleButton = () => {
   return (
     <Button
       onClick={toggleLang}
-      className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/60 hover:bg-white/80 dark:bg-black/20 dark:hover:bg-black/40 transition-colors"
+      // Use the new glassy color class
+      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm btn-lang transition-colors`}
       variant="ghost"
       size="sm"
       aria-label="Changer de langue"
