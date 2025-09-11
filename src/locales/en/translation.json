@@ -1,7 +1,5 @@
 {
-  "header": {
-    "appName": "REFUNDAI"
-  },
+  "header": {},
   "footer": {
     "copyright": "© {{year}} REFUNDAI. All rights reserved."
   },
