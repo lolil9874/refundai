@@ -69,6 +69,13 @@
     },
     "descriptionLabel": "Short Description",
     "descriptionPlaceholder": "Describe the issue with your order...",
+    "tone": {
+      "label": "Email tone",
+      "formal": "Formal",
+      "firm": "Firm",
+      "empathic": "Empathic",
+      "help": "Choose the tone you want. The bar reflects your selection."
+    },
     "imageLabel": "Upload Image (Optional)",
     "imageDescription": "A screenshot can help us find more details.",
     "submitButton": "Generate Email & Find Contacts",

@@ -35,6 +35,8 @@ import { popularCompanies } from "@/lib/companies";
 import OffsetButton from "@/components/OffsetButton";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 
 const formSchema = z
@@ -57,6 +59,7 @@ const formSchema = z
     issueType: z.string().min(1, "Issue type is required."),
     description: z.string().min(10, "Please provide a short description (min. 10 characters)."),
     image: z.any().optional(),
+    tone: z.enum(["formal", "firm", "empathic"], { required_error: "Tone is required." }),
   })
   .refine(
     (data) => {
@@ -82,6 +85,23 @@ const countries = [
   { code: "ES", name: "Spain", flag: "🇪🇸" },
   { code: "IT", name: "Italy", flag: "🇮🇹" },
 ];
+
+const toneToValue = (tone: "formal" | "firm" | "empathic") =>
+  tone === "formal" ? 0 : tone === "firm" ? 50 : 100;
+
+const valueToTone = (val: number): "formal" | "firm" | "empathic" => {
+  // Arrondir au plus proche parmi 0, 50, 100
+  const candidates = [0, 50, 100];
+  const nearest = candidates.reduce((prev, cur) =>
+    Math.abs(cur - val) < Math.abs(prev - val) ? cur : prev
+  );
+  if (nearest === 0) return "formal";
+  if (nearest === 50) return "firm";
+  return "empathic";
+};
+
+const toneToProgress = (tone: "formal" | "firm" | "empathic") =>
+  tone === "formal" ? 34 : tone === "firm" ? 67 : 100;
 
 export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundFormValues) => void; isLoading: boolean }) {
   const { t } = useTranslation();
@@ -117,11 +137,13 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
       issueCategory: "product",
       issueType: "",
       description: "",
+      tone: "formal",
     },
   });
 
   const watchCompany = form.watch("company");
   const watchCategory = form.watch("issueCategory");
+  const watchTone = form.watch("tone");
   const currentReasons = watchCategory === "service" ? serviceReasons : productReasons;
 
   // Réinitialiser le motif si on change la catégorie
@@ -140,16 +162,16 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
       productName: "Wireless Headphones",
       productValue: 49.99,
       orderNumber: "123-4567890-1234567",
-      purchaseDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12), // il y a ~12 jours
+      purchaseDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12), // ~12 jours
       issueCategory: "product",
       issueType: t("refundForm.issue.reasons.product.not_received"),
       description:
         "Package never arrived. Tracking shows no movement since dispatch. Requesting a full refund.",
       image: undefined,
+      tone: "formal",
     };
     form.reset(values);
     toast.info(t("refundForm.testFillToast"));
-    // Soumettre sur la frame suivante pour laisser le reset s'appliquer
     requestAnimationFrame(() => form.handleSubmit(onSubmit)());
   };
 
@@ -447,6 +469,7 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                 />
               </div>
 
+              {/* Description */}
               <FormField
                 control={form.control}
                 name="description"
@@ -460,6 +483,56 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                   </FormItem>
                 )}
               />
+
+              {/* Ton de l'email: Slider + Progress sous la description */}
+              <FormField
+                control={form.control}
+                name="tone"
+                render={({ field }) => {
+                  const currentTone = field.value as "formal" | "firm" | "empathic";
+                  const sliderValue = toneToValue(currentTone);
+                  const progressValue = toneToProgress(currentTone);
+                  return (
+                    <FormItem>
+                      <div className="flex items-center justify-between">
+                        <FormLabel>{t("refundForm.tone.label")}</FormLabel>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                          {currentTone === "formal"
+                            ? t("refundForm.tone.formal")
+                            : currentTone === "firm"
+                            ? t("refundForm.tone.firm")
+                            : t("refundForm.tone.empathic")}
+                        </span>
+                      </div>
+                      <FormControl>
+                        <div className="mt-2">
+                          <Slider
+                            value={[sliderValue]}
+                            min={0}
+                            max={100}
+                            step={50}
+                            onValueChange={(vals) => field.onChange(valueToTone(vals[0] ?? 0))}
+                            aria-label={t("refundForm.tone.label") as string}
+                          />
+                          <div className="mt-1 flex justify-between text-[11px] text-muted-foreground">
+                            <span>{t("refundForm.tone.formal")}</span>
+                            <span>{t("refundForm.tone.firm")}</span>
+                            <span>{t("refundForm.tone.empathic")}</span>
+                          </div>
+                          <div className="mt-3">
+                            <Progress value={progressValue} className="h-2" />
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormDescription className="text-xs">
+                        {t("refundForm.tone.help", { defaultValue: "" })}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+
               <FormField
                 control={form.control}
                 name="image"

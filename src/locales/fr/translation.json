@@ -69,6 +69,13 @@
     },
     "descriptionLabel": "Brève description",
     "descriptionPlaceholder": "Décrivez le problème avec votre commande...",
+    "tone": {
+      "label": "Ton de l’e-mail",
+      "formal": "Formel",
+      "firm": "Ferme",
+      "empathic": "Empathique",
+      "help": "Choisissez le ton souhaité. La barre reflète visuellement votre choix."
+    },
     "imageLabel": "Télécharger une image (Facultatif)",
     "imageDescription": "Une capture d'écran peut nous aider à trouver plus de détails.",
     "submitButton": "Générer l'e-mail & Trouver les contacts",
