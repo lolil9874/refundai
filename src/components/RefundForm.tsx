@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -32,6 +33,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { popularCompanies } from "@/lib/companies";
 import OffsetButton from "@/components/OffsetButton";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 const formSchema = z
   .object({
@@ -49,6 +52,7 @@ const formSchema = z
       }, z.number().nonnegative().optional()),
     orderNumber: z.string().min(1, "Order number is required."),
     purchaseDate: z.date({ required_error: "Purchase date is required." }),
+    issueCategory: z.enum(["product", "service"], { required_error: "Please choose a category." }),
     issueType: z.string().min(1, "Issue type is required."),
     description: z.string().min(10, "Please provide a short description (min. 10 characters)."),
     image: z.any().optional(),
@@ -80,7 +84,22 @@ const countries = [
 
 export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundFormValues) => void; isLoading: boolean }) {
   const { t } = useTranslation();
-  const issueTypes = Object.values(t("refundForm.issueTypes", { returnObjects: true }) as Record<string, string>);
+
+  // 4 motifs les plus pertinents + "Autre" par catégorie
+  const productReasons = [
+    t("refundForm.issue.reasons.product.not_received"),
+    t("refundForm.issue.reasons.product.late_delivery"),
+    t("refundForm.issue.reasons.product.wrong_or_not_as_described"),
+    t("refundForm.issue.reasons.product.damaged_or_defective"),
+    t("refundForm.issue.reasons.product.other"),
+  ];
+  const serviceReasons = [
+    t("refundForm.issue.reasons.service.not_provided"),
+    t("refundForm.issue.reasons.service.delayed_or_rescheduled"),
+    t("refundForm.issue.reasons.service.not_as_described_or_poor_quality"),
+    t("refundForm.issue.reasons.service.access_issues"),
+    t("refundForm.issue.reasons.service.other"),
+  ];
 
   const form = useForm<RefundFormValues>({
     resolver: zodResolver(formSchema),
@@ -93,12 +112,21 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
       productName: "",
       productValue: undefined,
       orderNumber: "",
+      purchaseDate: undefined,
+      issueCategory: "product",
       issueType: "",
       description: "",
     },
   });
 
   const watchCompany = form.watch("company");
+  const watchCategory = form.watch("issueCategory");
+  const currentReasons = watchCategory === "service" ? serviceReasons : productReasons;
+
+  // Réinitialiser le motif si on change la catégorie
+  React.useEffect(() => {
+    form.setValue("issueType", "");
+  }, [watchCategory]);
 
   return (
     <div>
@@ -338,20 +366,50 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                     </FormItem>
                   )}
                 />
+
+                {/* Nouvelle sélection: Catégorie Produit/Service */}
+                <FormField
+                  control={form.control}
+                  name="issueCategory"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("refundForm.issueCategoryLabel")}</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          value={field.value}
+                          className="grid grid-cols-2 gap-3"
+                        >
+                          <div className="flex items-center space-x-2 rounded-md border p-3">
+                            <RadioGroupItem id="cat-product" value="product" />
+                            <Label htmlFor="cat-product">{t("refundForm.issue.categories.product")}</Label>
+                          </div>
+                          <div className="flex items-center space-x-2 rounded-md border p-3">
+                            <RadioGroupItem id="cat-service" value="service" />
+                            <Label htmlFor="cat-service">{t("refundForm.issue.categories.service")}</Label>
+                          </div>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Motif dynamique: 4 + Autre */}
                 <FormField
                   control={form.control}
                   name="issueType"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t("refundForm.issueTypeLabel")}</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder={t("refundForm.issueTypePlaceholder")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {issueTypes.map((issue) => (
+                          {currentReasons.map((issue) => (
                             <SelectItem key={issue} value={issue}>
                               {issue}
                             </SelectItem>
@@ -363,6 +421,7 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                   )}
                 />
               </div>
+
               <FormField
                 control={form.control}
                 name="description"

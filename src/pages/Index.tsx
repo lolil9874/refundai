@@ -106,9 +106,8 @@ const Index = () => {
         companyDisplayName = 'The Company';
       }
 
-      const issueTypes = t('refundForm.issueTypes', { returnObjects: true }) as Record<string, string>;
-      const selectedIssueKey = Object.keys(issueTypes).find(key => issueTypes[key] === data.issueType);
-      const translatedIssue = selectedIssueKey ? t(`refundForm.issueTypes.${selectedIssueKey}`) : data.issueType;
+      // Utiliser directement le libellé choisi pour le motif
+      const translatedIssue = data.issueType;
 
       const productValueDisplay =
         data.productValue !== undefined && data.productValue !== null

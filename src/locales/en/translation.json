@@ -35,7 +35,8 @@
     "orderNumberPlaceholder": "e.g., 123-4567890-1234567",
     "purchaseDateLabel": "Purchase/Service Date",
     "purchaseDatePlaceholder": "Pick a date",
-    "issueTypeLabel": "Issue Type",
+    "issueCategoryLabel": "Issue category",
+    "issueTypeLabel": "Issue",
     "issueTypePlaceholder": "Select an issue",
     "issueTypes": {
       "didntArrive": "Didn't arrive",
@@ -43,6 +44,28 @@
       "wrongItem": "Wrong item",
       "refundMissing": "Refund missing",
       "other": "Other"
+    },
+    "issue": {
+      "categories": {
+        "product": "Product",
+        "service": "Service"
+      },
+      "reasons": {
+        "product": {
+          "not_received": "Not received",
+          "late_delivery": "Delivered late",
+          "wrong_or_not_as_described": "Wrong item / not as described",
+          "damaged_or_defective": "Damaged / defective",
+          "other": "Other"
+        },
+        "service": {
+          "not_provided": "Not provided (no-show)",
+          "delayed_or_rescheduled": "Delayed / rescheduled",
+          "not_as_described_or_poor_quality": "Not as described / poor quality",
+          "access_issues": "Access issues (digital)",
+          "other": "Other"
+        }
+      }
     },
     "descriptionLabel": "Short Description",
     "descriptionPlaceholder": "Describe the issue with your order...",

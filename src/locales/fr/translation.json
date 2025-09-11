@@ -35,14 +35,37 @@
     "orderNumberPlaceholder": "ex: 123-4567890-1234567",
     "purchaseDateLabel": "Date d'achat/service",
     "purchaseDatePlaceholder": "Choisissez une date",
-    "issueTypeLabel": "Type de problème",
-    "issueTypePlaceholder": "Sélectionnez un problème",
+    "issueCategoryLabel": "Type de problème",
+    "issueTypeLabel": "Motif",
+    "issueTypePlaceholder": "Sélectionnez un motif",
     "issueTypes": {
       "didntArrive": "N'est pas arrivé",
       "qualityIssue": "Problème de qualité",
       "wrongItem": "Mauvais article",
       "refundMissing": "Remboursement manquant",
       "other": "Autre"
+    },
+    "issue": {
+      "categories": {
+        "product": "Produit",
+        "service": "Service"
+      },
+      "reasons": {
+        "product": {
+          "not_received": "Jamais reçu",
+          "late_delivery": "Reçu en retard",
+          "wrong_or_not_as_described": "Mauvais article / non conforme",
+          "damaged_or_defective": "Endommagé / défectueux",
+          "other": "Autre"
+        },
+        "service": {
+          "not_provided": "Non fourni (no-show)",
+          "delayed_or_rescheduled": "Retard / reprogrammation",
+          "not_as_described_or_poor_quality": "Non conforme / qualité insuffisante",
+          "access_issues": "Accès impossible (numérique)",
+          "other": "Autre"
+        }
+      }
     },
     "descriptionLabel": "Brève description",
     "descriptionPlaceholder": "Décrivez le problème avec votre commande...",
