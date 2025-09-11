@@ -436,16 +436,16 @@ export function RefundForm({
                           value={field.value}
                           className="flex flex-wrap gap-3"
                         >
-                          <div className="flex items-center space-x-2 rounded-md border px-2 py-1">
-                            <RadioGroupItem id="cat-product" value="product" />
+                          <div className="flex items-center space-x-3 rounded-md border px-4 py-3 min-h-12">
+                            <RadioGroupItem id="cat-product" value="product" className="h-5 w-5" />
                             <Label htmlFor="cat-product">{t("refundForm.issue.categories.product")}</Label>
                           </div>
-                          <div className="flex items-center space-x-2 rounded-md border px-2 py-1">
-                            <RadioGroupItem id="cat-service" value="service" />
+                          <div className="flex items-center space-x-3 rounded-md border px-4 py-3 min-h-12">
+                            <RadioGroupItem id="cat-service" value="service" className="h-5 w-5" />
                             <Label htmlFor="cat-service">{t("refundForm.issue.categories.service")}</Label>
                           </div>
-                          <div className="flex items-center space-x-2 rounded-md border px-2 py-1">
-                            <RadioGroupItem id="cat-subscription" value="subscription" />
+                          <div className="flex items-center space-x-3 rounded-md border px-4 py-3 min-h-12">
+                            <RadioGroupItem id="cat-subscription" value="subscription" className="h-5 w-5" />
                             <Label htmlFor="cat-subscription">{t("refundForm.issue.categories.subscription")}</Label>
                           </div>
                         </RadioGroup>
@@ -502,7 +502,7 @@ export function RefundForm({
                 )}
               />
 
-              {/* Ton de l'e-mail: une seule barre (0-100%), % au-dessus du curseur, repère à 50% */}
+              {/* Ton de l'e-mail */}
               <FormField
                 control={form.control}
                 name="tone"
@@ -540,7 +540,7 @@ export function RefundForm({
                             aria-label={t("refundForm.tone.label") as string}
                           />
 
-                          {/* Libellés sous la barre: Empathique — Formel — Ferme */}
+                          {/* Libellés sous la barre */}
                           <div className="mt-2 grid grid-cols-3 text-[11px] text-muted-foreground">
                             <span className="justify-self-start">{t("refundForm.tone.empathic")}</span>
                             <span className="justify-self-center">{t("refundForm.tone.formal")}</span>
