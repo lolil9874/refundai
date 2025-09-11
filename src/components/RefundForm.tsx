@@ -423,7 +423,7 @@ export function RefundForm({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Catégorie Produit/Service */}
+                {/* Category (match height to other inputs) */}
                 <FormField
                   control={form.control}
                   name="issueCategory"
@@ -436,16 +436,16 @@ export function RefundForm({
                           value={field.value}
                           className="flex flex-wrap gap-3"
                         >
-                          <div className="flex items-center space-x-3 rounded-md border px-4 py-3 min-h-12">
-                            <RadioGroupItem id="cat-product" value="product" className="h-5 w-5" />
+                          <div className="flex items-center space-x-3 rounded-md border h-10 px-3">
+                            <RadioGroupItem id="cat-product" value="product" className="h-4 w-4" />
                             <Label htmlFor="cat-product">{t("refundForm.issue.categories.product")}</Label>
                           </div>
-                          <div className="flex items-center space-x-3 rounded-md border px-4 py-3 min-h-12">
-                            <RadioGroupItem id="cat-service" value="service" className="h-5 w-5" />
+                          <div className="flex items-center space-x-3 rounded-md border h-10 px-3">
+                            <RadioGroupItem id="cat-service" value="service" className="h-4 w-4" />
                             <Label htmlFor="cat-service">{t("refundForm.issue.categories.service")}</Label>
                           </div>
-                          <div className="flex items-center space-x-3 rounded-md border px-4 py-3 min-h-12">
-                            <RadioGroupItem id="cat-subscription" value="subscription" className="h-5 w-5" />
+                          <div className="flex items-center space-x-3 rounded-md border h-10 px-3">
+                            <RadioGroupItem id="cat-subscription" value="subscription" className="h-4 w-4" />
                             <Label htmlFor="cat-subscription">{t("refundForm.issue.categories.subscription")}</Label>
                           </div>
                         </RadioGroup>
@@ -455,7 +455,7 @@ export function RefundForm({
                   )}
                 />
 
-                {/* Motif dynamique */}
+                {/* Dynamic reason */}
                 <FormField
                   control={form.control}
                   name="issueType"
@@ -502,7 +502,7 @@ export function RefundForm({
                 )}
               />
 
-              {/* Ton de l'e-mail */}
+              {/* Tone */}
               <FormField
                 control={form.control}
                 name="tone"
@@ -513,7 +513,6 @@ export function RefundForm({
                       <FormLabel>{t("refundForm.tone.label")}</FormLabel>
                       <FormControl>
                         <div className="relative mt-3 pt-8">
-                          {/* Pourcentage au-dessus du curseur */}
                           <div
                             className="absolute top-0 left-0 -translate-y-1/2 -translate-x-1/2"
                             style={{ left: `${value}%` }}
@@ -522,15 +521,12 @@ export function RefundForm({
                               {value}%
                             </span>
                           </div>
-
-                          {/* Repère central (50%) */}
                           <div
                             className="pointer-events-none absolute top-1/2 -translate-y-1/2"
                             style={{ left: "50%" }}
                           >
                             <div className="h-4 w-[2px] bg-muted-foreground/40 rounded" />
                           </div>
-
                           <Slider
                             value={[value]}
                             min={0}
@@ -539,8 +535,6 @@ export function RefundForm({
                             onValueChange={(vals) => field.onChange(vals[0] ?? 0)}
                             aria-label={t("refundForm.tone.label") as string}
                           />
-
-                          {/* Libellés sous la barre */}
                           <div className="mt-2 grid grid-cols-3 text-[11px] text-muted-foreground">
                             <span className="justify-self-start">{t("refundForm.tone.empathic")}</span>
                             <span className="justify-self-center">{t("refundForm.tone.formal")}</span>
