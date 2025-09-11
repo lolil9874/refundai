@@ -9,10 +9,12 @@ export const LanguageToggleButton = () => {
   const { i18n } = useTranslation();
   const [anim, setAnim] = React.useState(false);
 
-  const currentLang = (i18n.language || "en").toString().toUpperCase();
+  // Normalize to base language ('en' or 'fr') even if i18n.language is 'en-US'/'fr-FR'
+  const baseLang = (i18n.resolvedLanguage || i18n.language || "en").split("-")[0];
+  const currentLang = baseLang.toUpperCase();
 
   const toggleLang = () => {
-    const next = i18n.language === "en" ? "fr" : "en";
+    const next = baseLang === "en" ? "fr" : "en";
     i18n.changeLanguage(next);
     setAnim(true);
     setTimeout(() => setAnim(false), 600);
@@ -21,7 +23,6 @@ export const LanguageToggleButton = () => {
   return (
     <Button
       onClick={toggleLang}
-      // Use the new glassy color class
       className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm btn-lang transition-colors`}
       variant="ghost"
       size="sm"

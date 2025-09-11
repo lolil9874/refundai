@@ -19,9 +19,19 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
+    // Default to English
     fallbackLng: "en",
+    // Only support 'en' and 'fr'; normalize 'en-US' -> 'en', 'fr-FR' -> 'fr'
+    supportedLngs: ["en", "fr"],
+    nonExplicitSupportedLngs: true,
+    load: "languageOnly",
+    // Only detect from storage/cookies; do not auto-detect from browser
+    detection: {
+      order: ["localStorage", "cookie"],
+      caches: ["localStorage", "cookie"],
+    },
     interpolation: {
-      escapeValue: false, // react already safes from xss
+      escapeValue: false,
     },
   });
 
