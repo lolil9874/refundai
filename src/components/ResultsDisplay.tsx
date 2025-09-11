@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Copy, ExternalLink, Lock, Mail, Phone } from "lucide-react";
+import { Copy, ExternalLink, Phone, User } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import OffsetButton from "@/components/OffsetButton";
@@ -24,8 +24,13 @@ export type PremiumContact = {
   phoneMasked?: string;
 };
 
+function obfuscateEmail(email: string) {
+  const [local, domain] = email.split("@");
+  return `****@${domain || ""}`;
+}
+
 export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { bestEmail, ranked, forms, links, subject, body, hasImage, phones, premiumContacts = [] } = results;
 
   const handleCopy = (text: string, typeKey: string) => {
@@ -34,7 +39,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     toast.success(t("resultsDisplay.copySuccess", { type }));
   };
 
-  // Top 5 emails: 2 visibles + 3 "contacts" (verrouillés)
+  // Top 5 emails: 2 visibles + 3 cachés (contacts)
   const topFive = React.useMemo(() => {
     const uniq = new Set<string>();
     if (bestEmail) uniq.add(bestEmail);
@@ -45,10 +50,42 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   }, [bestEmail, ranked]);
 
   const visibleEmails = topFive.slice(0, 2);
-  const lockedEmails = topFive.slice(2, 5);
+  const hiddenEmails = topFive.slice(2, 5);
+
+  // Titres de poste simples (visibles vs cachés)
+  const titlesVisible =
+    i18n.language === "fr"
+      ? ["Conseiller Client", "Agent Support"]
+      : ["Support Advisor", "Support Agent"];
+  const titlesHidden =
+    i18n.language === "fr"
+      ? ["Manager Support Client", "Responsable Customer Care", "Lead Facturation"]
+      : ["Customer Support Manager", "Head of Customer Care", "Billing Operations Lead"];
+
+  // Scores: cachés plus élevés
+  const scoresVisible = [72, 68];
+  const scoresHidden = [95, 92, 89];
+
+  type EmailEntry = { email: string; visible: boolean; title: string; score: number };
+  const emailEntries: EmailEntry[] = [
+    ...visibleEmails.map((e, i) => ({
+      email: e,
+      visible: true,
+      title: titlesVisible[i] || titlesVisible[titlesVisible.length - 1],
+      score: scoresVisible[i] || 65,
+    })),
+    ...hiddenEmails.map((e, i) => ({
+      email: e,
+      visible: false,
+      title: titlesHidden[i] || titlesHidden[titlesHidden.length - 1],
+      score: scoresHidden[i] || 88,
+    })),
+  ];
 
   // Sélection d'emails (par défaut tous les visibles)
-  const [selectedEmails, setSelectedEmails] = React.useState<Set<string>>(new Set(visibleEmails));
+  const [selectedEmails, setSelectedEmails] = React.useState<Set<string>>(
+    new Set(visibleEmails),
+  );
   React.useEffect(() => {
     setSelectedEmails(new Set(visibleEmails));
   }, [visibleEmails.join(",")]); // se met à jour si la liste change
@@ -101,7 +138,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
         </CardHeader>
 
         <CardContent className="space-y-8">
-          {(visibleEmails.length > 0 || lockedEmails.length > 0) && (
+          {(emailEntries.length > 0) && (
             <section>
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="font-semibold text-lg">{t("resultsDisplay.emailsToContactLabel")}</h3>
@@ -118,50 +155,68 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
 
               <div className="rounded-md border bg-card/50">
                 <ul className="divide-y">
-                  {visibleEmails.map((email) => {
-                    const checked = selectedEmails.has(email);
+                  {emailEntries.map((entry, idx) => {
+                    const checked = entry.visible && selectedEmails.has(entry.email);
+                    const displayEmail = entry.visible ? entry.email : obfuscateEmail(entry.email);
                     return (
-                      <li key={`vis-${email}`} className="flex items-center justify-between px-3 py-2 text-sm">
+                      <li
+                        key={`email-${idx}-${entry.email}`}
+                        className={`flex items-center justify-between px-3 py-2 ${entry.visible ? "text-sm" : "text-xs text-muted-foreground hover:bg-muted/50 cursor-pointer"}`}
+                        onClick={() => {
+                          if (!entry.visible) setUnlockOpen(true);
+                        }}
+                        title={displayEmail}
+                        aria-label={displayEmail}
+                      >
                         <div className="flex items-center gap-2 min-w-0">
-                          <Checkbox
-                            checked={checked}
-                            onCheckedChange={(v) => toggleOne(email, v)}
-                            className="h-4 w-4"
-                            aria-label={`Select ${email}`}
-                          />
-                          <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
-                          <span className="font-mono truncate">{email}</span>
+                          {entry.visible ? (
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(v) => toggleOne(entry.email, v)}
+                              className="h-4 w-4"
+                              aria-label={`Select ${entry.email}`}
+                            />
+                          ) : (
+                            <span className="w-4" />
+                          )}
+                          <User className={`shrink-0 ${entry.visible ? "h-4 w-4" : "h-3.5 w-3.5"}`} />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className={`font-mono truncate ${entry.visible ? "" : "text-muted-foreground"}`}>
+                                {displayEmail}
+                              </span>
+                              <span className="inline-flex items-center gap-1 text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5">
+                                {entry.score}
+                              </span>
+                            </div>
+                            <div className={`truncate ${entry.visible ? "text-xs text-muted-foreground" : "text-[11px] text-muted-foreground"}`}>
+                              {entry.title}
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                            onClick={() => handleCopy(email, "resultsDisplay.copySubject")}
-                            aria-label="Copy email"
-                            title="Copy email"
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                        </div>
+
+                        {entry.visible ? (
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCopy(entry.email, "resultsDisplay.copySubject");
+                              }}
+                              aria-label="Copy email"
+                              title="Copy email"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-[11px] text-muted-foreground">****</span>
+                        )}
                       </li>
                     );
                   })}
-                  {lockedEmails.map((email) => (
-                    <li
-                      key={`lock-${email}`}
-                      className="flex items-center justify-between px-3 py-2 text-xs text-muted-foreground hover:bg-muted/50 cursor-pointer"
-                      onClick={() => setUnlockOpen(true)}
-                      title={email}
-                      aria-label={email}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        {/* Pas de checkbox pour les contacts verrouillés */}
-                        <Lock className="h-3.5 w-3.5 shrink-0" />
-                        <span className="font-mono truncate">{email}</span>
-                      </div>
-                    </li>
-                  ))}
                 </ul>
               </div>
             </section>
@@ -263,9 +318,10 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                       aria-label={num}
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <Lock className="h-3.5 w-3.5 shrink-0" />
+                        <User className="h-3.5 w-3.5 shrink-0" />
                         <span className="truncate">{num}</span>
                       </div>
+                      <span className="text-[11px] text-muted-foreground">****</span>
                     </li>
                   ))}
                 </ul>
