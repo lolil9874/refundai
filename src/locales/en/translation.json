@@ -1,0 +1,73 @@
+{
+  "header": {
+    "appName": "REFUNDAI"
+  },
+  "footer": {
+    "copyright": "© {{year}} REFUNDAI. All rights reserved."
+  },
+  "indexPage": {
+    "title": "Generate refund emails, hassle-free.",
+    "subtitle": "Fill in the details, and we'll find the right contacts and draft a professional email for you in seconds.",
+    "privacyTitle": "Privacy First",
+    "privacyDescription": "Your data is processed in your browser and is not stored on our servers."
+  },
+  "refundForm": {
+    "title": "1. Enter Your Details",
+    "subtitle": "Provide as much information as possible for the best results.",
+    "companySectionTitle": "Company & Region",
+    "companyLabel": "Company",
+    "otherCompanyLabel": "Enter domain name",
+    "otherCompanyPlaceholder": "example.com",
+    "otherButton": "Other",
+    "countryLabel": "Country/Region",
+    "countryPlaceholder": "Select a country",
+    "personalInfoSectionTitle": "Personal Info",
+    "firstNameLabel": "First Name",
+    "firstNamePlaceholder": "John",
+    "lastNameLabel": "Last Name",
+    "lastNamePlaceholder": "Doe",
+    "orderDetailsSectionTitle": "Order Details",
+    "productNameLabel": "Product/Service Name",
+    "productNamePlaceholder": "e.g., Wireless Headphones",
+    "orderNumberLabel": "Order Number",
+    "orderNumberPlaceholder": "e.g., 123-4567890-1234567",
+    "purchaseDateLabel": "Purchase/Service Date",
+    "purchaseDatePlaceholder": "Pick a date",
+    "issueTypeLabel": "Issue Type",
+    "issueTypePlaceholder": "Select an issue",
+    "issueTypes": {
+      "didntArrive": "Didn't arrive",
+      "qualityIssue": "Quality issue",
+      "wrongItem": "Wrong item",
+      "refundMissing": "Refund missing",
+      "other": "Other"
+    },
+    "descriptionLabel": "Short Description",
+    "descriptionPlaceholder": "Describe the issue with your order...",
+    "imageLabel": "Upload Image (Optional)",
+    "imageDescription": "A screenshot can help us find more details.",
+    "submitButton": "Generate Email & Find Contacts",
+    "submitButtonLoading": "Generating..."
+  },
+  "resultsDisplay": {
+    "title": "2. Your Refund Request",
+    "description": "We've generated an email and found the best contact methods for you.",
+    "recommendedContactLabel": "Recommended Contact",
+    "noEmailFound": "We couldn't find a specific email. Try using a contact form.",
+    "otherOptionsLabel": "Other Options",
+    "contactForm": "Contact Form",
+    "supportPage": "Support Page",
+    "generatedEmailLabel": "Generated Email",
+    "subjectLabel": "Subject",
+    "bodyLabel": "Body",
+    "copySuccess": "{{type}} copied to clipboard!",
+    "copySubject": "Subject",
+    "copyBody": "Email body",
+    "openInEmailAppButton": "Open in Email App",
+    "imageReminder": "<strong>Reminder:</strong> Don't forget to attach your image in your mail app!"
+  },
+  "generatedEmail": {
+    "subject": "Issue with Order #{{orderNumber}}",
+    "body": "Dear {{companyDisplayName}} Team,\n\nI am writing to you regarding an issue with my recent order.\n\nOrder Details:\n- Product: {{productName}}\n- Order Number: {{orderNumber}}\n- Purchase Date: {{purchaseDate}}\n\nThe issue is: {{issueType}}.\n\n{{description}}\n\nI would appreciate it if you could look into this matter and provide a resolution.\n\nThank you for your time and assistance.\n\nSincerely,\n{{firstName}} {{lastName}}"
+  }
+}
