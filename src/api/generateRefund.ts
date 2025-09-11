@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { ensureSupabaseConfigured } from "@/lib/supabase";
 
 export type GenerateRefundPayload = {
   companyDomain: string;
@@ -33,6 +33,8 @@ export type GenerateRefundResponse = {
 };
 
 export async function generateRefund(payload: GenerateRefundPayload): Promise<GenerateRefundResponse> {
+  const supabase = ensureSupabaseConfigured();
+
   const { data, error } = await supabase.functions.invoke<GenerateRefundResponse>("generate-refund", {
     body: payload,
   });
