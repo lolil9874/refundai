@@ -155,13 +155,20 @@ const Index = () => {
     }, 2000);
   };
 
+  const shineClass = "bg-gradient-to-r from-primary via-sky-400 to-primary bg-[200%_auto] bg-clip-text text-transparent animate-shine";
+
   return (
     <div className="container relative">
       <section className="mx-auto flex max-w-[980px] flex-col items-center gap-2 py-8 md:py-12 md:pb-8 lg:py-24 lg:pb-20">
         <h1 className="text-center text-3xl font-bold leading-tight tracking-tighter md:text-6xl lg:leading-[1.1] animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <Trans i18nKey="indexPage.title">
-            Augmentez vos chances de remboursement de <span className="text-primary animate-pulse">88%</span>
-          </Trans>
+          <Trans
+            i18nKey="indexPage.title"
+            components={{
+              0: <span className={shineClass} />,
+              1: <span className={shineClass} />,
+              2: <span className={shineClass} />,
+            }}
+          />
         </h1>
         <p className="max-w-[750px] text-center text-lg text-muted-foreground sm:text-xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
           {t('indexPage.subtitle')}
