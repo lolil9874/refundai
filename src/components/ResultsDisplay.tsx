@@ -177,7 +177,9 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     };
   });
 
-  const scoresVisible = [72, 68];
+  // Visible (free) emails around 65%
+  const scoresVisible = [66, 64];
+  // Premium (locked) higher
   const scoresHidden = [95, 92, 89];
 
   const emailEntries: EmailEntry[] = [
@@ -266,6 +268,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   const premiumPhonePool = (premiumContacts || []).map((c) => c.phoneMasked).filter((v): v is string => !!v);
   const currentLockedPhones = Array.from(new Set([...remainingPhonePool, ...premiumPhonePool])).slice(0, 3);
 
+  // Visible (free) phones around 65%
   currentVisiblePhones.forEach((num, i) => {
     const brand = brandFromEmail(bestEmail || ranked[0] || "example.com");
     const fullName = i18n.language === "fr" ? `Agent IA ${brand}` : `AI Agent ${brand}`;
@@ -273,7 +276,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
       number: num,
       visible: true,
       type: pickDeterministic(i18n.language === "fr" ? phoneTypesFR : phoneTypesEN, i),
-      score: 70 + i * 5,
+      score: 65 + (i === 0 ? 1 : -1), // ~65%
       fullName: fullName,
       avatarUrl: undefined,
       companyDisplayName: companyDisplayName,
@@ -281,6 +284,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     });
   });
 
+  // Premium (locked) higher
   currentLockedPhones.forEach((num, i) => {
     const f = pickDeterministic(firstNames, seed + i * 7 + 3);
     const l = pickDeterministic(lastNames, seed + i * 11 + 4);
@@ -505,7 +509,6 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
             />
           )}
 
-          {/* Phone numbers moved to the end */}
           {mockPhoneEntries.length > 0 && (
             <section className="pt-2">
               <div className="mb-3">
