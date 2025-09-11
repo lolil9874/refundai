@@ -483,9 +483,9 @@ export function RefundForm({
                   const value = typeof field.value === "number" ? field.value : 50;
                   return (
                     <FormItem>
-                      <FormLabel className="block text-center">{t("refundForm.tone.label")}</FormLabel>
+                      <FormLabel>{t("refundForm.tone.label")}</FormLabel>
                       <FormControl>
-                        <div className="relative mt-4 pt-8">
+                        <div className="relative mt-3 pt-8">
                           {/* Pourcentage au-dessus du curseur */}
                           <div
                             className="absolute top-0 left-0 -translate-y-1/2 -translate-x-1/2"
@@ -512,9 +512,15 @@ export function RefundForm({
                             onValueChange={(vals) => field.onChange(vals[0] ?? 0)}
                             aria-label={t("refundForm.tone.label") as string}
                           />
+
+                          {/* Libellés sous la barre: Empathique — Formel — Ferme */}
+                          <div className="mt-2 grid grid-cols-3 text-[11px] text-muted-foreground">
+                            <span className="justify-self-start">{t("refundForm.tone.empathic")}</span>
+                            <span className="justify-self-center">{t("refundForm.tone.formal")}</span>
+                            <span className="justify-self-end">{t("refundForm.tone.firm")}</span>
+                          </div>
                         </div>
                       </FormControl>
-                      {/* Pas de seconde barre ni de labels sous le slider */}
                       <FormMessage />
                     </FormItem>
                   );
