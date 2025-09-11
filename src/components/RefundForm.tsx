@@ -191,145 +191,146 @@ export function RefundForm({
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-xl border-white/20 shadow-lg">
             <CardHeader>
-              <CardTitle>{t("refundForm.companySectionTitle")}</CardTitle>
+              <CardTitle>
+                {t("refundForm.companySectionTitle")} &amp; {t("refundForm.personalInfoSectionTitle")}
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <FormField
-                control={form.control}
-                name="company"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("refundForm.companyLabel")}</FormLabel>
-                    <FormControl>
-                      <div className="flex flex-wrap justify-center gap-2 pt-2">
-                        {popularCompanies.map((company) => (
-                          <Button
-                            key={company.name}
-                            type="button"
-                            variant={field.value === company.name ? "default" : "outline"}
-                            className={cn(
-                              "flex items-center justify-center gap-2",
-                              field.value !== company.name && "bg-white/50 dark:bg-black/20",
-                            )}
-                            onClick={() => field.onChange(company.name)}
-                          >
-                            <img
-                              src={`https://logo.clearbit.com/${company.domain}`}
-                              alt={`${company.name} logo`}
-                              className={cn("h-5 w-5", field.value === company.name && "brightness-0 invert")}
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = "none";
-                              }}
-                            />
-                            {company.name}
-                          </Button>
-                        ))}
-                        <Button
-                          key="other"
-                          type="button"
-                          variant={field.value === "other" ? "default" : "outline"}
-                          className={cn(field.value !== "other" && "bg-white/50 dark:bg-black/20")}
-                          onClick={() => field.onChange("other")}
-                        >
-                          {t("refundForm.otherButton")}
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {watchCompany === "other" && (
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+              {/* Left column */}
+              <div className="space-y-6 flex flex-col">
                 <FormField
                   control={form.control}
-                  name="otherCompany"
+                  name="company"
                   render={({ field }) => (
-                    <FormItem className="animate-in fade-in duration-300">
-                      <FormLabel>{t("refundForm.otherCompanyLabel")}</FormLabel>
+                    <FormItem>
+                      <FormLabel>{t("refundForm.companyLabel")}</FormLabel>
                       <FormControl>
-                        <Input placeholder={t("refundForm.otherCompanyPlaceholder")} {...field} />
+                        <div className="flex flex-wrap justify-center gap-2 pt-2">
+                          {popularCompanies.map((company) => (
+                            <Button
+                              key={company.name}
+                              type="button"
+                              variant={field.value === company.name ? "default" : "outline"}
+                              className={cn(
+                                "flex items-center justify-center gap-2",
+                                field.value !== company.name && "bg-white/50 dark:bg-black/20",
+                              )}
+                              onClick={() => field.onChange(company.name)}
+                            >
+                              <img
+                                src={`https://logo.clearbit.com/${company.domain}`}
+                                alt={`${company.name} logo`}
+                                className={cn("h-5 w-5", field.value === company.name && "brightness-0 invert")}
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = "none";
+                                }}
+                              />
+                              {company.name}
+                            </Button>
+                          ))}
+                          <Button
+                            key="other"
+                            type="button"
+                            variant={field.value === "other" ? "default" : "outline"}
+                            className={cn(field.value !== "other" && "bg-white/50 dark:bg-black/20")}
+                            onClick={() => field.onChange("other")}
+                          >
+                            {t("refundForm.otherButton")}
+                          </Button>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              )}
 
-              <FormField
-                control={form.control}
-                name="country"
-                render={({ field }) => {
-                  const selectedCountry = countries.find((c) => c.code === field.value);
-                  return (
-                    <FormItem>
-                      <FormLabel>{t("refundForm.countryLabel")}</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                {watchCompany === "other" && (
+                  <FormField
+                    control={form.control}
+                    name="otherCompany"
+                    render={({ field }) => (
+                      <FormItem className="animate-in fade-in duration-300">
+                        <FormLabel>{t("refundForm.otherCompanyLabel")}</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t("refundForm.countryPlaceholder")}>
-                              {selectedCountry ? (
-                                <div className="flex items-center gap-2">
-                                  <span>{selectedCountry.flag}</span>
-                                  <span>{selectedCountry.name}</span>
-                                  <span className="text-muted-foreground">{selectedCountry.code}</span>
-                                </div>
-                              ) : (
-                                t("refundForm.countryPlaceholder")
-                              )}
-                            </SelectValue>
-                          </SelectTrigger>
+                          <Input placeholder={t("refundForm.otherCompanyPlaceholder")} {...field} />
                         </FormControl>
-                        <SelectContent>
-                          {countries.map((country) => (
-                            <SelectItem key={country.code} value={country.code}>
-                              <div className="flex items-center gap-2">
-                                <span>{country.flag}</span>
-                                <span>{country.name}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                <FormField
+                  control={form.control}
+                  name="country"
+                  render={({ field }) => {
+                    const selectedCountry = countries.find((c) => c.code === field.value);
+                    return (
+                      <FormItem>
+                        <FormLabel>{t("refundForm.countryLabel")}</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={t("refundForm.countryPlaceholder")}>
+                                {selectedCountry ? (
+                                  <div className="flex items-center gap-2">
+                                    <span>{selectedCountry.flag}</span>
+                                    <span>{selectedCountry.name}</span>
+                                    <span className="text-muted-foreground">{selectedCountry.code}</span>
+                                  </div>
+                                ) : (
+                                  t("refundForm.countryPlaceholder")
+                                )}
+                              </SelectValue>
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {countries.map((country) => (
+                              <SelectItem key={country.code} value={country.code}>
+                                <div className="flex items-center gap-2">
+                                  <span>{country.flag}</span>
+                                  <span>{country.name}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
+              </div>
+
+              {/* Right column */}
+              <div className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("refundForm.firstNameLabel")}</FormLabel>
+                      <FormControl>
+                        <Input placeholder={t("refundForm.firstNamePlaceholder")} {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
-                  );
-                }}
-              />
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-xl border-white/20 shadow-lg">
-            <CardHeader>
-              <CardTitle>{t("refundForm.personalInfoSectionTitle")}</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("refundForm.firstNameLabel")}</FormLabel>
-                    <FormControl>
-                      <Input placeholder={t("refundForm.firstNamePlaceholder")} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("refundForm.lastNameLabel")}</FormLabel>
-                    <FormControl>
-                      <Input placeholder={t("refundForm.lastNamePlaceholder")} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("refundForm.lastNameLabel")}</FormLabel>
+                      <FormControl>
+                        <Input placeholder={t("refundForm.lastNamePlaceholder")} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </CardContent>
           </Card>
 
