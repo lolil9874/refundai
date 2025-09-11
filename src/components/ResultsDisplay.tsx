@@ -150,13 +150,9 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
       ? ["Manager Support Client", "Responsable Customer Care", "Lead Facturation"]
       : ["Customer Support Manager", "Head of Customer Care", "Billing Operations Lead"];
 
-  const firstNamesFR = ["Florian", "Camille", "Louis", "Chloé", "Hugo", "Manon", "Simon", "Julie"];
-  const lastNamesFR = ["Martin", "Dubois", "Durand", "Lefevre", "Moreau", "Laurent", "Simon", "Garnier"];
-  const firstNamesEN = ["John", "Sarah", "Michael", "Emily", "David", "Laura", "Daniel", "Grace"];
-  const lastNamesEN = ["Smith", "Johnson", "Brown", "Davis", "Miller", "Wilson", "Taylor", "Clark"];
-
-  const firstPool = i18n.language === "fr" ? firstNamesFR : firstNamesEN;
-  const lastPool = i18n.language === "fr" ? lastNamesFR : lastNamesEN;
+  // Unified, language-agnostic names
+  const firstNames = ["Florian", "Camille", "Louis", "Chloé", "John", "Sarah", "Michael", "Emily", "Simon", "Grace"];
+  const lastNames = ["Martin", "Dubois", "Durand", "Smith", "Johnson", "Brown", "Wilson", "Taylor", "Clark"];
 
   let seed = 0;
   for (let i = 0; i < domain.length; i++) {
@@ -164,8 +160,8 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   }
 
   const hiddenInvented = Array.from({ length: 3 }).map((_, i) => {
-    const f = pickDeterministic(firstPool, seed + i * 3 + 1);
-    const l = pickDeterministic(lastPool, seed + i * 5 + 2);
+    const f = pickDeterministic(firstNames, seed + i * 3 + 1);
+    const l = pickDeterministic(lastNames, seed + i * 5 + 2);
     const full = `${f} ${l}`;
     const email = `${toEmailToken(f)}.${toEmailToken(l)}@${domain}`;
     return {
@@ -275,8 +271,8 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   });
 
   currentLockedPhones.forEach((num, i) => {
-    const f = pickDeterministic(firstPool, seed + i * 7 + 3);
-    const l = pickDeterministic(lastPool, seed + i * 11 + 4);
+    const f = pickDeterministic(firstNames, seed + i * 7 + 3);
+    const l = pickDeterministic(lastNames, seed + i * 11 + 4);
     const full = `${f} ${l}`;
     mockPhoneEntries.push({
       number: num,
