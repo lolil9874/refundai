@@ -94,8 +94,16 @@ function domainFromAny(bestEmail?: string, ranked: string[] = [], fallback = "ex
   const pick = bestEmail || ranked[0] || "";
   const parts = pick.split("@");
   if (parts.length === 2) return parts[1];
-  // maybe links like https://www.domain.com/contact — last resort extract from forms or links (kept simple)
   return fallback;
+}
+
+function shortNameFromFullName(full: string) {
+  const parts = full.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "";
+  const first = parts[0];
+  const last = parts[parts.length - 1] || "";
+  const initial = last ? `${last[0].toUpperCase()}.` : "";
+  return `${first} ${initial}`.trim();
 }
 
 const SCORE_BADGE_CLASS =
@@ -149,7 +157,11 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     const l = pickDeterministic(lastPool, seed + i * 5 + 2);
     const full = `${f} ${l}`;
     const email = `${toEmailToken(f)}.${toEmailToken(l)}@${domain}`;
-    return { email, fullName: full, title: titlesHidden[i] || titlesHidden[titlesHidden.length - 1] };
+    return { 
+      email, 
+      fullName: shortNameFromFullName(full), // Apply shortening here
+      title: titlesHidden[i] || titlesHidden[titlesHidden.length - 1] 
+    };
   });
 
   const scoresVisible = [72, 68];
@@ -162,7 +174,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     score: number;
     avatarUrl?: string;
     brand?: string;
-    fullName?: string; // for paid rows display under email
+    fullName?: string; // for paid rows
   };
 
   const emailEntries: EmailEntry[] = [
@@ -186,11 +198,11 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
       title: p.title,
       score: scoresHidden[i] || 88,
       avatarUrl: avatarUrlFromEmail(p.email, i + 1),
-      fullName: p.fullName,
+      fullName: p.fullName, // This is already shortened
     })),
   ];
 
-  // Sélection (par défaut: visibles)
+  // Selection (default: visibles)
   const [selectedEmails, setSelectedEmails] = React.useState<Set<string>>(new Set(visibleEmails));
   React.useEffect(() => {
     setSelectedEmails(new Set(visibleEmails));
@@ -224,7 +236,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
       ? `mailto:${encodeURIComponent(recipients.join(","))}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
       : undefined;
 
-  // Paywall si des cachés sont sélectionnés pour générer
+  // Paywall if any hidden selected on generate
   const hasHiddenSelected = emailEntries.some((e) => !e.visible && selectedEmails.has(e.email));
   const [unlockOpen, setUnlockOpen] = React.useState(false);
   const handleGenerateClick = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {
@@ -234,7 +246,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     }
   };
 
-  // Téléphones
+  // Phones
   const visiblePhones = (phones || []).slice(0, 2);
   const remainingPhonePool = (phones || []).slice(2);
   const premiumPhonePool = (premiumContacts || [])
@@ -271,7 +283,6 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
               </div>
 
               <div className="rounded-md border bg-card/50">
-                {/* En-tête de colonne pour le score (même classe que les lignes) */}
                 <div className="px-3 py-1">
                   <div className="grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2">
                     <span />
@@ -297,7 +308,6 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                         title={displayEmail}
                         aria-label={displayEmail}
                       >
-                        {/* Col 1: checkbox */}
                         <Checkbox
                           checked={checked}
                           onCheckedChange={(v) => toggleOne(entry.email, v)}
@@ -305,7 +315,6 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                           aria-label={`Select ${entry.email}`}
                         />
 
-                        {/* Col 2: avatar/icon */}
                         {entry.visible ? (
                           <User className="h-4 w-4 shrink-0 text-muted-foreground" />
                         ) : (
@@ -315,31 +324,26 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                           </Avatar>
                         )}
 
-                        {/* Col 3: contenu principal */}
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 min-w-0">
                             <span className={`font-mono truncate ${emailTint}`}>
                               {displayEmail}
                             </span>
-                            {/* Titre de poste à côté pour payants */}
                             {isPaid && (
                               <span className="inline-flex items-center text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5">
                                 {entry.title}
                               </span>
                             )}
                           </div>
-                          {/* Sous-ligne:
-                              - payants: Prénom Nom complet (inventé)
-                              - gratuits: libellé Agent IA {marque} */}
                           <div className={`truncate ${entry.visible ? "text-xs text-muted-foreground" : "text-[11px] text-muted-foreground"}`}>
-                            {entry.visible ? entry.title : entry.fullName || fullNameFromEmail(entry.email)}
+                            {entry.visible
+                              ? entry.title
+                              : entry.fullName} {/* Now entry.fullName is already shortened */}
                           </div>
                         </div>
 
-                        {/* Col 4: score (mêmes classes partout) */}
                         <span className={SCORE_BADGE_CLASS}>{entry.score}%</span>
 
-                        {/* Col 5: actions - bouton copier partout; payants -> paywall */}
                         <div className="flex items-center gap-1 justify-self-end">
                           <Button
                             variant="ghost"
