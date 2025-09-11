@@ -36,7 +36,6 @@ import OffsetButton from "@/components/OffsetButton";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 
 const formSchema = z
@@ -47,19 +46,18 @@ const formSchema = z
     firstName: z.string().min(1, "First name is required."),
     lastName: z.string().min(1, "Last name is required."),
     productName: z.string().min(1, "Product/Service name is required."),
-    productValue: z
-      .preprocess((a) => {
-        if (a === "" || a === undefined || a === null) return undefined;
-        const n = Number(a);
-        return Number.isNaN(n) ? undefined : n;
-      }, z.number().nonnegative().optional()),
+    productValue: z.preprocess((a) => {
+      if (a === "" || a === undefined || a === null) return undefined;
+      const n = Number(a);
+      return Number.isNaN(n) ? undefined : n;
+    }, z.number().nonnegative().optional()),
     orderNumber: z.string().min(1, "Order number is required."),
     purchaseDate: z.date({ required_error: "Purchase date is required." }),
     issueCategory: z.enum(["product", "service"], { required_error: "Please choose a category." }),
     issueType: z.string().min(1, "Issue type is required."),
     description: z.string().min(10, "Please provide a short description (min. 10 characters)."),
     image: z.any().optional(),
-    tone: z.enum(["formal", "firm", "empathic"], { required_error: "Tone is required." }),
+    tone: z.number().min(0).max(100),
   })
   .refine(
     (data) => {
@@ -86,27 +84,16 @@ const countries = [
   { code: "IT", name: "Italy", flag: "🇮🇹" },
 ];
 
-const toneToValue = (tone: "formal" | "firm" | "empathic") =>
-  tone === "formal" ? 0 : tone === "firm" ? 50 : 100;
-
-const valueToTone = (val: number): "formal" | "firm" | "empathic" => {
-  // Arrondir au plus proche parmi 0, 50, 100
-  const candidates = [0, 50, 100];
-  const nearest = candidates.reduce((prev, cur) =>
-    Math.abs(cur - val) < Math.abs(prev - val) ? cur : prev
-  );
-  if (nearest === 0) return "formal";
-  if (nearest === 50) return "firm";
-  return "empathic";
-};
-
-const toneToProgress = (tone: "formal" | "firm" | "empathic") =>
-  tone === "formal" ? 34 : tone === "firm" ? 67 : 100;
-
-export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundFormValues) => void; isLoading: boolean }) {
+export function RefundForm({
+  onSubmit,
+  isLoading,
+}: {
+  onSubmit: (values: RefundFormValues) => void;
+  isLoading: boolean;
+}) {
   const { t } = useTranslation();
 
-  // 4 motifs les plus pertinents + "Autre" par catégorie
+  // Motifs par catégorie
   const productReasons = [
     t("refundForm.issue.reasons.product.not_received"),
     t("refundForm.issue.reasons.product.late_delivery"),
@@ -137,7 +124,7 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
       issueCategory: "product",
       issueType: "",
       description: "",
-      tone: "formal",
+      tone: 50,
     },
   });
 
@@ -146,12 +133,11 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
   const watchTone = form.watch("tone");
   const currentReasons = watchCategory === "service" ? serviceReasons : productReasons;
 
-  // Réinitialiser le motif si on change la catégorie
   React.useEffect(() => {
     form.setValue("issueType", "");
   }, [watchCategory]);
 
-  // Remplir avec des données tests et soumettre
+  // Test: Remplir et générer automatiquement
   const fillAndGenerate = () => {
     const values: RefundFormValues = {
       company: "Amazon",
@@ -162,13 +148,13 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
       productName: "Wireless Headphones",
       productValue: 49.99,
       orderNumber: "123-4567890-1234567",
-      purchaseDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12), // ~12 jours
+      purchaseDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12),
       issueCategory: "product",
       issueType: t("refundForm.issue.reasons.product.not_received"),
       description:
         "Package never arrived. Tracking shows no movement since dispatch. Requesting a full refund.",
       image: undefined,
-      tone: "formal",
+      tone: 60,
     };
     form.reset(values);
     toast.info(t("refundForm.testFillToast"));
@@ -414,7 +400,7 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                   )}
                 />
 
-                {/* Nouvelle sélection: Catégorie Produit/Service */}
+                {/* Catégorie Produit/Service */}
                 <FormField
                   control={form.control}
                   name="issueCategory"
@@ -442,7 +428,7 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                   )}
                 />
 
-                {/* Motif dynamique: 4 + Autre */}
+                {/* Motif dynamique */}
                 <FormField
                   control={form.control}
                   name="issueType"
@@ -477,56 +463,58 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                   <FormItem>
                     <FormLabel>{t("refundForm.descriptionLabel")}</FormLabel>
                     <FormControl>
-                      <Textarea placeholder={t("refundForm.descriptionPlaceholder")} className="resize-none" rows={4} {...field} />
+                      <Textarea
+                        placeholder={t("refundForm.descriptionPlaceholder")}
+                        className="resize-none"
+                        rows={4}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {/* Ton de l'email: Slider + Progress sous la description */}
+              {/* Ton de l'e-mail: une seule barre (0-100%), % au-dessus du curseur, repère à 50% */}
               <FormField
                 control={form.control}
                 name="tone"
                 render={({ field }) => {
-                  const currentTone = field.value as "formal" | "firm" | "empathic";
-                  const sliderValue = toneToValue(currentTone);
-                  const progressValue = toneToProgress(currentTone);
+                  const value = typeof field.value === "number" ? field.value : 50;
                   return (
                     <FormItem>
-                      <div className="flex items-center justify-between">
-                        <FormLabel>{t("refundForm.tone.label")}</FormLabel>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                          {currentTone === "formal"
-                            ? t("refundForm.tone.formal")
-                            : currentTone === "firm"
-                            ? t("refundForm.tone.firm")
-                            : t("refundForm.tone.empathic")}
-                        </span>
-                      </div>
+                      <FormLabel className="block text-center">{t("refundForm.tone.label")}</FormLabel>
                       <FormControl>
-                        <div className="mt-2">
+                        <div className="relative mt-4 pt-8">
+                          {/* Pourcentage au-dessus du curseur */}
+                          <div
+                            className="absolute top-0 left-0 -translate-y-1/2 -translate-x-1/2"
+                            style={{ left: `${value}%` }}
+                          >
+                            <span className="px-2 py-1 text-xs font-medium rounded bg-muted text-foreground shadow">
+                              {value}%
+                            </span>
+                          </div>
+
+                          {/* Repère central (50%) */}
+                          <div
+                            className="pointer-events-none absolute top-1/2 -translate-y-1/2"
+                            style={{ left: "50%" }}
+                          >
+                            <div className="h-4 w-[2px] bg-muted-foreground/40 rounded" />
+                          </div>
+
                           <Slider
-                            value={[sliderValue]}
+                            value={[value]}
                             min={0}
                             max={100}
-                            step={50}
-                            onValueChange={(vals) => field.onChange(valueToTone(vals[0] ?? 0))}
+                            step={1}
+                            onValueChange={(vals) => field.onChange(vals[0] ?? 0)}
                             aria-label={t("refundForm.tone.label") as string}
                           />
-                          <div className="mt-1 flex justify-between text-[11px] text-muted-foreground">
-                            <span>{t("refundForm.tone.formal")}</span>
-                            <span>{t("refundForm.tone.firm")}</span>
-                            <span>{t("refundForm.tone.empathic")}</span>
-                          </div>
-                          <div className="mt-3">
-                            <Progress value={progressValue} className="h-2" />
-                          </div>
                         </div>
                       </FormControl>
-                      <FormDescription className="text-xs">
-                        {t("refundForm.tone.help", { defaultValue: "" })}
-                      </FormDescription>
+                      {/* Pas de seconde barre ni de labels sous le slider */}
                       <FormMessage />
                     </FormItem>
                   );
@@ -540,7 +528,12 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                   <FormItem>
                     <FormLabel>{t("refundForm.imageLabel")}</FormLabel>
                     <FormControl>
-                      <Input type="file" accept="image/*" onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)} {...rest} />
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)}
+                        {...rest}
+                      />
                     </FormControl>
                     <FormDescription>{t("refundForm.imageDescription")}</FormDescription>
                     <FormMessage />
