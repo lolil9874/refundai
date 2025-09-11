@@ -431,17 +431,17 @@ export function RefundForm({
                         <RadioGroup
                           onValueChange={field.onChange}
                           value={field.value}
-                          className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+                          className="flex flex-wrap gap-3"
                         >
-                          <div className="flex items-center space-x-2 rounded-md border px-3 py-1">
+                          <div className="flex items-center space-x-2 rounded-md border px-2 py-1">
                             <RadioGroupItem id="cat-product" value="product" />
                             <Label htmlFor="cat-product">{t("refundForm.issue.categories.product")}</Label>
                           </div>
-                          <div className="flex items-center space-x-2 rounded-md border px-3 py-1">
+                          <div className="flex items-center space-x-2 rounded-md border px-2 py-1">
                             <RadioGroupItem id="cat-service" value="service" />
                             <Label htmlFor="cat-service">{t("refundForm.issue.categories.service")}</Label>
                           </div>
-                          <div className="flex items-center space-x-2 rounded-md border px-3 py-1">
+                          <div className="flex items-center space-x-2 rounded-md border px-2 py-1">
                             <RadioGroupItem id="cat-subscription" value="subscription" />
                             <Label htmlFor="cat-subscription">{t("refundForm.issue.categories.subscription")}</Label>
                           </div>
