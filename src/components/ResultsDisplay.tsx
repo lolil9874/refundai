@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Copy, Mail } from "lucide-react";
+import { Copy, Mail, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 type RefundResult = {
@@ -24,20 +24,20 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   const mailtoLink = `mailto:${bestEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
   return (
-    <Card className="mt-8 animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
+    <Card className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500 shadow-lg border-primary/20">
       <CardHeader>
-        <CardTitle>2. Your Refund Request</CardTitle>
+        <CardTitle className="text-2xl font-bold tracking-tight">2. Your Refund Request</CardTitle>
         <CardDescription>
           We've generated an email and found the best contact methods for you.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-8">
         <div>
-          <h3 className="font-semibold mb-2">Recommended Contact</h3>
+          <h3 className="font-semibold mb-3 text-lg">Recommended Contact</h3>
           {bestEmail ? (
-            <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md animate-in fade-in-50">
-              <Mail className="h-5 w-5 text-green-600 dark:text-green-400" />
-              <span className="font-mono text-green-800 dark:text-green-300">{bestEmail}</span>
+            <div className="flex items-center gap-3 p-3 bg-primary/10 border border-primary/20 rounded-lg animate-in fade-in-50">
+              <Mail className="h-5 w-5 text-primary" />
+              <span className="font-mono text-primary font-medium">{bestEmail}</span>
             </div>
           ) : (
             <p className="text-muted-foreground">We couldn't find a specific email. Try using a contact form.</p>
@@ -46,23 +46,38 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
 
         {(ranked.length > 0 || forms.length > 0 || links.length > 0) && (
           <div>
-            <h3 className="font-semibold mb-2">Other Options</h3>
-            <ul className="list-disc list-inside space-y-1 text-sm">
-              {ranked.map((email, i) => <li key={`e-${i}`} className="animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${i * 60}ms` }}><a href={`mailto:${email}`} className="text-blue-500 hover:underline">{email}</a></li>)}
-              {forms.map((form, i) => <li key={`f-${i}`} className="animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${(ranked.length + i) * 60}ms` }}><a href={form} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Contact Form</a></li>)}
-              {links.map((link, i) => <li key={`l-${i}`} className="animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${(ranked.length + forms.length + i) * 60}ms` }}><a href={link} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Support Page</a></li>)}
+            <h3 className="font-semibold mb-3 text-lg">Other Options</h3>
+            <ul className="space-y-2 text-sm">
+              {ranked.map((email, i) => (
+                <li key={`e-${i}`} className="animate-in fade-in slide-in-from-bottom-2 flex items-center" style={{ animationDelay: `${i * 60}ms` }}>
+                  <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <a href={`mailto:${email}`} className="text-primary hover:underline">{email}</a>
+                </li>
+              ))}
+              {forms.map((form, i) => (
+                <li key={`f-${i}`} className="animate-in fade-in slide-in-from-bottom-2 flex items-center" style={{ animationDelay: `${(ranked.length + i) * 60}ms` }}>
+                  <ExternalLink className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <a href={form} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Contact Form</a>
+                </li>
+              ))}
+              {links.map((link, i) => (
+                <li key={`l-${i}`} className="animate-in fade-in slide-in-from-bottom-2 flex items-center" style={{ animationDelay: `${(ranked.length + forms.length + i) * 60}ms` }}>
+                  <ExternalLink className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <a href={link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Support Page</a>
+                </li>
+              ))}
             </ul>
           </div>
         )}
 
-        <div className="pt-4 border-t">
-          <h3 className="font-semibold mb-2">Generated Email</h3>
+        <div className="pt-6 border-t">
+          <h3 className="font-semibold mb-4 text-lg">Generated Email</h3>
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Subject</label>
               <div className="relative mt-1">
-                <p className="p-3 bg-gray-100 dark:bg-gray-800 rounded-md font-medium">{subject}</p>
-                <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-8 w-8" onClick={() => handleCopy(subject, "Subject")}>
+                <p className="p-3 pr-12 bg-muted/50 rounded-md font-medium">{subject}</p>
+                <Button variant="ghost" size="icon" className="absolute top-1/2 -translate-y-1/2 right-1 h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => handleCopy(subject, "Subject")}>
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
@@ -70,10 +85,10 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
             <div>
               <label className="text-sm font-medium text-muted-foreground">Body</label>
               <div className="relative mt-1">
-                <div className="p-3 h-64 overflow-y-auto bg-gray-100 dark:bg-gray-800 rounded-md whitespace-pre-wrap text-sm">
+                <div className="p-3 pr-12 h-64 overflow-y-auto bg-muted/50 rounded-md whitespace-pre-wrap text-sm font-mono leading-relaxed">
                   {body}
                 </div>
-                <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-8 w-8" onClick={() => handleCopy(body, "Email body")}>
+                <Button variant="ghost" size="icon" className="absolute top-2 right-1 h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => handleCopy(body, "Email body")}>
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
@@ -81,8 +96,8 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t">
-          <Button asChild className="w-full transition-transform active:scale-[0.98]" size="lg">
+        <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t">
+          <Button asChild className="w-full transition-transform active:scale-[0.98] font-semibold" size="lg">
             <a href={mailtoLink}>
               <Mail className="mr-2 h-5 w-5" /> Open in Email App
             </a>

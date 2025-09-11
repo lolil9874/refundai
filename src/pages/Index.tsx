@@ -1,8 +1,7 @@
-import { MadeWithDyad } from "@/components/made-with-dyad";
 import { RefundForm, RefundFormValues } from "@/components/RefundForm";
 import { ResultsDisplay } from "@/components/ResultsDisplay";
 import { ResultsSkeleton } from "@/components/ResultsSkeleton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useState } from "react";
 import { ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
@@ -45,35 +44,34 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col items-center p-4 sm:p-6 md:p-8">
-      <main className="w-full max-w-2xl mx-auto">
-        <header className="text-center mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">REFUNDAI</h1>
-          <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">
-            Generate refund or complaint emails to companies, hassle-free.
-          </p>
-        </header>
+    <div className="container relative">
+      <section className="mx-auto flex max-w-[980px] flex-col items-center gap-2 py-8 md:py-12 md:pb-8 lg:py-24 lg:pb-20">
+        <h1 className="text-center text-3xl font-bold leading-tight tracking-tighter md:text-6xl lg:leading-[1.1] animate-in fade-in slide-in-from-bottom-4 duration-700">
+          Generate refund emails, hassle-free.
+        </h1>
+        <p className="max-w-[750px] text-center text-lg text-muted-foreground sm:text-xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+          Fill in the details, and we'll find the right contacts and draft a professional email for you in seconds.
+        </p>
+      </section>
 
-        <Alert className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+      <section className="mx-auto max-w-3xl w-full">
+        <Alert className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
           <ShieldCheck className="h-4 w-4" />
+          <AlertTitle>Privacy First</AlertTitle>
           <AlertDescription>
             Your data is processed in your browser and is not stored on our servers.
           </AlertDescription>
         </Alert>
 
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
-            <RefundForm onSubmit={handleFormSubmit} isLoading={isLoading} />
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+          <RefundForm onSubmit={handleFormSubmit} isLoading={isLoading} />
         </div>
 
-        {isLoading && <ResultsSkeleton />}
-
-        {results && <ResultsDisplay results={results} />}
-
-      </main>
-      <footer className="w-full max-w-2xl mx-auto mt-8 text-center text-sm text-gray-500">
-        <p>© REFUNDAI</p>
-        <MadeWithDyad />
-      </footer>
+        <div className="mt-8">
+          {isLoading && <ResultsSkeleton />}
+          {results && <ResultsDisplay results={results} />}
+        </div>
+      </section>
     </div>
   );
 };

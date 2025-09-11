@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "./ui/separator";
 
 const formSchema = z.object({
   company: z.string().min(1, "Company is required."),
@@ -92,13 +92,14 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
   const watchCompany = form.watch("company");
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>1. Enter Your Details</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+    <div className="p-6 sm:p-8 border rounded-xl shadow-sm bg-card">
+      <h2 className="text-2xl font-bold tracking-tight mb-2">1. Enter Your Details</h2>
+      <p className="text-muted-foreground mb-8">Provide as much information as possible for the best results.</p>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+          <div className="space-y-6">
+            <h3 className="text-lg font-medium">Company & Personal Info</h3>
+            <Separator />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
@@ -150,24 +151,21 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                 )}
               />
             </div>
-             {watchCompany === "other" && (
-                <FormField
-                  control={form.control}
-                  name="otherCompany"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Company Website/Domain</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-            
-            <CardTitle className="text-lg pt-4 border-t">Order Details</CardTitle>
-
+            {watchCompany === "other" && (
+              <FormField
+                control={form.control}
+                name="otherCompany"
+                render={({ field }) => (
+                  <FormItem className="animate-in fade-in duration-300">
+                    <FormLabel>Company Website/Domain</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
@@ -195,6 +193,13 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                   </FormItem>
                 )}
               />
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <h3 className="text-lg font-medium">Order Details</h3>
+            <Separator />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
                 name="productName"
@@ -238,11 +243,7 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                             )}
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
+                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
@@ -251,9 +252,7 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
-                          disabled={(date) =>
-                            date > new Date() || date < new Date("1900-01-01")
-                          }
+                          disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
                           initialFocus
                         />
                       </PopoverContent>
@@ -297,6 +296,7 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
                     <Textarea
                       placeholder="Describe the issue with your order..."
                       className="resize-none"
+                      rows={4}
                       {...field}
                     />
                   </FormControl>
@@ -307,29 +307,29 @@ export function RefundForm({ onSubmit, isLoading }: { onSubmit: (values: RefundF
             <FormField
               control={form.control}
               name="image"
-              render={({ field: { onChange, value, ...rest }}) => (
+              render={({ field: { onChange, value, ...rest } }) => (
                 <FormItem>
                   <FormLabel>Upload Image (Optional)</FormLabel>
                   <FormControl>
                     <Input type="file" accept="image/*" onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)} {...rest} />
                   </FormControl>
                   <FormDescription>
-                    Upload a screenshot to help us find more details.
+                    A screenshot can help us find more details.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full text-lg transition-transform active:scale-[0.98]" size="lg" disabled={isLoading}>
-              {isLoading ? (
-                <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-              ) : (
-                "✉️ Generate email & find contacts"
-              )}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+          </div>
+          <Button type="submit" className="w-full text-lg transition-transform active:scale-[0.98] font-semibold" size="lg" disabled={isLoading}>
+            {isLoading ? (
+              <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+            ) : (
+              "Generate Email & Find Contacts"
+            )}
+          </Button>
+        </form>
+      </Form>
+    </div>
   );
 }
