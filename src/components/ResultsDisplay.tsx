@@ -276,7 +276,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
       number: num,
       visible: true,
       type: pickDeterministic(i18n.language === "fr" ? phoneTypesFR : phoneTypesEN, i),
-      score: 65 + (i === 0 ? 1 : -1), // ~65%
+      score: 65 + (i === 0 ? 1 : -1),
       fullName: fullName,
       avatarUrl: undefined,
       companyDisplayName: companyDisplayName,
@@ -415,40 +415,6 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                   })}
                 </ul>
               </div>
-            </section>
-          )}
-
-          {(forms.length > 0 || links.length > 0) && (
-            <section className="pt-2">
-              <h3 className="font-semibold mb-2 text-lg">{t("resultsDisplay.otherOptionsLabel")}</h3>
-              <ul className="space-y-2 text-sm">
-                {forms.map((form, i) => (
-                  <li key={`f-${i}`} className="flex items-center">
-                    <ExternalLink className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <a
-                      href={form}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline truncate"
-                    >
-                      {t("resultsDisplay.contactForm")}
-                    </a>
-                  </li>
-                ))}
-                {links.map((link, i) => (
-                  <li key={`l-${i}`} className="flex items-center">
-                    <ExternalLink className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <a
-                      href={link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline truncate"
-                    >
-                      {t("resultsDisplay.supportPage")}
-                    </a>
-                  </li>
-                ))}
-              </ul>
             </section>
           )}
 
@@ -595,6 +561,40 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                   })}
                 </ul>
               </div>
+            </section>
+          )}
+
+          {(forms.length > 0 || links.length > 0) && (
+            <section className="pt-2">
+              <h3 className="font-semibold mb-2 text-lg">{t("resultsDisplay.otherOptionsLabel")}</h3>
+              <ul className="space-y-2 text-sm">
+                {forms.map((form, i) => (
+                  <li key={`f-${i}`} className="flex items-center">
+                    <ExternalLink className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <a
+                      href={form}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline truncate"
+                    >
+                      {t("resultsDisplay.contactForm")}
+                    </a>
+                  </li>
+                ))}
+                {links.map((link, i) => (
+                  <li key={`l-${i}`} className="flex items-center">
+                    <ExternalLink className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <a
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline truncate"
+                    >
+                      {t("resultsDisplay.supportPage")}
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </section>
           )}
         </CardContent>
