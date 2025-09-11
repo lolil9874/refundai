@@ -1,11 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Copy, Mail, ExternalLink, Phone } from "lucide-react";
+import { Copy, ExternalLink, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import OffsetButton from "@/components/OffsetButton";
 import React from "react";
+import { cn } from "@/lib/utils";
 
 type RefundResult = {
   bestEmail: string;
@@ -76,27 +77,6 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
         <CardDescription>{t("resultsDisplay.description")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
-        <div>
-          <h3 className="font-semibold mb-3 text-lg">
-            {t("resultsDisplay.recommendedContactLabel")}
-          </h3>
-          {bestEmail ? (
-            <div className="flex items-center gap-3 p-3 bg-primary/10 border border-primary/20 rounded-lg animate-in fade-in-50">
-              <Mail className="h-5 w-5 text-primary" />
-              <span className="font-mono text-primary font-medium">
-                {bestEmail}
-              </span>
-              <span className="ml-auto text-xs px-2 py-0.5 rounded bg-primary/15 text-primary">
-                {t("resultsDisplay.recommended")}
-              </span>
-            </div>
-          ) : (
-            <p className="text-muted-foreground">
-              {t("resultsDisplay.noEmailFound")}
-            </p>
-          )}
-        </div>
-
         {(allEmails.length > 0 || forms.length > 0 || links.length > 0) && (
           <div className="space-y-4">
             {allEmails.length > 0 && (
@@ -123,7 +103,12 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                     return (
                       <li
                         key={email}
-                        className="flex items-center gap-3 p-2 rounded-md border bg-muted/30"
+                        className={cn(
+                          "flex items-center gap-3 p-2 rounded-md border transition-colors",
+                          isBest
+                            ? "bg-sky-50 border-sky-200 text-sky-700 dark:bg-sky-950/30 dark:border-sky-900 dark:text-sky-300"
+                            : "bg-muted/30"
+                        )}
                         style={{ animationDelay: `${i * 60}ms` }}
                       >
                         <Checkbox
@@ -133,15 +118,13 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                         />
                         <label
                           htmlFor={`chk-${i}`}
-                          className="text-sm font-mono cursor-pointer"
+                          className={cn(
+                            "text-sm font-mono cursor-pointer",
+                            isBest && "text-sky-700 dark:text-sky-300"
+                          )}
                         >
                           {email}
                         </label>
-                        {isBest && (
-                          <span className="ml-auto text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary">
-                            {t("resultsDisplay.recommended")}
-                          </span>
-                        )}
                       </li>
                     );
                   })}
@@ -284,7 +267,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
             className="w-full"
             aria-disabled={recipients.length === 0}
           >
-            <Mail className="mr-2 h-5 w-5" /> {t("resultsDisplay.openInEmailAppButton")}
+            {t("resultsDisplay.openInEmailAppButton")}
           </OffsetButton>
         </div>
         {hasImage && (
