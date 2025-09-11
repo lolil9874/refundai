@@ -147,6 +147,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   }, [bestEmail, ranked]);
 
   const visibleEmails = topFive.slice(0, 2);
+  const firstEmail = topFive[0];
   const domain = domainFromAny(bestEmail, ranked);
   const titlesHidden =
     i18n.language === "fr"
@@ -207,10 +208,13 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     })),
   ];
 
-  const [selectedEmails, setSelectedEmails] = React.useState<Set<string>>(new Set(visibleEmails));
+  const [selectedEmails, setSelectedEmails] = React.useState<Set<string>>(
+    new Set(firstEmail ? [firstEmail] : []),
+  );
+
   React.useEffect(() => {
-    setSelectedEmails(new Set(visibleEmails));
-  }, [visibleEmails.join(",")]);
+    setSelectedEmails(new Set(firstEmail ? [firstEmail] : []));
+  }, [firstEmail]);
 
   const allEmailsSelected = selectedEmails.size === emailEntries.length && emailEntries.length > 0;
   const noEmailsSelected = selectedEmails.size === 0;
@@ -242,7 +246,6 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
   const hasHiddenEmailSelected = emailEntries.some((e) => !e.visible && selectedEmails.has(e.email));
   const [unlockOpen, setUnlockOpen] = React.useState(false);
 
-  // Accepte clics bouton ou lien (OffsetButton peut rendre <button> ou <a>)
   const handleOpenEmailApp = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
     if (hasHiddenEmailSelected) {
       e.preventDefault();
@@ -502,6 +505,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
             />
           )}
 
+          {/* Phone numbers moved to the end */}
           {mockPhoneEntries.length > 0 && (
             <section className="pt-2">
               <div className="mb-3">
