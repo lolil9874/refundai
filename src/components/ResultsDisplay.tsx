@@ -288,27 +288,6 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
     });
   });
 
-  const [selectedPhones, setSelectedPhones] = React.useState<Set<string>>(new Set(currentVisiblePhones));
-  const allPhonesSelected = selectedPhones.size === currentVisiblePhones.length && currentVisiblePhones.length > 0;
-  const noPhonesSelected = selectedPhones.size === 0;
-
-  const toggleSelectAllPhones = (checked: boolean | "indeterminate") => {
-    if (checked) {
-      setSelectedPhones(new Set(currentVisiblePhones));
-    } else {
-      setSelectedPhones(new Set());
-    }
-  };
-
-  const toggleOnePhone = (number: string, checked: boolean | "indeterminate") => {
-    setSelectedPhones((prev) => {
-      const next = new Set(prev);
-      if (checked) next.add(number);
-      else next.delete(number);
-      return next;
-    });
-  };
-
   const successLabel = i18n.language === "fr" ? "% de succès" : "Success rate";
 
   return (
@@ -424,78 +403,13 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
             </section>
           )}
 
-          <section className="pt-2">
-            <h3 className="font-semibold mb-4 text-lg">{t("resultsDisplay.generatedEmailLabel")}</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">{t("resultsDisplay.subjectLabel")}</label>
-                <div className="relative mt-1">
-                  <p className="p-3 pr-10 bg-muted/50 rounded-md font-medium text-sm">{subject}</p>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-1/2 -translate-y-1/2 right-1 h-8 w-8 text-muted-foreground hover:text-foreground"
-                    onClick={() => handleCopy(subject, "resultsDisplay.copySubject")}
-                    aria-label={t("resultsDisplay.copySubject") as string}
-                    title={t("resultsDisplay.copySubject") as string}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">{t("resultsDisplay.bodyLabel")}</label>
-                <div className="relative mt-1">
-                  <div className="p-3 pr-10 h-56 overflow-y-auto bg-muted/50 rounded-md whitespace-pre-wrap text-sm leading-relaxed">
-                    {body}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-2 right-1 h-8 w-8 text-muted-foreground hover:text-foreground"
-                    onClick={() => handleCopy(body, "resultsDisplay.copyBody")}
-                    aria-label={t("resultsDisplay.copyBody") as string}
-                    title={t("resultsDisplay.copyBody") as string}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 mt-4">
-              <OffsetButton
-                href={mailtoLink}
-                onClick={handleGenerateClick}
-                className="w-full"
-                aria-disabled={recipients.length === 0}
-                disabled={recipients.length === 0}
-                title={recipients.length === 0 ? "Select at least one email" : undefined}
-              >
-                {t("resultsDisplay.openInEmailAppButton")}
-              </OffsetButton>
-            </div>
-          </section>
-
           {mockPhoneEntries.length > 0 && (
             <section className="pt-2">
-              <div className="mb-3 flex items-center justify-between">
+              <div className="mb-3">
                 <h3 className="font-semibold text-lg">{t("resultsDisplay.phoneNumbersLabel")}</h3>
-                <label className="group flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-                  <Checkbox
-                    checked={allPhonesSelected ? true : noPhonesSelected ? false : "indeterminate"}
-                    onCheckedChange={toggleSelectAllPhones}
-                    className="h-4 w-4"
-                    aria-label={t("resultsDisplay.selectAll") as string}
-                  />
-                  <span className="bg-gradient-to-r from-primary via-sky-400 to-primary bg-clip-text text-transparent bg-[200%_auto] group-hover:animate-shine">
-                    {t("resultsDisplay.selectAll")}
-                  </span>
-                </label>
               </div>
               <div className="px-3 py-1">
-                <div className="grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2">
-                  <span />
+                <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2">
                   <span />
                   <span />
                   <span className={SCORE_BADGE_CLASS}>{successLabel}</span>
@@ -505,7 +419,6 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
               <div className="rounded-md border bg-card/50">
                 <ul className="divide-y">
                   {mockPhoneEntries.map((entry, i) => {
-                    const checked = selectedPhones.has(entry.number);
                     const isPaid = !entry.visible;
                     const rowTint = isPaid ? "bg-blue-50/40 dark:bg-blue-950/20" : "";
                     const numberTint = isPaid ? "text-blue-700 dark:text-blue-300 font-medium" : "";
@@ -513,17 +426,10 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
                     return (
                       <li
                         key={`phone-${i}-${entry.number}`}
-                        className={`grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-2 px-3 py-2 ${entry.visible ? "text-sm" : "text-xs"} ${rowTint}`}
+                        className={`grid grid-cols-[auto_1fr_auto_auto] items-center gap-2 px-3 py-2 ${entry.visible ? "text-sm" : "text-xs"} ${rowTint}`}
                         title={entry.number}
                         aria-label={entry.number}
                       >
-                        <Checkbox
-                          checked={checked}
-                          onCheckedChange={(v) => toggleOnePhone(entry.number, v)}
-                          className="h-4 w-4"
-                          aria-label={`Select ${entry.number}`}
-                        />
-
                         {entry.visible ? (
                           <Phone className="h-4 w-4 shrink-0 text-muted-foreground" />
                         ) : (
