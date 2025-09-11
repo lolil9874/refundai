@@ -174,7 +174,7 @@ const Index = () => {
         </p>
       </section>
 
-      <section className="mx-auto max-w-3xl w-full">
+      <section className="mx-auto max-w-5xl w-full">
         <div className="mb-4 flex items-center rounded-lg border border-white/20 bg-card/60 p-4 shadow-lg backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 dark:bg-card/40">
           <ShieldCheck className="h-6 w-6 shrink-0 text-primary" />
           <div className="ml-4">
