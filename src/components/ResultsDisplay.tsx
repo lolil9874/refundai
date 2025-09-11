@@ -2,6 +2,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Copy, ExternalLink, Phone, User } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -239,10 +241,16 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
 
   const hasHiddenEmailSelected = emailEntries.some((e) => !e.visible && selectedEmails.has(e.email));
   const [unlockOpen, setUnlockOpen] = React.useState(false);
-  const handleGenerateClick = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {
+
+  // Accept both anchor and button click events so it matches OffsetButton's onClick type
+  const handleOpenEmailApp = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
     if (hasHiddenEmailSelected) {
       e.preventDefault();
       setUnlockOpen(true);
+      return;
+    }
+    if (mailtoLink) {
+      window.location.href = mailtoLink;
     }
   };
 
@@ -525,6 +533,57 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
               </ul>
             </section>
           )}
+
+          <section className="pt-2">
+            <h3 className="font-semibold mb-2 text-lg">{t("resultsDisplay.generatedEmailLabel")}</h3>
+
+            <div className="space-y-4">
+              <div>
+                <div className="mb-1 text-sm font-medium">{t("resultsDisplay.subjectLabel")}</div>
+                <div className="grid grid-cols-[1fr_auto] items-center gap-2">
+                  <Input readOnly value={subject} className="font-mono" />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCopy(subject, "resultsDisplay.copySubject")}
+                    aria-label={t("resultsDisplay.copySubject") as string}
+                    title={t("resultsDisplay.copySubject") as string}
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    {t("resultsDisplay.copySubject")}
+                  </Button>
+                </div>
+              </div>
+
+              <div>
+                <div className="mb-1 text-sm font-medium">{t("resultsDisplay.bodyLabel")}</div>
+                <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                  <Textarea readOnly value={body} rows={10} className="font-mono" />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCopy(body, "resultsDisplay.copyBody")}
+                    aria-label={t("resultsDisplay.copyBody") as string}
+                    title={t("resultsDisplay.copyBody") as string}
+                    className="self-start"
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    {t("resultsDisplay.copyBody")}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <OffsetButton
+                  onClick={handleOpenEmailApp}
+                  disabled={!mailtoLink}
+                  className="w-full sm:w-auto"
+                >
+                  {t("resultsDisplay.openInEmailAppButton")}
+                </OffsetButton>
+              </div>
+            </div>
+          </section>
 
           {hasImage && (
             <p
