@@ -19,8 +19,8 @@ type RefundResult = {
   hasImage: boolean;
   phones: string[];
   premiumContacts?: PremiumContact[];
-  companyDisplayName: string; // Added for detailed labels
-  countryCode: string; // Added for detailed labels
+  companyDisplayName: string;
+  countryCode: string;
 };
 
 const Index = () => {
@@ -28,7 +28,7 @@ const Index = () => {
   const [results, setResults] = useState<RefundResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const dateLocale = i18n.language === 'fr' ? fr : enUS;
+  const dateLocale = i18n.language === "fr" ? fr : enUS;
 
   const getMockPhones = (country: string) => {
     switch (country) {
@@ -76,8 +76,8 @@ const Index = () => {
         country === "FR"
           ? "+33 •• •• •• •• 89"
           : country === "US" || country === "CA"
-            ? "+1 ••• ••• ••01"
-            : "+44 •• •• •• •• 78",
+          ? "+1 ••• ••• ••01"
+          : "+44 •• •• •• •• 78",
       avatarUrl: `https://i.pravatar.cc/150?img=${p.img}`,
       location: countryTag,
       score: p.score,
@@ -93,22 +93,21 @@ const Index = () => {
       let companyDomain: string | undefined;
       let companyDisplayName: string;
 
-      if (data.company === 'other') {
+      if (data.company === "other") {
         companyDomain = data.otherCompany;
-        const domainName = companyDomain?.split('.')[0] || 'the company';
+        const domainName = companyDomain?.split(".")[0] || "the company";
         companyDisplayName = domainName.charAt(0).toUpperCase() + domainName.slice(1);
       } else {
-        const selectedCompany = popularCompanies.find(c => c.name === data.company);
+        const selectedCompany = popularCompanies.find((c) => c.name === data.company);
         companyDomain = selectedCompany?.domain;
         companyDisplayName = data.company;
       }
 
       if (!companyDomain) {
-        companyDomain = 'example.com';
-        companyDisplayName = 'The Company';
+        companyDomain = "example.com";
+        companyDisplayName = "The Company";
       }
 
-      // Utiliser directement le libellé choisi pour le motif
       const translatedIssue = data.issueType;
 
       const productValueDisplay =
@@ -132,8 +131,8 @@ const Index = () => {
         ranked: additionalEmails,
         forms: [`https://www.${domain}/contact`],
         links: [],
-        subject: t('generatedEmail.subject', { orderNumber: data.orderNumber }),
-        body: t('generatedEmail.body', {
+        subject: t("generatedEmail.subject", { orderNumber: data.orderNumber }),
+        body: t("generatedEmail.body", {
           companyDisplayName,
           productName: data.productName,
           productValue: productValueDisplay,
@@ -147,15 +146,16 @@ const Index = () => {
         hasImage: !!data.image,
         phones: getMockPhones(data.country),
         premiumContacts: mockPremium,
-        companyDisplayName: companyDisplayName, // Pass company display name
-        countryCode: data.country, // Pass country code
+        companyDisplayName: companyDisplayName,
+        countryCode: data.country,
       };
       setResults(mockResults);
       setIsLoading(false);
     }, 2000);
   };
 
-  const shineClass = "bg-gradient-to-r from-primary via-sky-400 to-primary bg-[200%_auto] bg-clip-text text-transparent animate-shine";
+  const shineClass =
+    "bg-gradient-to-r from-primary via-sky-400 to-primary bg-[200%_auto] bg-clip-text text-transparent animate-shine";
 
   return (
     <div className="container relative">
@@ -163,25 +163,23 @@ const Index = () => {
         <h1 className="text-center text-3xl font-bold leading-tight tracking-tighter md:text-6xl lg:leading-[1.1] animate-in fade-in slide-in-from-bottom-4 duration-700">
           <Trans
             i18nKey="indexPage.title"
-            components={{
-              0: <span className={shineClass} />,
-              1: <span className={shineClass} />,
-              2: <span className={shineClass} />,
-            }}
+            components={[
+              <span className={shineClass} key="inc" />,
+              <span className={shineClass} key="ref" />,
+              <span className={shineClass} key="pct" />,
+            ]}
           />
         </h1>
         <p className="max-w-[750px] text-center text-lg text-muted-foreground sm:text-xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
-          {t('indexPage.subtitle')}
+          {t("indexPage.subtitle")}
         </p>
       </section>
 
       <section className="mx-auto max-w-3xl w-full">
         <Alert className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 bg-card/60 dark:bg-card/40 backdrop-blur-xl border-white/20 shadow-lg">
           <ShieldCheck className="h-4 w-4" />
-          <AlertTitle>{t('indexPage.privacyTitle')}</AlertTitle>
-          <AlertDescription>
-            {t('indexPage.privacyDescription')}
-          </AlertDescription>
+          <AlertTitle>{t("indexPage.privacyTitle")}</AlertTitle>
+          <AlertDescription>{t("indexPage.privacyDescription")}</AlertDescription>
         </Alert>
 
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">

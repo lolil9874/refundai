@@ -96,7 +96,8 @@ function shortNameFromFullName(full: string) {
 const SCORE_BADGE_CLASS =
   "inline-flex items-center gap-1 text-[10px] leading-none rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5";
 
-const TAG_CLASS = "inline-flex items-center text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 whitespace-nowrap";
+const TAG_CLASS =
+  "inline-flex items-center text-[10px] rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 whitespace-nowrap";
 
 type PhoneEntry = {
   number: string;
@@ -150,7 +151,6 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
       ? ["Manager Support Client", "Responsable Customer Care", "Lead Facturation"]
       : ["Customer Support Manager", "Head of Customer Care", "Billing Operations Lead"];
 
-  // Unified, language-agnostic names
   const firstNames = ["Florian", "Camille", "Louis", "Chloé", "John", "Sarah", "Michael", "Emily", "Simon", "Grace"];
   const lastNames = ["Martin", "Dubois", "Durand", "Smith", "Johnson", "Brown", "Wilson", "Taylor", "Clark"];
 
@@ -168,7 +168,7 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
       email,
       fullName: shortNameFromFullName(full),
       title: titlesHidden[i] || titlesHidden[titlesHidden.length - 1],
-      yearsOfExperience: Math.floor(Math.random() * 8) + 2, // 2-9 years
+      yearsOfExperience: Math.floor(Math.random() * 8) + 2,
       companyDisplayName,
       countryCode,
     };
@@ -324,14 +324,16 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
             <section>
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="font-semibold text-lg">{t("resultsDisplay.emailsToContactLabel")}</h3>
-                <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                <label className="group flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
                   <Checkbox
                     checked={allEmailsSelected ? true : noEmailsSelected ? false : "indeterminate"}
                     onCheckedChange={toggleSelectAllEmails}
                     className="h-4 w-4"
                     aria-label={t("resultsDisplay.selectAll") as string}
                   />
-                  <span>{t("resultsDisplay.selectAll")}</span>
+                  <span className="bg-gradient-to-r from-primary via-sky-400 to-primary bg-clip-text text-transparent bg-[200%_auto] group-hover:animate-shine">
+                    {t("resultsDisplay.selectAll")}
+                  </span>
                 </label>
               </div>
 
@@ -479,14 +481,16 @@ export const ResultsDisplay = ({ results }: { results: RefundResult }) => {
             <section className="pt-2">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="font-semibold text-lg">{t("resultsDisplay.phoneNumbersLabel")}</h3>
-                <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                <label className="group flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
                   <Checkbox
                     checked={allPhonesSelected ? true : noPhonesSelected ? false : "indeterminate"}
                     onCheckedChange={toggleSelectAllPhones}
                     className="h-4 w-4"
                     aria-label={t("resultsDisplay.selectAll") as string}
                   />
-                  <span>{t("resultsDisplay.selectAll")}</span>
+                  <span className="bg-gradient-to-r from-primary via-sky-400 to-primary bg-clip-text text-transparent bg-[200%_auto] group-hover:animate-shine">
+                    {t("resultsDisplay.selectAll")}
+                  </span>
                 </label>
               </div>
               <div className="px-3 py-1">
