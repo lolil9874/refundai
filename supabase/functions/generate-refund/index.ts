@@ -182,7 +182,7 @@ async function generateWithOpenAI(messages: ChatMessage[]): Promise<{ subject: s
   const input = messages.find((m) => m.role === "user")?.content || "";
 
   const payload = {
-    model: "gpt-4o-mini",
+    model: "gpt-5-nano-2025-08-07",
     instructions,
     input,
   };
