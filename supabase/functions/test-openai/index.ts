@@ -18,14 +18,14 @@ async function callOpenAI(prompt: string): Promise<string> {
     throw new Error("OPENAI_API_KEY is not set in Supabase secrets.");
   }
 
-  const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+  const resp = await fetch("https://api.openai.com/v1/responses", { // Updated endpoint
     method: "POST",
     headers: {
       "Authorization": `Bearer ${OPENAI_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: "gpt-5-nano-2025-08-07", // Updated model
       temperature: 0.5,
       messages: [
         { role: "system", content: "You are a helpful assistant. Respond concisely." },
