@@ -21,7 +21,7 @@ export function ImageUpload({ isLoading }: { isLoading: boolean }) {
     <FormField
       control={form.control}
       name="image"
-      render={({ field: { onChange, ...rest } }) => (
+      render={({ field: { onChange, value, ...rest } }) => ( // Destructure `value` here to exclude it from `...rest`
         <FormItem>
           <FormLabel>{t("refundForm.imageLabel")}</FormLabel>
           <FormControl>
@@ -32,12 +32,12 @@ export function ImageUpload({ isLoading }: { isLoading: boolean }) {
                 const file = e.target.files?.[0];
                 if (file) {
                   await extractTextFromFile(file);
-                  onChange(file);
+                  onChange(file); // Pass the file object to react-hook-form
                   setIsTextBoxOpen(true);
                 }
               }}
               disabled={isLoading || isExtracting}
-              {...rest}
+              {...rest} // `...rest` no longer contains `value`
             />
           </FormControl>
           <FormDescription>
