@@ -87,8 +87,8 @@
       "empathic": "Empathic",
       "help": "Choose the tone you want. The bar reflects your selection."
     },
-    "imageLabel": "Optional: Let our AI auto-fill from your receipt! ✨",
-    "imageDescription": "Upload a clear receipt or invoice screenshot to auto-fill details like product, price, and order number.",
+    "imageLabel": "Optional: Upload your receipt or invoice",
+    "imageDescription": "Attach a clear image or PDF of your receipt/invoice (for manual use in your email).",
     "submitButton": "Generate Email & Find Contacts",
     "submitButtonLoading": "Generating...",
     "testFillButton": "Fill and generate (TEST)",
@@ -134,17 +134,5 @@
     "yearsLabel_one": "1 year",
     "yearsLabel_other": "{{count}} years",
     "atCompany": "at"
-  },
-  "ocr": {
-    "success": "Auto-filled {{count}} of 8 fields from {{type}}—review others!",
-    "deepseekSuccess": "AI auto-filled {{count}} of 8 fields + detected {{currency}} from your receipt!",
-    "currencyDetected": "Detected {{currency}} from your receipt!",
-    "noText": "No clear text found in file—enter manually.",
-    "error": "Extraction error: {{message}}",
-    "processing": "Processing your {{type}}...",
-    "parsingWithAI": "Parsing with AI...",
-    "deepseekFallback": "AI unavailable—using basic extraction.",
-    "guidance": "Upload clear printed receipts/invoices (images or PDFs) for best results.",
-    "retry": "Retry"
   }
 }
