@@ -1,31 +1,29 @@
 // @ts-nocheck
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
-/* Supabase Edge Function: generate-refund
-   - Uses the new OpenAI Responses API.
-   - Expects JSON body with normalized companyDomain, companyDisplayName, locale ('en'|'fr'), and form data.
-   - Calls OpenAI to generate subject/body with a robust generalist prompt.
-   - Returns the exact structure the frontend already consumes.
+/* Supabase Edge Function: generate-refund (Responses API)
+   - Uses the OpenAI Responses API (gpt-5-nano-2025-08-07).
+   - Requests a strict JSON schema via `text.format` to guarantee {"subject","body"} output.
+   - Uses store: false to avoid persisting request state (stateless).
+   - Returns the same structure the frontend expects.
 */
 
 type GenerateRefundInput = {
-  // normalized client-provided fields
-  companyDomain: string; // e.g. 'amazon.com'
-  companyDisplayName: string; // e.g. 'Amazon'
+  companyDomain: string;
+  companyDisplayName: string;
   locale: "en" | "fr";
 
-  // form values
-  country: string; // country code (US, FR, GB, etc.)
+  country: string;
   firstName: string;
   lastName: string;
   productName: string;
   productValue?: number;
   orderNumber: string;
-  purchaseDateISO: string; // ISO string
+  purchaseDateISO: string;
   issueCategory: "product" | "service" | "subscription";
-  issueType: string; // already human-readable in the right language
+  issueType: string;
   description: string;
-  tone: number; // 0..100
+  tone: number;
   hasImage: boolean;
 };
 
@@ -90,7 +88,6 @@ function getMockPhones(country: string): string[] {
   }
 }
 
-// Minimal premium phones for locked entries (only masked number needed by UI)
 function getPremiumPhoneMasks(country: string): { phoneMasked?: string }[] {
   switch (country) {
     case "FR":
@@ -118,7 +115,6 @@ function formatDateISOToLocale(iso: string, locale: "en" | "fr"): string {
 function formatCurrency(value: number | undefined, locale: "en" | "fr"): string {
   if (value === undefined || value === null) return "";
   const loc = locale === "fr" ? "fr-FR" : "en-US";
-  // No specific currency given by the form; keep it as a plain number formatted for locale.
   return new Intl.NumberFormat(loc, { maximumFractionDigits: 2 }).format(value);
 }
 
@@ -181,10 +177,29 @@ async function generateWithOpenAI(messages: ChatMessage[]): Promise<{ subject: s
   const instructions = messages.find((m) => m.role === "system")?.content || "";
   const input = messages.find((m) => m.role === "user")?.content || "";
 
+  // Request a strict JSON schema via `text.format` to make the model return structured JSON.
   const payload = {
     model: "gpt-5-nano-2025-08-07",
     instructions,
     input,
+    // Make this request stateless (do not store)
+    store: false,
+    text: {
+      format: {
+        type: "json_schema",
+        name: "refund_email",
+        strict: true,
+        schema: {
+          type: "object",
+          properties: {
+            subject: { type: "string", minLength: 1 },
+            body: { type: "string", minLength: 1 },
+          },
+          required: ["subject", "body"],
+          additionalProperties: false,
+        },
+      },
+    },
   };
 
   const resp = await fetch("https://api.openai.com/v1/responses", {
@@ -202,15 +217,73 @@ async function generateWithOpenAI(messages: ChatMessage[]): Promise<{ subject: s
   }
 
   const data = await resp.json();
-  const messageItem = data?.output?.find((item: any) => item.type === "message");
-  const outputTextItem = messageItem?.content?.find((item: any) => item.type === "output_text");
-  const content: string = outputTextItem?.text ?? "";
+  const outputItems = Array.isArray(data?.output) ? data.output : [];
 
-  if (!content) {
-    throw new Error("OpenAI returned an empty response.");
+  // Try to extract JSON text from output items. Prefer output_text inside a message.
+  let contentText = "";
+
+  for (const item of outputItems) {
+    if (item?.type === "message" && Array.isArray(item.content)) {
+      // Common case: content includes { type: "output_text", text: "..." }
+      const outText = item.content.find((c: any) => c?.type === "output_text" && typeof c?.text === "string");
+      if (outText?.text) {
+        contentText = outText.text;
+        break;
+      }
+      // Responses with structured_output may include direct structured JSON
+      const structured = item.content.find((c: any) => c?.type === "structured_output");
+      if (structured) {
+        // Attempt to extract JSON as string or object
+        if (typeof structured?.value === "string") {
+          contentText = structured.value;
+          break;
+        } else if (structured?.value) {
+          contentText = JSON.stringify(structured.value);
+          break;
+        } else if (structured?.data) {
+          contentText = JSON.stringify(structured.data);
+          break;
+        }
+      }
+    }
+
+    // Fallback: scan any content array entries for output_text
+    if (Array.isArray(item?.content)) {
+      const outEntry = item.content.find((c: any) => c?.type === "output_text" && typeof c?.text === "string");
+      if (outEntry?.text) {
+        contentText = outEntry.text;
+        break;
+      }
+    }
   }
 
-  const parsed = JSON.parse(content);
+  if (!contentText) {
+    // As a last resort, try response.output_text top-level helper if present
+    if (typeof data?.output_text === "string" && data.output_text.trim().length > 0) {
+      contentText = data.output_text;
+    } else {
+      throw new Error("OpenAI returned no usable text output.");
+    }
+  }
+
+  // The model was asked to return strict JSON matching our schema.
+  let parsed: any;
+  try {
+    parsed = JSON.parse(contentText);
+  } catch (err) {
+    // Some models may wrap JSON in triple backticks or whitespace—try to extract JSON substring
+    const m = contentText.match(/\{[\s\S]*\}/);
+    if (m) {
+      try {
+        parsed = JSON.parse(m[0]);
+      } catch (err2) {
+        throw new Error("Failed to parse JSON output from OpenAI.");
+      }
+    } else {
+      throw new Error("OpenAI returned non-JSON output and no JSON could be extracted.");
+    }
+  }
+
   if (!parsed?.subject || !parsed?.body) {
     throw new Error("Invalid OpenAI response structure. Could not find subject/body in JSON.");
   }
@@ -252,7 +325,6 @@ serve(async (req) => {
       throw new Error(`Invalid JSON format in request body. Raw body: ${bodyText}`);
     }
 
-    // Basic normalization
     const companyDomain = (input.companyDomain || "example.com").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
     const companyDisplayName = input.companyDisplayName?.trim() || "The Company";
     const locale = input.locale === "fr" ? "fr" : "en";
@@ -293,7 +365,7 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Error in generate-refund function:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error?.message || String(error) }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders() },
     });
