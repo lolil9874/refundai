@@ -160,7 +160,7 @@ export function RefundForm({
               <CardTitle>{t("refundForm.orderDetailsSectionTitle")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <ImageUpload isLoading={isUploading} />
+              <ImageUpload isLoading={isUploading} setFormValue={setValue} />
               <OrderDetailsForm />
               <IssueSelector />
               <DescriptionField />
