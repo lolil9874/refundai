@@ -213,6 +213,9 @@ serve(async (req) => {
     return new Response(null, { status: 204, headers: corsHeaders() });
   }
 
+  console.log("--- New Request Received ---");
+  console.log(`Request method: ${req.method}`);
+
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
@@ -221,7 +224,20 @@ serve(async (req) => {
   }
 
   try {
-    const input: GenerateRefundInput = await req.json();
+    const bodyText = await req.text();
+    console.log("Raw request body:", bodyText);
+
+    if (!bodyText) {
+      throw new Error("Request body is empty.");
+    }
+
+    let input: GenerateRefundInput;
+    try {
+      input = JSON.parse(bodyText);
+    } catch (parseError) {
+      console.error("Failed to parse JSON body:", parseError);
+      throw new Error(`Invalid JSON format in request body. Raw body: ${bodyText}`);
+    }
 
     // Basic normalization
     const companyDomain = (input.companyDomain || "example.com").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
