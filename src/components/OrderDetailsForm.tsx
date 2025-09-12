@@ -157,14 +157,14 @@ export function OrderDetailsForm() {
               control={form.control}
               name="currency"
               render={({ field }) => (
-                <FormItem className="w-fit">
+                <FormItem className="w-20">
                   <Popover open={open} onOpenChange={setOpen}>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
                           variant="outline"
                           role="combobox"
-                          className="h-10 px-3 text-sm justify-between"
+                          className="h-10 px-2 text-sm justify-between"
                         >
                           {field.value 
                             ? currencies.find((currency) => currency.code === field.value)?.display || field.value
@@ -174,9 +174,9 @@ export function OrderDetailsForm() {
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[200px] p-0">
+                    <PopoverContent className="w-[280px] p-0">
                       <Command filter={filterCurrency}>
-                        <CommandInput placeholder="Search..." />
+                        <CommandInput placeholder="Search currency..." />
                         <CommandList>
                           <CommandEmpty>No currency found.</CommandEmpty>
                           <CommandGroup>
@@ -191,6 +191,7 @@ export function OrderDetailsForm() {
                               >
                                 <div className="flex items-center gap-2">
                                   <span className="font-medium">{currency.display}</span>
+                                  <span className="text-muted-foreground text-sm">({currency.name})</span>
                                 </div>
                               </CommandItem>
                             ))}
