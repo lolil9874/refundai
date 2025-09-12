@@ -25,11 +25,15 @@ const formSchema = z
     firstName: z.string().min(1, "First name is required."),
     lastName: z.string().min(1, "Last name is required."),
     productName: z.string().min(1, "Product/Service name is required."),
-    productValue: z.preprocess((a) => {
-      if (a === "" || a === undefined || a === null) return undefined;
-      const n = Number(a);
-      return Number.isNaN(n) ? undefined : n;
-    }, z.number().nonnegative().optional()),
+    productValue: z.preprocess((val) => {
+      if (typeof val === "string") {
+        // Allow comma as decimal separator for international users
+        val = val.replace(",", ".");
+      }
+      if (val === "" || val === null || val === undefined) return undefined;
+      const n = Number(val);
+      return isNaN(n) ? undefined : n;
+    }, z.number().positive("Value must be a positive number.").optional()),
     currency: z.enum(["USD", "EUR", "GBP", "CAD", "CHF", "JPY", "AUD"]).optional(),
     orderNumber: z.string().min(1, "Order number is required."),
     purchaseDate: z.date({ required_error: "Purchase date is required." }),

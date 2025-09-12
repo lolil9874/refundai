@@ -12,6 +12,7 @@ export function IssueSelector() {
   const { t, i18n } = useTranslation();
   const form = useFormContext();
   const watchCategory = useWatch({ control: form.control, name: "issueCategory" });
+  const prevCategoryRef = React.useRef(watchCategory);
 
   // Motifs par catégorie
   const productReasons = [
@@ -48,7 +49,11 @@ export function IssueSelector() {
   }, [watchCategory, i18n.language]);
 
   React.useEffect(() => {
-    form.setValue("issueType", "");
+    // Only reset the issue type if the category has actually changed
+    if (prevCategoryRef.current !== watchCategory) {
+      form.setValue("issueType", "", { shouldValidate: true });
+      prevCategoryRef.current = watchCategory;
+    }
   }, [watchCategory, form]);
 
   return (
