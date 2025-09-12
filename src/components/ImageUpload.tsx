@@ -14,14 +14,14 @@ import { Button } from "@/components/ui/button";
 export function ImageUpload({ isLoading }: { isLoading: boolean }) {
   const { t } = useTranslation();
   const form = useFormContext();
-  const { autoFillFromFile, isExtracting, fullExtractedText } = useOCR();
-  const [isTextBoxOpen, setIsTextBoxOpen] = React.useState(true);
+  const { extractTextFromFile, isExtracting, fullExtractedText } = useOCR();
+  const [isTextBoxOpen, setIsTextBoxOpen] = React.useState(false);
 
   return (
     <FormField
       control={form.control}
       name="image"
-      render={({ field: { onChange, value, ...rest } }) => (
+      render={({ field: { onChange, ...rest } }) => (
         <FormItem>
           <FormLabel>{t("refundForm.imageLabel")}</FormLabel>
           <FormControl>
@@ -31,8 +31,9 @@ export function ImageUpload({ isLoading }: { isLoading: boolean }) {
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (file) {
-                  await autoFillFromFile(file);
+                  await extractTextFromFile(file);
                   onChange(file);
+                  setIsTextBoxOpen(true);
                 }
               }}
               disabled={isLoading || isExtracting}
@@ -44,7 +45,7 @@ export function ImageUpload({ isLoading }: { isLoading: boolean }) {
             {isExtracting && (
               <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Extracting details from your receipt...
+                Extracting text... This may take a moment.
               </div>
             )}
           </FormDescription>
@@ -59,13 +60,13 @@ export function ImageUpload({ isLoading }: { isLoading: boolean }) {
                     {isTextBoxOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </Button>
                 </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-2">
+                <CollapsibleContent className="space-y-2 pt-2">
                   <Card className="bg-muted/50 border-muted">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium">Extracted Text Preview</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <pre className="text-xs font-mono overflow-auto max-h-40 p-3 bg-background rounded-md border text-muted-foreground whitespace-pre-wrap">
+                      <pre className="text-xs font-mono overflow-auto max-h-60 p-3 bg-background rounded-md border text-muted-foreground whitespace-pre-wrap">
                         {fullExtractedText}
                       </pre>
                       <p className="text-xs text-muted-foreground mt-2">
