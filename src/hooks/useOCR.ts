@@ -4,13 +4,21 @@ import { useState, useCallback } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import Tesseract from "tesseract.js";
 import { toast } from "sonner";
+import { preprocessImageFileForOCR } from "@/utils/imagePreprocess";
 
-// IMPORTANT: Use a locally bundled PDF.js worker with Vite (no CDN).
-// Vite's ?worker import returns a Worker constructor we can instantiate.
+// Use a locally bundled PDF.js worker with Vite
 import PdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?worker";
-
-// Wire the worker instance directly (stable for pdfjs-dist v4)
 pdfjsLib.GlobalWorkerOptions.workerPort = new PdfWorker();
+
+// Centralized OCR options (typed as any to satisfy varying Tesseract param typings)
+const OCR_OPTIONS: any = {
+  // Page segmentation mode (equivalent to psm: 6)
+  tessedit_pageseg_mode: "6",
+  // Keep spaces to help parsing receipts/lines
+  preserve_interword_spaces: "1",
+  // Hint DPI to improve accuracy
+  user_defined_dpi: "300",
+};
 
 export function useOCR() {
   const [isExtracting, setIsExtracting] = useState(false);
@@ -25,21 +33,21 @@ export function useOCR() {
       let text = "";
 
       if (file.type.startsWith("image/")) {
-        // Directly OCR images (PNG, JPG, etc.)
-        const result = await Tesseract.recognize(file, "eng");
+        // Preprocess the image to improve OCR and use eng+fra models
+        const processedUrl = await preprocessImageFileForOCR(file);
+        const result = await Tesseract.recognize(processedUrl, "eng+fra", OCR_OPTIONS);
         text = result.data.text;
       } else if (file.name.toLowerCase().endsWith(".pdf")) {
-        // Render PDF pages to canvas, convert to JPG, then OCR
+        // PDF path: render to canvas, convert to JPEG, then OCR
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         const numPages = pdf.numPages;
         let combinedText = "";
 
-        // Process up to the first 3 pages for performance
         const maxPages = Math.min(numPages, 3);
         for (let i = 1; i <= maxPages; i++) {
           const page = await pdf.getPage(i);
-          const viewport = page.getViewport({ scale: 2.0 }); // upscale for better OCR
+          const viewport = page.getViewport({ scale: 2.0 });
           const canvas = document.createElement("canvas");
           const context = canvas.getContext("2d")!;
           canvas.width = viewport.width;
@@ -47,9 +55,9 @@ export function useOCR() {
 
           await page.render({ canvasContext: context, viewport }).promise;
 
-          // Convert canvas to a high-quality JPG to improve OCR stability
+          // Convert to JPEG then OCR (eng+fra can help for bilingual content)
           const imageDataUrl = canvas.toDataURL("image/jpeg", 0.95);
-          const result = await Tesseract.recognize(imageDataUrl, "eng");
+          const result = await Tesseract.recognize(imageDataUrl, "eng+fra", OCR_OPTIONS);
           combinedText += result.data.text;
 
           if (i < maxPages) {
