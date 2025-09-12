@@ -84,7 +84,7 @@
       "empathic": "Empathic",
       "help": "Choose the tone you want. The bar reflects your selection."
     },
-    "imageLabel": "Our AI will extract and complete the form for you",
+    "imageLabel": "Optional: Let our AI auto-fill from your receipt! ✨",
     "imageDescription": "Upload a clear receipt or invoice screenshot to auto-fill details like product, price, and order number.",
     "submitButton": "Generate Email & Find Contacts",
     "submitButtonLoading": "Generating...",
