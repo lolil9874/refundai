@@ -131,5 +131,11 @@
     "yearsLabel_one": "1 an",
     "yearsLabel_other": "{{count}} ans",
     "atCompany": "chez"
+  },
+  "ocr": {
+    "success": "Rempli automatiquement {{count}} champs sur 6 à partir de l'image — vérifiez les autres !",
+    "noText": "Aucun texte clair trouvé dans l'image — saisissez manuellement.",
+    "error": "Erreur d'extraction : {{message}}",
+    "guidance": "Téléchargez des reçus imprimés clairs pour un auto-remplissage."
   }
 }

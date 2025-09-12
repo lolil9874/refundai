@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { Calendar as CalendarIcon, Loader2, Image as ImageIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
@@ -38,6 +38,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import LiquidGlassButton from "./LiquidGlassButton";
+import { useOCR, type ExtractedData } from "@/hooks/useOCR";
 
 const formSchema = z
   .object({
@@ -157,6 +158,32 @@ export function RefundForm({
     form.setValue("issueType", "");
   }, [watchCategory]);
 
+  // OCR Integration
+  const { extractFromImage, isExtracting, error: ocrError, resetError: resetOcrError } = useOCR(i18n.language);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    resetOcrError();
+    form.setValue("image", file); // Always attach original file
+
+    if (!isExtracting) {
+      const extracted = await extractFromImage(file);
+      if (extracted) {
+        // Auto-fill matching fields
+        if (extracted.company) form.setValue("company", extracted.company);
+        if (extracted.productName) form.setValue("productName", extracted.productName);
+        if (extracted.productValue !== undefined) form.setValue("productValue", extracted.productValue);
+        if (extracted.orderNumber) form.setValue("orderNumber", extracted.orderNumber);
+        if (extracted.purchaseDate) form.setValue("purchaseDate", extracted.purchaseDate);
+        if (extracted.description) form.setValue("description", extracted.description);
+
+        // UX toast handled in parseText
+      }
+    }
+  };
+
   // Test: Remplir et générer automatiquement
   const fillAndGenerate = () => {
     const values: RefundFormValues = {
@@ -180,6 +207,8 @@ export function RefundForm({
     toast.info(t("refundForm.testFillToast"));
     requestAnimationFrame(() => form.handleSubmit(onSubmit)());
   };
+
+  const isUploading = isLoading || isExtracting;
 
   return (
     <div>
@@ -555,23 +584,45 @@ export function RefundForm({
                   <FormItem>
                     <FormLabel>{t("refundForm.imageLabel")}</FormLabel>
                     <FormControl>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)}
-                        {...rest}
-                      />
+                      <div className="relative">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={async (e) => {
+                            await handleImageUpload(e);
+                            onChange(e.target.files ? e.target.files[0] : null);
+                          }}
+                          disabled={isUploading}
+                          {...rest}
+                        />
+                        {isExtracting && (
+                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
                     </FormControl>
-                    <FormDescription>{t("refundForm.imageDescription")}</FormDescription>
-                    <FormMessage />
+                    <FormDescription>
+                      {t("refundForm.imageDescription")}{" "}
+                      <span className="text-xs text-muted-foreground">
+                        ({t("ocr.guidance")}) {/* "Upload clear printed receipts for auto-fill." */}
+                      </span>
+                    </FormDescription>
+                    {ocrError && (
+                      <FormMessage className="text-destructive">
+                        {ocrError} <Button variant="link" size="sm" onClick={resetOcrError} className="h-auto p-0 text-destructive">
+                          Retry
+                        </Button>
+                      </FormMessage>
+                    )}
                   </FormItem>
                 )}
               />
             </CardContent>
           </Card>
 
-          <OffsetButton type="submit" className="w-full text-lg" loading={isLoading} disabled={isLoading}>
-            {isLoading ? (
+          <OffsetButton type="submit" className="w-full text-lg" loading={isUploading} disabled={isUploading}>
+            {isUploading ? (
               <>
                 <Loader2 className="mr-2 h-6 w-6 animate-spin" />
                 {t("refundForm.submitButtonLoading")}
@@ -585,7 +636,7 @@ export function RefundForm({
             type="button"
             className="w-full"
             onClick={fillAndGenerate}
-            disabled={isLoading}
+            disabled={isUploading}
           >
             {t("refundForm.testFillButton")}
           </LiquidGlassButton>

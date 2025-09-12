@@ -131,5 +131,11 @@
     "yearsLabel_one": "1 year",
     "yearsLabel_other": "{{count}} years",
     "atCompany": "at"
+  },
+  "ocr": {
+    "success": "Auto-filled {{count}} of 6 fields from image—review others!",
+    "noText": "No clear text found in image—enter details manually.",
+    "error": "Extraction error: {{message}}",
+    "guidance": "Upload clear printed receipts for auto-fill."
   }
 }
