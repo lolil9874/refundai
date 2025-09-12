@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 /* Supabase Edge Function: generate-refund
+   - Uses the new OpenAI Responses API.
    - Expects JSON body with normalized companyDomain, companyDisplayName, locale ('en'|'fr'), and form data.
    - Calls OpenAI to generate subject/body with a robust generalist prompt.
    - Returns the exact structure the frontend already consumes.
@@ -177,17 +178,22 @@ async function generateWithOpenAI(messages: ChatMessage[]): Promise<{ subject: s
     throw new Error("OPENAI_API_KEY is not set. Please add it as a secret in your Supabase project.");
   }
 
-  const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+  const instructions = messages.find((m) => m.role === "system")?.content || "";
+  const input = messages.find((m) => m.role === "user")?.content || "";
+
+  const payload = {
+    model: "gpt-4o-mini",
+    instructions,
+    input,
+  };
+
+  const resp = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${OPENAI_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      temperature: 0.4,
-      messages,
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!resp.ok) {
@@ -196,12 +202,19 @@ async function generateWithOpenAI(messages: ChatMessage[]): Promise<{ subject: s
   }
 
   const data = await resp.json();
-  const content: string = data?.choices?.[0]?.message?.content ?? "";
+  const messageItem = data?.output?.find((item: any) => item.type === "message");
+  const outputTextItem = messageItem?.content?.find((item: any) => item.type === "output_text");
+  const content: string = outputTextItem?.text ?? "";
+
+  if (!content) {
+    throw new Error("OpenAI returned an empty response.");
+  }
+
   const parsed = JSON.parse(content);
   if (!parsed?.subject || !parsed?.body) {
-    throw new Error("Invalid OpenAI response structure.");
+    throw new Error("Invalid OpenAI response structure. Could not find subject/body in JSON.");
   }
-  // Basic trims
+
   return {
     subject: String(parsed.subject).trim(),
     body: String(parsed.body).trim(),
