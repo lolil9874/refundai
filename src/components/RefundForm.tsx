@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { Calendar as CalendarIcon, Loader2, Upload } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
@@ -37,7 +37,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
+import { showError, showSuccess } from "@/utils/toast";
 import LiquidGlassButton from "./LiquidGlassButton";
+import { ocrAnalyze, type OcrExtractedData } from "@/api/ocrAnalyze";
 
 const formSchema = z
   .object({
@@ -156,6 +158,75 @@ export function RefundForm({
   React.useEffect(() => {
     form.setValue("issueType", "");
   }, [watchCategory]);
+
+  // OCR Processing
+  const [ocrLoading, setOcrLoading] = React.useState(false);
+  const [ocrError, setOcrError] = React.useState<string | null>(null);
+
+  const handleImageUpload = async (file: File | null) => {
+    if (!file) {
+      form.setValue("image", null);
+      return;
+    }
+
+    setOcrLoading(true);
+    setOcrError(null);
+    toast.loading(t("refundForm.ocrLoading") || "Analyzing image...");
+
+    try {
+      // Convert file to base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = error => reject(error);
+      });
+
+      const imageBase64 = base64.split(",")[1]; // Remove data:image/...;base64, prefix
+
+      const extracted = await ocrAnalyze({
+        imageBase64,
+        language: i18n.language === "fr" ? "fr" : "en",
+      });
+
+      // Auto-fill form fields
+      if (extracted.company) {
+        // Check if company matches popular ones, else set to "other" and fill domain
+        const matchedCompany = popularCompanies.find(c => 
+          extracted.company?.toLowerCase().includes(c.name.toLowerCase()) || 
+          extracted.company?.toLowerCase().includes(c.domain.split(".")[0])
+        );
+        if (matchedCompany) {
+          form.setValue("company", matchedCompany.name);
+        } else {
+          form.setValue("company", "other");
+          form.setValue("otherCompany", extracted.company);
+        }
+      }
+
+      if (extracted.productName) form.setValue("productName", extracted.productName);
+      if (extracted.productValue) form.setValue("productValue", extracted.productValue);
+      if (extracted.orderNumber) form.setValue("orderNumber", extracted.orderNumber);
+      if (extracted.purchaseDate) {
+        const date = new Date(extracted.purchaseDate);
+        if (!isNaN(date.getTime())) {
+          form.setValue("purchaseDate", date);
+        }
+      }
+
+      form.setValue("image", file);
+      showSuccess(t("refundForm.ocrSuccess") || "Image analyzed! Fields auto-filled where possible.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "OCR analysis failed";
+      setOcrError(message);
+      showError(t("refundForm.ocrError", { message }) || `OCR Error: ${message}`);
+      // Still set the image file, but don't auto-fill
+      form.setValue("image", file);
+    } finally {
+      setOcrLoading(false);
+      toast.dismiss(); // Dismiss loading toast
+    }
+  };
 
   // Test: Remplir et générer automatiquement
   const fillAndGenerate = () => {
@@ -346,14 +417,32 @@ export function RefundForm({
                   <FormItem>
                     <FormLabel>{t("refundForm.imageLabel")}</FormLabel>
                     <FormControl>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)}
-                        {...rest}
-                      />
+                      <div className="relative">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] || null;
+                            onChange(file);
+                            handleImageUpload(file);
+                          }}
+                          {...rest}
+                          className={cn(
+                            "file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground",
+                            "file:cursor-pointer hover:file:bg-primary/90",
+                            ocrLoading && "opacity-50 cursor-not-allowed"
+                          )}
+                          disabled={ocrLoading}
+                        />
+                        {ocrLoading && (
+                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          </div>
+                        )}
+                      </div>
                     </FormControl>
                     <FormDescription>{t("refundForm.imageDescription")}</FormDescription>
+                    {ocrError && <p className="text-sm text-destructive mt-1">{ocrError}</p>}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -570,7 +659,7 @@ export function RefundForm({
             </CardContent>
           </Card>
 
-          <OffsetButton type="submit" className="w-full text-lg" loading={isLoading} disabled={isLoading}>
+          <OffsetButton type="submit" className="w-full text-lg" loading={isLoading} disabled={isLoading || ocrLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-6 w-6 animate-spin" />
@@ -585,7 +674,7 @@ export function RefundForm({
             type="button"
             className="w-full"
             onClick={fillAndGenerate}
-            disabled={isLoading}
+            disabled={isLoading || ocrLoading}
           >
             {t("refundForm.testFillButton")}
           </LiquidGlassButton>
