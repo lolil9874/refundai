@@ -16,70 +16,43 @@ export function CompanySelector() {
 
   return (
     <div className="space-y-4">
-      <FormLabel>{t("refundForm.companyLabel")}</FormLabel>
-
-      {watchCompany === "other" && (
-        <FormField
-          control={form.control}
-          name="otherCompany"
-          render={({ field }) => (
-            <FormItem className="animate-in fade-in duration-300">
-              <FormControl>
-                <Input placeholder={t("refundForm.otherCompanyPlaceholder")} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      )}
-
       <FormField
         control={form.control}
         name="company"
         render={({ field }) => (
           <FormItem>
+            <FormLabel>{t("refundForm.companyLabel")}</FormLabel>
             <FormControl>
-              <div className="flex flex-wrap justify-center gap-2">
-                {popularCompanies.map((company) => (
-                  <Button
-                    key={company.name}
-                    type="button"
-                    variant={field.value === company.name ? "default" : "outline"}
-                    className={cn(
-                      "flex items-center justify-center gap-2",
-                      field.value !== company.name && "bg-white/50 dark:bg-black/20",
-                    )}
-                    onClick={() => {
-                      field.onChange(company.name);
-                      form.setValue("otherCompany", "", { shouldValidate: false });
-                    }}
-                  >
-                    <img
-                      src={`https://logo.clearbit.com/${company.domain}`}
-                      alt={`${company.name} logo`}
-                      className="h-5 w-5"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                    {company.name}
-                  </Button>
-                ))}
-                <Button
-                  key="other"
-                  type="button"
-                  variant={field.value === "other" ? "default" : "outline"}
-                  className={cn(field.value !== "other" && "bg-white/50 dark:bg-black/20")}
-                  onClick={() => field.onChange("other")}
-                >
-                  {t("refundForm.otherButton")}
-                </Button>
-              </div>
+              <Input placeholder={t("refundForm.otherCompanyPlaceholder")} {...field} />
             </FormControl>
-            <FormMessage className="pt-2" />
+            <FormMessage />
           </FormItem>
         )}
       />
+
+      <div className="flex flex-wrap justify-center gap-2">
+        {popularCompanies.map((company) => (
+          <Button
+            key={company.name}
+            type="button"
+            variant={watchCompany === company.name ? "default" : "outline"}
+            className={cn(watchCompany !== company.name && "bg-white/50 dark:bg-black/20")}
+            onClick={() => {
+              form.setValue("company", company.name, { shouldValidate: true });
+            }}
+          >
+            <img
+              src={`https://logo.clearbit.com/${company.domain}`}
+              alt={`${company.name} logo`}
+              className="h-5 w-5"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
+            {company.name}
+          </Button>
+        ))}
+      </div>
     </div>
   );
 }

@@ -19,8 +19,7 @@ import { Loader2 } from "lucide-react";
 
 const formSchema = z
   .object({
-    company: z.string().min(1, "Please select a company or 'Other'."),
-    otherCompany: z.string().optional(),
+    company: z.string().min(1, "Please enter a company name or domain."),
     country: z.enum(["US", "FR", "GB", "CA", "DE", "ES", "IT"], { required_error: "Country is required." }),
     firstName: z.string().min(1, "First name is required."),
     lastName: z.string().min(1, "Last name is required."),
@@ -45,18 +44,6 @@ const formSchema = z
     image: z.any().optional(),
     tone: z.number().min(0).max(100),
   })
-  .refine(
-    (data) => {
-      if (data.company === "other") {
-        return !!data.otherCompany && data.otherCompany.length > 0;
-      }
-      return true;
-    },
-    {
-      message: "Please enter the company domain.",
-      path: ["otherCompany"],
-    },
-  )
   .refine(
     (data) => !(data.productValue && data.productValue > 0 && !data.currency),
     {

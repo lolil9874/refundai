@@ -37,18 +37,18 @@ const Index = () => {
     return raw.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
   };
 
-  const resolveCompany = (company: string, otherCompany?: string): { domain: string; display: string } => {
-    if (company === "other") {
-      const d = toDomain(otherCompany) || "example.com";
-      const name = d.split(".")[0] || "the company";
-      const display = name.charAt(0).toUpperCase() + name.slice(1);
-      return { domain: d, display };
+  const resolveCompany = (companyInput: string): { domain: string; display: string } => {
+    const selectedPopular = popularCompanies.find((c) => c.name.toLowerCase() === companyInput.toLowerCase());
+
+    if (selectedPopular) {
+      return { domain: selectedPopular.domain, display: selectedPopular.name };
     }
-    const selected = popularCompanies.find((c) => c.name === company);
-    return {
-      domain: selected?.domain || "example.com",
-      display: company || "The Company",
-    };
+
+    // Treat as a custom domain/name
+    const d = toDomain(companyInput) || "example.com";
+    const name = d.split(".")[0] || "the company";
+    const display = name.charAt(0).toUpperCase() + name.slice(1);
+    return { domain: d, display };
   };
 
   const handleFormSubmit = async (data: RefundFormValues) => {
@@ -56,7 +56,7 @@ const Index = () => {
     setResults(null);
 
     try {
-      const { domain, display } = resolveCompany(data.company, data.otherCompany);
+      const { domain, display } = resolveCompany(data.company);
 
       const payload = {
         companyDomain: domain,
