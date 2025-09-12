@@ -84,8 +84,8 @@
       "empathic": "Empathique",
       "help": "Choisissez le ton souhaité. La barre reflète visuellement votre choix."
     },
-    "imageLabel": "Télécharger une image (Facultatif)",
-    "imageDescription": "Une capture d'écran peut nous aider à trouver plus de détails.",
+    "imageLabel": "Notre IA va extraire et compléter le formulaire pour vous",
+    "imageDescription": "Téléchargez une capture claire de votre reçu ou facture pour auto-remplir les détails comme le produit, le prix et le numéro de commande.",
     "submitButton": "Générer l'e-mail & Trouver les contacts",
     "submitButtonLoading": "Génération en cours...",
     "testFillButton": "Remplir et générer (TEST)",
