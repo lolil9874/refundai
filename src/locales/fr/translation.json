@@ -81,14 +81,14 @@
     "descriptionLabel": "Brève description",
     "descriptionPlaceholder": "Décrivez le problème avec votre commande...",
     "tone": {
-      "label": "Ton de l'e-mail",
+      "label": "Ton de l’e-mail",
       "formal": "Formel",
       "firm": "Ferme",
       "empathic": "Empathique",
       "help": "Choisissez le ton souhaité. La barre reflète visuellement votre choix."
     },
-    "imageLabel": "Optionnel : Joignez votre reçu ou capture d'écran",
-    "imageDescription": "Téléchargez une image de votre reçu ou facture pour l'attacher à votre e-mail.",
+    "imageLabel": "Optionnel : Laissez notre IA auto-remplir à partir de votre reçu ! ✨",
+    "imageDescription": "Téléchargez une capture claire de votre reçu ou facture pour auto-remplir les détails comme le produit, le prix et le numéro de commande.",
     "submitButton": "Générer l'e-mail & Trouver les contacts",
     "submitButtonLoading": "Génération en cours...",
     "testFillButton": "Remplir et générer (TEST)",
@@ -134,5 +134,17 @@
     "yearsLabel_one": "1 an",
     "yearsLabel_other": "{{count}} ans",
     "atCompany": "chez"
+  },
+  "ocr": {
+    "success": "Rempli automatiquement {{count}} champs sur 8 à partir de {{type}} — vérifiez les autres !",
+    "deepseekSuccess": "IA a rempli {{count}} champs sur 8 + détecté {{currency}} depuis votre reçu !",
+    "currencyDetected": "Devise {{currency}} détectée depuis votre reçu !",
+    "noText": "Aucun texte clair trouvé dans le fichier — saisissez manuellement.",
+    "error": "Erreur d'extraction : {{message}}",
+    "processing": "Traitement de votre {{type}}...",
+    "parsingWithAI": "Analyse avec IA...",
+    "deepseekFallback": "IA indisponible — extraction basique utilisée.",
+    "guidance": "Téléchargez des reçus/factures imprimés clairs (images ou PDFs) pour de meilleurs résultats.",
+    "retry": "Réessayer"
   }
 }
