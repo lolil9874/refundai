@@ -238,8 +238,8 @@ export function useOCR(initialLanguage: string = "en") {
   // Handle PDF rendering + OCR
   const ocrFromPdf = useCallback(async (file: File, langModel: string): Promise<string> => {
     const pdfjsLib = await import('pdfjs-dist');
-    // Use unpkg.com for reliable dynamic version fetching (fixes cdnjs fetch issues in Vite/browser)
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
+    // Use jsDelivr CDN for reliable dynamic version fetching (better uptime/CORS than unpkg for pdfjs-dist in browser/Vite)
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
 
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
