@@ -129,8 +129,8 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       pdfjs-dist:
-        specifier: ^5.4.149
-        version: 5.4.149
+        specifier: ^4.5.136
+        version: 4.10.38
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -2168,9 +2168,9 @@ packages:
     resolution: {integrity: sha512-Xa4Nw17FS9ApQFJ9umLiJS4orGjm7ZzwUrwamcGQuHSzDyth9boKDaycYdDcZDuqYATXw4HFXgaqWTctW/v1HA==}
     engines: {node: '>=16 || 14 >=14.18'}
 
-  pdfjs-dist@5.4.149:
-    resolution: {integrity: sha512-Xe8/1FMJEQPUVSti25AlDpwpUm2QAVmNOpFP0SIahaPIOKBKICaefbzogLdwey3XGGoaP4Lb9wqiw2e9Jqp0LA==}
-    engines: {node: '>=20.16.0 || >=22.3.0'}
+  pdfjs-dist@4.10.38:
+    resolution: {integrity: sha512-/Y3fcFrXEAsMjJXeL9J8+ZG9U01LbuWaYypvDW2ycW1jL269L3js3DVBjDJ0Up9Np1uqDXsDrRihHANhZOlwdQ==}
+    engines: {node: '>=20'}
 
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
@@ -4514,7 +4514,7 @@ snapshots:
       lru-cache: 10.4.3
       minipass: 7.1.2
 
-  pdfjs-dist@5.4.149:
+  pdfjs-dist@4.10.38:
     optionalDependencies:
       '@napi-rs/canvas': 0.1.79
 
