@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 /* Supabase Edge Function: generate-refund
@@ -173,7 +174,7 @@ Please return JSON with "subject" and "body" for an email the user will send to 
 async function generateWithOpenAI(messages: ChatMessage[]): Promise<{ subject: string; body: string }> {
   const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
   if (!OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY is not set");
+    throw new Error("OPENAI_API_KEY is not set. Please add it as a secret in your Supabase project.");
   }
 
   const resp = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -219,45 +220,53 @@ serve(async (req) => {
     });
   }
 
-  const input: GenerateRefundInput = await req.json();
+  try {
+    const input: GenerateRefundInput = await req.json();
 
-  // Basic normalization
-  const companyDomain = (input.companyDomain || "example.com").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
-  const companyDisplayName = input.companyDisplayName?.trim() || "The Company";
-  const locale = input.locale === "fr" ? "fr" : "en";
+    // Basic normalization
+    const companyDomain = (input.companyDomain || "example.com").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+    const companyDisplayName = input.companyDisplayName?.trim() || "The Company";
+    const locale = input.locale === "fr" ? "fr" : "en";
 
-  const formattedDate = formatDateISOToLocale(input.purchaseDateISO, locale);
-  const formattedValue = formatCurrency(input.productValue, locale);
+    const formattedDate = formatDateISOToLocale(input.purchaseDateISO, locale);
+    const formattedValue = formatCurrency(input.productValue, locale);
 
-  const { bestEmail, ranked, forms, links } = emailFallbacks(companyDomain);
+    const { bestEmail, ranked, forms, links } = emailFallbacks(companyDomain);
 
-  const phones = getMockPhones(input.country);
-  const premiumContacts = getPremiumPhoneMasks(input.country);
+    const phones = getMockPhones(input.country);
+    const premiumContacts = getPremiumPhoneMasks(input.country);
 
-  const messages = buildMessages(
-    { ...input, companyDomain, companyDisplayName, locale },
-    formattedDate,
-    formattedValue,
-  );
+    const messages = buildMessages(
+      { ...input, companyDomain, companyDisplayName, locale },
+      formattedDate,
+      formattedValue,
+    );
 
-  const { subject, body } = await generateWithOpenAI(messages);
+    const { subject, body } = await generateWithOpenAI(messages);
 
-  const payload: GenerateRefundResult = {
-    bestEmail,
-    ranked,
-    forms,
-    links,
-    subject,
-    body,
-    hasImage: input.hasImage,
-    phones,
-    premiumContacts,
-    companyDisplayName,
-    countryCode: input.country,
-  };
+    const payload: GenerateRefundResult = {
+      bestEmail,
+      ranked,
+      forms,
+      links,
+      subject,
+      body,
+      hasImage: input.hasImage,
+      phones,
+      premiumContacts,
+      companyDisplayName,
+      countryCode: input.country,
+    };
 
-  return new Response(JSON.stringify(payload), {
-    status: 200,
-    headers: { "Content-Type": "application/json", ...corsHeaders() },
-  });
+    return new Response(JSON.stringify(payload), {
+      status: 200,
+      headers: { "Content-Type": "application/json", ...corsHeaders() },
+    });
+  } catch (error) {
+    console.error("Error in generate-refund function:", error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders() },
+    });
+  }
 });

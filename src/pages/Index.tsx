@@ -6,6 +6,7 @@ import { ShieldCheck, Banknote } from "lucide-react";
 import { popularCompanies } from "@/lib/companies";
 import { useTranslation, Trans } from "react-i18next";
 import { generateRefund } from "@/api/generateRefund";
+import { showError } from "@/utils/toast";
 
 type RefundResult = {
   bestEmail: string;
@@ -29,7 +30,7 @@ const Index = () => {
   const normalizeLocale = (lng: string): "en" | "fr" => {
     const base = (lng || "en").split("-")[0];
     return base === "fr" ? "fr" : "en";
-    };
+  };
 
   const toDomain = (raw?: string) => {
     if (!raw) return undefined;
@@ -54,30 +55,36 @@ const Index = () => {
     setIsLoading(true);
     setResults(null);
 
-    const { domain, display } = resolveCompany(data.company, data.otherCompany);
+    try {
+      const { domain, display } = resolveCompany(data.company, data.otherCompany);
 
-    const payload = {
-      companyDomain: domain,
-      companyDisplayName: display,
-      locale: normalizeLocale(i18n.language),
-      country: data.country,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      productName: data.productName,
-      productValue: data.productValue,
-      orderNumber: data.orderNumber,
-      purchaseDateISO: data.purchaseDate.toISOString(),
-      issueCategory: data.issueCategory,
-      issueType: data.issueType,
-      description: data.description,
-      tone: data.tone,
-      hasImage: !!data.image,
-    };
+      const payload = {
+        companyDomain: domain,
+        companyDisplayName: display,
+        locale: normalizeLocale(i18n.language),
+        country: data.country,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        productName: data.productName,
+        productValue: data.productValue,
+        orderNumber: data.orderNumber,
+        purchaseDateISO: data.purchaseDate.toISOString(),
+        issueCategory: data.issueCategory,
+        issueType: data.issueType,
+        description: data.description,
+        tone: data.tone,
+        hasImage: !!data.image,
+      };
 
-    const serverResult = await generateRefund(payload);
-
-    setResults(serverResult);
-    setIsLoading(false);
+      const serverResult = await generateRefund(payload);
+      setResults(serverResult);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "An unknown error occurred.";
+      showError(message);
+      setResults(null);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const shineClass =
