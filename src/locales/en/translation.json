@@ -88,87 +88,53 @@
       "help": "Choose the tone you want. The bar reflects your selection."
     },
     "imageLabel": "Optional: Let our AI auto-fill from your receipt! ✨",
-    "imageDescription": "Upload a receipt or invoice screenshot to auto-fillI'll help you integrate OpenRouter with the nvidia/nemotron-nano-9b-v2:free model to parse OCR text and fill in the form fields. Let me create the necessary components and update the OCR functionality.
-
-First, I need to add the OpenAI dependency and create a service for OpenRouter:
-
-<dyad-add-dependency packages="openai"></dyad-add-dependency>
-
-Now, let me create a service for OpenRouter integration:
-
-<dyad-write path="src/services/openrouter.ts" description="OpenRouter service for LLM integration">
-import OpenAI from 'openai';
-
-const openrouter = new OpenAI({
-  baseURL: 'https://openrouter.ai/api/v1',
-  apiKey: import.meta.env.VITE_OPENROUTER_API_KEY || '',
-  dangerouslyAllowBrowser: true, // Allow browser usage
-});
-
-export interface ParsedFormData {
-  productName?: string;
-  productValue?: number;
-  currency?: string;
-  orderNumber?: string;
-  purchaseDate?: string;
-  company?: string;
-  otherCompany?: string;
-  firstName?: string;
-  lastName?: string;
-  issueType?: string;
-  description?: string;
-}
-
-export async function parseOCRTextWithLLM(ocrText: string): Promise<ParsedFormData> {
-  try {
-    const completion = await openrouter.chat.completions.create({
-      model: 'nvidia/nemotron-nano-9b-v2:free',
-      messages: [
-        {
-          role: 'system',
-          content: `You are an expert at extracting structured information from receipts, invoices, and order confirmations. 
-          Extract the following information and return it as a JSON object:
-          - productName: Name of the product or service
-          - productValue: Numeric value of the product (just the number)
-          - currency: Currency code (USD, EUR, GBP, etc.)
-          - orderNumber: Order or transaction number
-          - purchaseDate: Date in YYYY-MM-DD format
-          - company: Company name (if it's a known company like Amazon, Walmart, etc.)
-          - otherCompany: Company domain if not a known company
-          - firstName: Customer first name if present
-          - lastName: Customer last name if present
-          - issueType: Type of issue if mentioned (e.g., "damaged", "not received", "wrong item")
-          - description: Brief description of any issues mentioned
-
-          If a field is not found, omit it from the JSON. Return only valid JSON.`
-        },
-        {
-          role: 'user',
-          content: `Extract information from this text:\n\n${ocrText}`
-        }
-      ],
-      extra_headers: {
-        'HTTP-Referer': 'https://refundai.app',
-        'X-Title': 'RefundAI',
-      },
-      temperature: 0.1,
-    });
-
-    const response = completion.choices[0]?.message?.content;
-    if (!response) {
-      throw new Error('No response from LLM');
-    }
-
-    // Parse the JSON response
-    try {
-      const parsed = JSON.parse(response);
-      return parsed;
-    } catch (parseError) {
-      console.error('Failed to parse LLM response as JSON:', response);
-      throw new Error('Invalid JSON response from LLM');
-    }
-  } catch (error) {
-    console.error('Error calling OpenRouter:', error);
-    throw error;
+    "imageDescription": "Upload a receipt or invoice screenshot to auto-fill your order details.",
+    "ocrTestBoxTitle": "Raw OCR Text (for testing)",
+    "ocrTestBoxNote": "(This is for testing OCR output. Auto-fill uses this text to parse details.)",
+    "submitButton": "Generate Email & Find Contacts",
+    "submitButtonLoading": "Generating...",
+    "testFillButton": "Fill & Generate (TEST)",
+    "testFillToast": "Fields auto-filled for testing."
+  },
+  "resultsDisplay": {
+    "title": "2. Your Refund Request",
+    "description": "We've generated an email and found the best contact methods for you.",
+    "recommendedContactLabel": "Recommended Contact",
+    "recommended": "Recommended",
+    "noEmailFound": "We couldn't find a specific email. Try using a contact form.",
+    "emailsToContactLabel": "Emails to Contact",
+    "selectAll": "Select all",
+    "unselectAll": "Unselect all",
+    "otherOptionsLabel": "Other Options",
+    "contactForm": "Contact Form",
+    "supportPage": "Support Page",
+    "phoneNumbersLabel": "Phone Numbers",
+    "generatedEmailLabel": "Generated Email",
+    "subjectLabel": "Subject",
+    "bodyLabel": "Body",
+    "copySuccess": "{{type}} copied to clipboard!",
+    "copySubject": "Subject",
+    "copyBody": "Email body",
+    "copyPhone": "Phone number",
+    "openInEmailAppButton": "Open in Email App",
+    "imageReminder": "<strong>Reminder:</strong> Don't forget to attach your image in your email app!"
+  },
+  "generatedEmail": {
+    "subject": "Issue with order #{{orderNumber}}",
+    "body": "Dear {{companyDisplayName}} team,\n\nI am writing to you about an issue with my recent order.\n\nOrder details:\n- Product: {{productName}}\n- Product value: {{productValue}}\n- Order number: {{orderNumber}}\n- Purchase date: {{purchaseDate}}\n\nThe issue is: {{issueType}}.\n\n{{description}}\n\nI would appreciate it if you could look into this matter and provide a solution.\n\nThank you for your time and assistance.\n\nSincerely,\n{{firstName}} {{lastName}}"
+  },
+  "premiumContacts": {
+    "title": "Premium Contacts (Locked)",
+    "subtitle": "Managers for customer service, billing, customer care, etc.",
+    "lockedBadge": "Locked",
+    "unlockCta": "Unlock",
+    "dialogTitle": "Unlock verified individual contacts",
+    "dialogDescription": "Access professional emails and direct numbers of relevant managers (customer service, billing, customer care) to maximize your chances of a response.",
+    "discoverPlans": "Discover plans",
+    "notNow": "Not now",
+    "ctaToast": "Coming soon — billing is on its way!",
+    "yearsLabel_one": "1 year",
+    "yearsLabel_other": "{{count}} years",
+    "atCompany": "at"
   }
 }
