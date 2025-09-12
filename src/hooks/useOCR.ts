@@ -33,7 +33,7 @@ export function useOCR() {
         // Process up to the first 3 pages for performance
         for (let i = 1; i <= Math.min(numPages, 3); i++) {
           const page = await pdf.getPage(i);
-          const viewport = page.getViewport({ scale: 1.5 });
+          const viewport = page.getViewport({ scale: 2.0 }); // Increased scale for better quality
           const canvas = document.createElement("canvas");
           const context = canvas.getContext("2d")!;
           canvas.height = viewport.height;
@@ -41,7 +41,10 @@ export function useOCR() {
 
           await page.render({ canvasContext: context, viewport }).promise;
           
-          const result = await Tesseract.recognize(canvas, "eng");
+          // Convert canvas to a JPG data URL for more robust OCR
+          const imageDataUrl = canvas.toDataURL("image/jpeg", 0.95); // 95% quality
+          
+          const result = await Tesseract.recognize(imageDataUrl, "eng");
           combinedText += result.data.text;
           if (i < Math.min(numPages, 3)) {
              combinedText += "\n\n--- End of Page " + i + " ---\n\n";
