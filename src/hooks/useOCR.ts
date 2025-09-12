@@ -237,11 +237,11 @@ export function useOCR(initialLanguage: string = "en") {
 
   // Handle PDF rendering + OCR
   const ocrFromPdf = useCallback(async (file: File, langModel: string): Promise<string> => {
-    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.js');
-    pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+    const pdfjsLib = await import('pdfjs-dist');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.js`;
 
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjs.getDocument(arrayBuffer).promise;
+    const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
     let fullText = "";
 
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
@@ -251,7 +251,7 @@ export function useOCR(initialLanguage: string = "en") {
       canvas.width = viewport.width;
       canvas.height = viewport.height;
       const ctx = canvas.getContext("2d")!;
-      await page.render({ canvasContext: ctx, viewport }).promise;
+      await page.render({ canvasContext: ctx, canvas, viewport }).promise;
 
       preprocessImage(canvas); // Enhance for OCR
 

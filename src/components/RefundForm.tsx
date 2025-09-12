@@ -1,4 +1,3 @@
-0). Integrate CountrySelector into company/personal card. Update auto-fill in ImageUpload to set currency/country from OCR. Update payload to include currency.">
 "use client";
 
 import * as React from "react";
