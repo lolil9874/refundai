@@ -84,8 +84,8 @@
       "empathic": "Empathic",
       "help": "Choose the tone you want. The bar reflects your selection."
     },
-    "imageLabel": "Upload receipt or screenshot to auto-fill details (optional)",
-    "imageDescription": "Our AI will analyze your image and automatically extract key information like company, product, date, and order details to save you time.",
+    "imageLabel": "Upload Receipt or Screenshot to Auto-Fill Details (optional)",
+    "imageDescription": "AI extracts company, product, date & order info automatically.",
     "submitButton": "Generate Email & Find Contacts",
     "submitButtonLoading": "Generating...",
     "testFillButton": "Fill and generate (TEST)",
