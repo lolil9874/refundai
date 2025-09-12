@@ -18,15 +18,6 @@ export type GenerateRefundPayload = {
   hasImage: boolean;
 };
 
-export type GenerateRefundResponseMeta = {
-  traceId?: string;
-  timings?: {
-    totalMs?: number;
-    openAIMs?: number;
-  };
-  received?: Record<string, unknown>;
-};
-
 export type GenerateRefundResponse = {
   bestEmail: string;
   ranked: string[];
@@ -39,7 +30,6 @@ export type GenerateRefundResponse = {
   premiumContacts?: { phoneMasked?: string }[];
   companyDisplayName: string;
   countryCode: string;
-  meta?: GenerateRefundResponseMeta;
 };
 
 const FN_NAME = "generate-refund";
@@ -60,12 +50,9 @@ export async function generateRefund(payload: GenerateRefundPayload): Promise<Ge
 
   // Prefer the Supabase SDK if it's initialized
   if (supabase) {
-    const label = "generateRefund.invoke (SDK)";
-    console.time?.(label);
     const { data, error } = await supabase.functions.invoke<GenerateRefundResponse>(FN_NAME, {
       body: payload,
     });
-    console.timeEnd?.(label);
 
     if (error) {
       const functionErrorMessage = (error as any)?.context?.body?.error || error.message;
@@ -78,8 +65,6 @@ export async function generateRefund(payload: GenerateRefundPayload): Promise<Ge
 
   // Fallback to a direct fetch call if the SDK isn't ready
   if (baseUrl && anonKey) {
-    const label = "generateRefund.invoke (fetch)";
-    console.time?.(label);
     const url = buildFunctionsUrl(baseUrl, FN_NAME);
     const res = await fetch(url, {
       method: "POST",
@@ -90,14 +75,13 @@ export async function generateRefund(payload: GenerateRefundPayload): Promise<Ge
       },
       body: JSON.stringify(payload),
     });
-    console.timeEnd?.(label);
 
     const responseBody = await res.json();
     if (!res.ok) {
       const errorMessage = responseBody?.error || `Request failed with status ${res.status}`;
       throw new Error(errorMessage);
     }
-    return responseBody as GenerateRefundResponse;
+    return responseBody;
   }
 
   throw new Error("Supabase client is not configured. Please check your .env file and restart the server.");

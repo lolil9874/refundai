@@ -1,23 +1,30 @@
 // @ts-nocheck
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
-/* Supabase Edge Function: generate-refund */
+/* Supabase Edge Function: generate-refund
+   - Expects JSON body with normalized companyDomain, companyDisplayName, locale ('en'|'fr'), and form data.
+   - Calls OpenAI to generate subject/body with a robust generalist prompt.
+   - Returns the exact structure the frontend already consumes.
+*/
 
 type GenerateRefundInput = {
-  companyDomain: string;
-  companyDisplayName: string;
+  // normalized client-provided fields
+  companyDomain: string; // e.g. 'amazon.com'
+  companyDisplayName: string; // e.g. 'Amazon'
   locale: "en" | "fr";
-  country: string;
+
+  // form values
+  country: string; // country code (US, FR, GB, etc.)
   firstName: string;
   lastName: string;
   productName: string;
   productValue?: number;
   orderNumber: string;
-  purchaseDateISO: string;
+  purchaseDateISO: string; // ISO string
   issueCategory: "product" | "service" | "subscription";
-  issueType: string;
+  issueType: string; // already human-readable in the right language
   description: string;
-  tone: number;
+  tone: number; // 0..100
   hasImage: boolean;
 };
 
@@ -33,21 +40,6 @@ type GenerateRefundResult = {
   premiumContacts?: { phoneMasked?: string }[];
   companyDisplayName: string;
   countryCode: string;
-  meta?: {
-    traceId: string;
-    timings: {
-      totalMs: number;
-      openAIMs: number;
-    };
-    received: Record<string, unknown>;
-    openai?: {
-      model: string;
-      jsonMode: boolean;
-      parsed: boolean;
-      subjectLen: number;
-      bodyLen: number;
-    };
-  };
 };
 
 type ChatMessage = { role: "system" | "user"; content: string };
@@ -55,8 +47,7 @@ type ChatMessage = { role: "system" | "user"; content: string };
 function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers":
-      "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
 }
@@ -98,19 +89,14 @@ function getMockPhones(country: string): string[] {
   }
 }
 
+// Minimal premium phones for locked entries (only masked number needed by UI)
 function getPremiumPhoneMasks(country: string): { phoneMasked?: string }[] {
   switch (country) {
     case "FR":
-      return [
-        { phoneMasked: "+33 •• •• •• •• 89" },
-        { phoneMasked: "+33 •• •• •• •• 12" },
-      ];
+      return [{ phoneMasked: "+33 •• •• •• •• 89" }, { phoneMasked: "+33 •• •• •• •• 12" }];
     case "US":
     case "CA":
-      return [
-        { phoneMasked: "+1 ••• ••• ••01" },
-        { phoneMasked: "+1 ••• ••• ••22" },
-      ];
+      return [{ phoneMasked: "+1 ••• ••• ••01" }, { phoneMasked: "+1 ••• ••• ••22" }];
     default:
       return [{ phoneMasked: "+44 •• •• •• •• 78" }];
   }
@@ -125,26 +111,17 @@ function mapToneToStyle(tone: number): "empathic" | "formal" | "firm" {
 function formatDateISOToLocale(iso: string, locale: "en" | "fr"): string {
   const date = new Date(iso);
   const loc = locale === "fr" ? "fr-FR" : "en-US";
-  return new Intl.DateTimeFormat(loc, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  }).format(date);
+  return new Intl.DateTimeFormat(loc, { year: "numeric", month: "long", day: "numeric" }).format(date);
 }
 
 function formatCurrency(value: number | undefined, locale: "en" | "fr"): string {
   if (value === undefined || value === null) return "";
   const loc = locale === "fr" ? "fr-FR" : "en-US";
-  return new Intl.NumberFormat(loc, { maximumFractionDigits: 2 }).format(
-    value,
-  );
+  // No specific currency given by the form; keep it as a plain number formatted for locale.
+  return new Intl.NumberFormat(loc, { maximumFractionDigits: 2 }).format(value);
 }
 
-function buildMessages(
-  input: GenerateRefundInput,
-  formattedDate: string,
-  formattedValue: string,
-): ChatMessage[] {
+function buildMessages(input: GenerateRefundInput, formattedDate: string, formattedValue: string): ChatMessage[] {
   const style = mapToneToStyle(input.tone);
   const language = input.locale;
 
@@ -194,58 +171,22 @@ Please return JSON with "subject" and "body" for an email the user will send to 
   ];
 }
 
-function tryParseJSONObject(raw: string): { subject?: string; body?: string } {
-  // Remove common code fences if present
-  const cleaned = raw
-    .trim()
-    .replace(/^```json\s*/i, "")
-    .replace(/^```\s*/i, "")
-    .replace(/```$/i, "")
-    .trim();
-
-  try {
-    return JSON.parse(cleaned);
-  } catch {
-    // Last resort: extract the first {...} block
-    const m = cleaned.match(/\{[\s\S]*\}/);
-    if (m) {
-      try {
-        return JSON.parse(m[0]);
-      } catch {
-        // ignore
-      }
-    }
-    throw new Error("Failed to parse OpenAI JSON output.");
-  }
-}
-
-async function generateWithOpenAI(messages: ChatMessage[]): Promise<{
-  subject: string;
-  body: string;
-  chars: number;
-  parsed: boolean;
-}> {
+async function generateWithOpenAI(messages: ChatMessage[]): Promise<{ subject: string; body: string }> {
   const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
   if (!OPENAI_API_KEY) {
-    throw new Error(
-      "OPENAI_API_KEY is not set. Please add it as a secret in your Supabase project.",
-    );
+    throw new Error("OPENAI_API_KEY is not set. Please add it as a secret in your Supabase project.");
   }
-
-  const model = "gpt-4o-mini";
 
   const resp = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
+      "Authorization": `Bearer ${OPENAI_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model,
+      model: "gpt-4o-mini",
       temperature: 0.4,
       messages,
-      // Enforce JSON object response
-      response_format: { type: "json_object" },
     }),
   });
 
@@ -256,16 +197,15 @@ async function generateWithOpenAI(messages: ChatMessage[]): Promise<{
 
   const data = await resp.json();
   const content: string = data?.choices?.[0]?.message?.content ?? "";
-
-  // Parse JSON with safety
-  const parsed = tryParseJSONObject(content);
+  const parsed = JSON.parse(content);
   if (!parsed?.subject || !parsed?.body) {
     throw new Error("Invalid OpenAI response structure.");
   }
-
-  const subject = String(parsed.subject).trim();
-  const body = String(parsed.body).trim();
-  return { subject, body, chars: subject.length + body.length, parsed: true };
+  // Basic trims
+  return {
+    subject: String(parsed.subject).trim(),
+    body: String(parsed.body).trim(),
+  };
 }
 
 serve(async (req) => {
@@ -273,11 +213,8 @@ serve(async (req) => {
     return new Response(null, { status: 204, headers: corsHeaders() });
   }
 
-  const traceId = crypto.randomUUID();
-  const startedAt = Date.now();
-  console.log(
-    `[${traceId}] --- New Request Received --- method=${req.method}`,
-  );
+  console.log("--- New Request Received ---");
+  console.log(`Request method: ${req.method}`);
 
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -288,9 +225,7 @@ serve(async (req) => {
 
   try {
     const bodyText = await req.text();
-    console.log(
-      `[${traceId}] Raw request body length: ${bodyText?.length ?? 0}`,
-    );
+    console.log("Raw request body:", bodyText);
 
     if (!bodyText) {
       throw new Error("Request body is empty.");
@@ -300,43 +235,30 @@ serve(async (req) => {
     try {
       input = JSON.parse(bodyText);
     } catch (parseError) {
-      console.error(
-        `[${traceId}] Failed to parse JSON body:`,
-        parseError,
-      );
-      throw new Error(`Invalid JSON format in request body.`);
+      console.error("Failed to parse JSON body:", parseError);
+      throw new Error(`Invalid JSON format in request body. Raw body: ${bodyText}`);
     }
 
-    const normDomain = (input.companyDomain || "example.com")
-      .trim()
-      .toLowerCase()
-      .replace(/^https?:\/\//, "")
-      .replace(/\/.*$/, "");
-    const display = input.companyDisplayName?.trim() || "The Company";
+    // Basic normalization
+    const companyDomain = (input.companyDomain || "example.com").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+    const companyDisplayName = input.companyDisplayName?.trim() || "The Company";
     const locale = input.locale === "fr" ? "fr" : "en";
 
     const formattedDate = formatDateISOToLocale(input.purchaseDateISO, locale);
     const formattedValue = formatCurrency(input.productValue, locale);
 
-    const { bestEmail, ranked, forms, links } = emailFallbacks(normDomain);
+    const { bestEmail, ranked, forms, links } = emailFallbacks(companyDomain);
+
     const phones = getMockPhones(input.country);
     const premiumContacts = getPremiumPhoneMasks(input.country);
 
     const messages = buildMessages(
-      { ...input, companyDomain: normDomain, companyDisplayName: display, locale },
+      { ...input, companyDomain, companyDisplayName, locale },
       formattedDate,
       formattedValue,
     );
 
-    console.log(`[${traceId}] Calling OpenAI...`);
-    const tOpenAI0 = Date.now();
-    const { subject, body, chars, parsed } = await generateWithOpenAI(messages);
-    const tOpenAI1 = Date.now();
-    console.log(
-      `[${traceId}] OpenAI responded. chars=${chars} durationMs=${
-        tOpenAI1 - tOpenAI0
-      }`,
-    );
+    const { subject, body } = await generateWithOpenAI(messages);
 
     const payload: GenerateRefundResult = {
       bestEmail,
@@ -348,30 +270,8 @@ serve(async (req) => {
       hasImage: input.hasImage,
       phones,
       premiumContacts,
-      companyDisplayName: display,
+      companyDisplayName,
       countryCode: input.country,
-      meta: {
-        traceId,
-        timings: {
-          totalMs: Date.now() - startedAt,
-          openAIMs: tOpenAI1 - tOpenAI0,
-        },
-        received: {
-          companyDomain: normDomain,
-          companyDisplayName: display,
-          locale,
-          country: input.country,
-          issueCategory: input.issueCategory,
-          hasImage: input.hasImage,
-        },
-        openai: {
-          model: "gpt-4o-mini",
-          jsonMode: true,
-          parsed,
-          subjectLen: subject.length,
-          bodyLen: body.length,
-        },
-      },
     };
 
     return new Response(JSON.stringify(payload), {
@@ -379,8 +279,8 @@ serve(async (req) => {
       headers: { "Content-Type": "application/json", ...corsHeaders() },
     });
   } catch (error) {
-    console.error(`[${traceId}] Error in generate-refund:`, error);
-    return new Response(JSON.stringify({ error: error.message, traceId }), {
+    console.error("Error in generate-refund function:", error);
+    return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders() },
     });
