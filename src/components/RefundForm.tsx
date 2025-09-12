@@ -1,3 +1,4 @@
+0). Integrate CountrySelector into company/personal card. Update auto-fill in ImageUpload to set currency/country from OCR. Update payload to include currency.">
 "use client";
 
 import * as React from "react";
@@ -10,6 +11,7 @@ import OffsetButton from "@/components/OffsetButton";
 import LiquidGlassButton from "./LiquidGlassButton";
 import { toast } from "sonner";
 import { CompanySelector } from "./CompanySelector";
+import { CountrySelector } from "./CountrySelector";
 import { PersonalInfoForm } from "./PersonalInfoForm";
 import { OrderDetailsForm } from "./OrderDetailsForm";
 import { IssueSelector } from "./IssueSelector";
@@ -22,7 +24,7 @@ const formSchema = z
   .object({
     company: z.string().min(1, "Please select a company or 'Other'."),
     otherCompany: z.string().optional(),
-    country: z.string().min(1, "Country is required."),
+    country: z.enum(["US", "FR", "GB", "CA", "DE", "ES", "IT"], { required_error: "Country is required." }),
     firstName: z.string().min(1, "First name is required."),
     lastName: z.string().min(1, "Last name is required."),
     productName: z.string().min(1, "Product/Service name is required."),
@@ -31,6 +33,7 @@ const formSchema = z
       const n = Number(a);
       return Number.isNaN(n) ? undefined : n;
     }, z.number().nonnegative().optional()),
+    currency: z.enum(["USD", "EUR", "GBP", "CAD", "CHF", "JPY", "AUD"]).optional(),
     orderNumber: z.string().min(1, "Order number is required."),
     purchaseDate: z.date({ required_error: "Purchase date is required." }),
     issueCategory: z.enum(["product", "service", "subscription"], {
@@ -51,6 +54,13 @@ const formSchema = z
     {
       message: "Please enter the company domain.",
       path: ["otherCompany"],
+    },
+  )
+  .refine(
+    (data) => !(data.productValue && data.productValue > 0 && !data.currency),
+    {
+      message: "Currency is required for the product value.",
+      path: ["currency"],
     },
   );
 
@@ -80,11 +90,12 @@ export function RefundForm({
     defaultValues: {
       company: "",
       otherCompany: "",
-      country: "",
+      country: "US",
       firstName: "",
       lastName: "",
       productName: "",
       productValue: undefined,
+      currency: "USD",
       orderNumber: "",
       purchaseDate: undefined,
       issueCategory: "product",
@@ -94,10 +105,10 @@ export function RefundForm({
     },
   });
 
-  const { handleSubmit, reset } = methods;
+  const { handleSubmit, reset, setValue } = methods;
   const isUploading = isLoading;
 
-  // Test: Remplir et générer automatiquement
+  // Test fill
   const fillAndGenerate = () => {
     const values: RefundFormValues = {
       company: "Amazon",
@@ -107,6 +118,7 @@ export function RefundForm({
       lastName: "Doe",
       productName: "Wireless Headphones",
       productValue: 49.99,
+      currency: "USD",
       orderNumber: "123-4567890-1234567",
       purchaseDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12),
       issueCategory: "product",
@@ -136,7 +148,10 @@ export function RefundForm({
               </CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-              <CompanySelector />
+              <div className="space-y-6">
+                <CompanySelector />
+                <CountrySelector />
+              </div>
               <PersonalInfoForm />
             </CardContent>
           </Card>
@@ -146,7 +161,7 @@ export function RefundForm({
               <CardTitle>{t("refundForm.orderDetailsSectionTitle")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <ImageUpload isLoading={isUploading} />
+              <ImageUpload isLoading={isUploading} setFormValue={setValue} />
               <OrderDetailsForm />
               <IssueSelector />
               <DescriptionField />

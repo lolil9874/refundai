@@ -21,6 +21,9 @@
     "otherButton": "Autre",
     "countryLabel": "Pays/Région",
     "countryPlaceholder": "Sélectionnez un pays",
+    "currencyLabel": "Devise",
+    "currencyPlaceholder": "Sélectionnez la devise",
+    "currencyHint": "Astuce : Sélectionnez la devise pour plus de précision.",
     "personalInfoSectionTitle": "Informations personnelles",
     "firstNameLabel": "Prénom",
     "firstNamePlaceholder": "Jean",
@@ -133,9 +136,15 @@
     "atCompany": "chez"
   },
   "ocr": {
-    "success": "Rempli automatiquement {{count}} champs sur 6 à partir de l'image — vérifiez les autres !",
-    "noText": "Aucun texte clair trouvé dans l'image — saisissez manuellement.",
+    "success": "Rempli automatiquement {{count}} champs sur 8 à partir de {{type}} — vérifiez les autres !",
+    "deepseekSuccess": "IA a rempli {{count}} champs sur 8 + détecté {{currency}} depuis votre reçu !",
+    "currencyDetected": "Devise {{currency}} détectée depuis votre reçu !",
+    "noText": "Aucun texte clair trouvé dans le fichier — saisissez manuellement.",
     "error": "Erreur d'extraction : {{message}}",
-    "guidance": "Téléchargez des reçus imprimés clairs pour un auto-remplissage."
+    "processing": "Traitement de votre {{type}}...",
+    "parsingWithAI": "Analyse avec IA...",
+    "deepseekFallback": "IA indisponible — extraction basique utilisée.",
+    "guidance": "Téléchargez des reçus/factures imprimés clairs (images ou PDFs) pour de meilleurs résultats.",
+    "retry": "Réessayer"
   }
 }

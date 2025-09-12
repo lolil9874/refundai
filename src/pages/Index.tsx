@@ -67,6 +67,7 @@ const Index = () => {
         lastName: data.lastName,
         productName: data.productName,
         productValue: data.productValue,
+        currency: data.currency, // New: Include currency
         orderNumber: data.orderNumber,
         purchaseDateISO: data.purchaseDate.toISOString(),
         issueCategory: data.issueCategory,

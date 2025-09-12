@@ -21,6 +21,9 @@
     "otherButton": "Other",
     "countryLabel": "Country/Region",
     "countryPlaceholder": "Select a country",
+    "currencyLabel": "Currency",
+    "currencyPlaceholder": "Select currency",
+    "currencyHint": "Tip: Select currency for better accuracy.",
     "personalInfoSectionTitle": "Personal Info",
     "firstNameLabel": "First Name",
     "firstNamePlaceholder": "John",
@@ -133,9 +136,15 @@
     "atCompany": "at"
   },
   "ocr": {
-    "success": "Auto-filled {{count}} of 6 fields from image—review others!",
-    "noText": "No clear text found in image—enter details manually.",
+    "success": "Auto-filled {{count}} of 8 fields from {{type}}—review others!",
+    "deepseekSuccess": "AI auto-filled {{count}} of 8 fields + detected {{currency}} from your receipt!",
+    "currencyDetected": "Detected {{currency}} from your receipt!",
+    "noText": "No clear text found in file—enter manually.",
     "error": "Extraction error: {{message}}",
-    "guidance": "Upload clear printed receipts for auto-fill."
+    "processing": "Processing your {{type}}...",
+    "parsingWithAI": "Parsing with AI...",
+    "deepseekFallback": "AI unavailable—using basic extraction.",
+    "guidance": "Upload clear printed receipts/invoices (images or PDFs) for best results.",
+    "retry": "Retry"
   }
 }

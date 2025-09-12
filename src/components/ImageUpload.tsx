@@ -7,9 +7,15 @@ import { Loader2 } from "lucide-react";
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useOCR } from "@/hooks/useOCR";
+import { useOCR, type ExtractedData } from "@/hooks/useOCR";
+import { toast } from "sonner";
 
-export function ImageUpload({ isLoading }: { isLoading: boolean }) {
+type Props = {
+  isLoading: boolean;
+  setFormValue?: (name: string, value: any) => void; // From useForm
+};
+
+export function ImageUpload({ isLoading, setFormValue }: Props) {
   const { t, i18n } = useTranslation();
   const form = useFormContext();
   const { extractFromImage, isExtracting, error: ocrError, resetError: resetOcrError } = useOCR(i18n.language);
@@ -23,18 +29,23 @@ export function ImageUpload({ isLoading }: { isLoading: boolean }) {
     resetOcrError();
     form.setValue("image", file); // Always attach original file
 
-    if (!isExtracting) {
+    if (!isExtracting && setFormValue) {
       const extracted = await extractFromImage(file);
       if (extracted) {
-        // Auto-fill matching fields
-        if (extracted.company) form.setValue("company", extracted.company);
-        if (extracted.productName) form.setValue("productName", extracted.productName);
-        if (extracted.productValue !== undefined) form.setValue("productValue", extracted.productValue);
-        if (extracted.orderNumber) form.setValue("orderNumber", extracted.orderNumber);
-        if (extracted.purchaseDate) form.setValue("purchaseDate", extracted.purchaseDate);
-        if (extracted.description) form.setValue("description", extracted.description);
+        // Auto-fill all fields from OCR + DeepSeek
+        if (extracted.company) setFormValue("company", extracted.company);
+        if (extracted.productName) setFormValue("productName", extracted.productName);
+        if (extracted.productValue !== undefined) setFormValue("productValue", extracted.productValue);
+        if (extracted.currency) setFormValue("currency", extracted.currency);
+        if (extracted.orderNumber) setFormValue("orderNumber", extracted.orderNumber);
+        if (extracted.purchaseDate) setFormValue("purchaseDate", extracted.purchaseDate);
+        if (extracted.description) setFormValue("description", extracted.description);
+        if (extracted.country) setFormValue("country", extracted.country);
 
-        // UX toast handled in parseText
+        // UX: Currency-specific toast if detected
+        if (extracted.currency) {
+          toast.success(t("ocr.currencyDetected", { currency: extracted.currency }));
+        }
       }
     }
   };
@@ -50,7 +61,7 @@ export function ImageUpload({ isLoading }: { isLoading: boolean }) {
             <div className="relative">
               <Input
                 type="file"
-                accept="image/*"
+                accept="image/*,application/pdf"
                 onChange={async (e) => {
                   await handleImageUpload(e);
                   onChange(e.target.files ? e.target.files[0] : null);
@@ -80,7 +91,7 @@ export function ImageUpload({ isLoading }: { isLoading: boolean }) {
                 onClick={resetOcrError}
                 className="h-auto p-0 text-destructive"
               >
-                Retry
+                {t("ocr.retry")}
               </Button>
             </FormMessage>
           )}
