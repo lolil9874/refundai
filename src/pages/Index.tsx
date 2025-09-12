@@ -1,4 +1,4 @@
-import { RefundForm, type RefundFormValues } from "@/components/RefundForm";
+import { RefundForm, RefundFormValues } from "@/components/RefundForm";
 import { ResultsDisplay, type PremiumContact } from "@/components/ResultsDisplay";
 import { ResultsSkeleton } from "@/components/ResultsSkeleton";
 import { useState } from "react";
