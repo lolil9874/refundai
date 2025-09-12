@@ -5,8 +5,12 @@ import * as pdfjsLib from "pdfjs-dist";
 import Tesseract from "tesseract.js";
 import { toast } from "sonner";
 
-// Configure pdf.js worker from a stable CDN to avoid 404 errors
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@4.5.136/build/pdf.worker.min.js`;
+// IMPORTANT: Use a locally bundled PDF.js worker with Vite (no CDN).
+// Vite's ?worker import returns a Worker constructor we can instantiate.
+import PdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?worker";
+
+// Wire the worker instance directly (stable for pdfjs-dist v4)
+pdfjsLib.GlobalWorkerOptions.workerPort = new PdfWorker();
 
 export function useOCR() {
   const [isExtracting, setIsExtracting] = useState(false);
@@ -14,42 +18,45 @@ export function useOCR() {
 
   const extractTextFromFile = useCallback(async (file: File) => {
     setIsExtracting(true);
-    setFullExtractedText(""); // Clear previous results
+    setFullExtractedText("");
     const loadingToast = toast.loading("Extracting text from file...");
 
     try {
       let text = "";
+
       if (file.type.startsWith("image/")) {
-        // Process image (PNG, JPG, etc.)
+        // Directly OCR images (PNG, JPG, etc.)
         const result = await Tesseract.recognize(file, "eng");
         text = result.data.text;
       } else if (file.name.toLowerCase().endsWith(".pdf")) {
-        // Process PDF
+        // Render PDF pages to canvas, convert to JPG, then OCR
         const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         const numPages = pdf.numPages;
         let combinedText = "";
 
         // Process up to the first 3 pages for performance
-        for (let i = 1; i <= Math.min(numPages, 3); i++) {
+        const maxPages = Math.min(numPages, 3);
+        for (let i = 1; i <= maxPages; i++) {
           const page = await pdf.getPage(i);
-          const viewport = page.getViewport({ scale: 2.0 }); // Increased scale for better quality
+          const viewport = page.getViewport({ scale: 2.0 }); // upscale for better OCR
           const canvas = document.createElement("canvas");
           const context = canvas.getContext("2d")!;
-          canvas.height = viewport.height;
           canvas.width = viewport.width;
+          canvas.height = viewport.height;
 
           await page.render({ canvasContext: context, viewport }).promise;
-          
-          // Convert canvas to a JPG data URL for more robust OCR
-          const imageDataUrl = canvas.toDataURL("image/jpeg", 0.95); // 95% quality
-          
+
+          // Convert canvas to a high-quality JPG to improve OCR stability
+          const imageDataUrl = canvas.toDataURL("image/jpeg", 0.95);
           const result = await Tesseract.recognize(imageDataUrl, "eng");
           combinedText += result.data.text;
-          if (i < Math.min(numPages, 3)) {
-             combinedText += "\n\n--- End of Page " + i + " ---\n\n";
+
+          if (i < maxPages) {
+            combinedText += `\n\n--- End of Page ${i} ---\n\n`;
           }
         }
+
         text = combinedText;
       } else {
         throw new Error("Unsupported file type. Please upload an image (PNG, JPG) or a PDF.");
