@@ -4,27 +4,24 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 /* Supabase Edge Function: generate-refund
    - Expects JSON body with normalized companyDomain, companyDisplayName, locale ('en'|'fr'), and form data.
    - Calls OpenAI to generate subject/body with a robust generalist prompt.
-   - Returns the exact structure the frontend already consumes.
+   - Returns the exact structure the frontend consumes, plus an optional `meta` with traceId/timings for diagnostics.
 */
 
 type GenerateRefundInput = {
-  // normalized client-provided fields
-  companyDomain: string; // e.g. 'amazon.com'
-  companyDisplayName: string; // e.g. 'Amazon'
+  companyDomain: string;
+  companyDisplayName: string;
   locale: "en" | "fr";
-
-  // form values
-  country: string; // country code (US, FR, GB, etc.)
+  country: string;
   firstName: string;
   lastName: string;
   productName: string;
   productValue?: number;
   orderNumber: string;
-  purchaseDateISO: string; // ISO string
+  purchaseDateISO: string;
   issueCategory: "product" | "service" | "subscription";
-  issueType: string; // already human-readable in the right language
+  issueType: string;
   description: string;
-  tone: number; // 0..100
+  tone: number;
   hasImage: boolean;
 };
 
@@ -40,6 +37,14 @@ type GenerateRefundResult = {
   premiumContacts?: { phoneMasked?: string }[];
   companyDisplayName: string;
   countryCode: string;
+  meta?: {
+    traceId: string;
+    timings: {
+      totalMs: number;
+      openAIMs: number;
+    };
+    received: Record<string, unknown>;
+  };
 };
 
 type ChatMessage = { role: "system" | "user"; content: string };
@@ -89,7 +94,6 @@ function getMockPhones(country: string): string[] {
   }
 }
 
-// Minimal premium phones for locked entries (only masked number needed by UI)
 function getPremiumPhoneMasks(country: string): { phoneMasked?: string }[] {
   switch (country) {
     case "FR":
@@ -117,7 +121,6 @@ function formatDateISOToLocale(iso: string, locale: "en" | "fr"): string {
 function formatCurrency(value: number | undefined, locale: "en" | "fr"): string {
   if (value === undefined || value === null) return "";
   const loc = locale === "fr" ? "fr-FR" : "en-US";
-  // No specific currency given by the form; keep it as a plain number formatted for locale.
   return new Intl.NumberFormat(loc, { maximumFractionDigits: 2 }).format(value);
 }
 
@@ -171,7 +174,7 @@ Please return JSON with "subject" and "body" for an email the user will send to 
   ];
 }
 
-async function generateWithOpenAI(messages: ChatMessage[]): Promise<{ subject: string; body: string }> {
+async function generateWithOpenAI(messages: ChatMessage[]): Promise<{ subject: string; body: string; chars: number }> {
   const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
   if (!OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY is not set. Please add it as a secret in your Supabase project.");
@@ -201,11 +204,9 @@ async function generateWithOpenAI(messages: ChatMessage[]): Promise<{ subject: s
   if (!parsed?.subject || !parsed?.body) {
     throw new Error("Invalid OpenAI response structure.");
   }
-  // Basic trims
-  return {
-    subject: String(parsed.subject).trim(),
-    body: String(parsed.body).trim(),
-  };
+  const subject = String(parsed.subject).trim();
+  const body = String(parsed.body).trim();
+  return { subject, body, chars: subject.length + body.length };
 }
 
 serve(async (req) => {
@@ -213,8 +214,9 @@ serve(async (req) => {
     return new Response(null, { status: 204, headers: corsHeaders() });
   }
 
-  console.log("--- New Request Received ---");
-  console.log(`Request method: ${req.method}`);
+  const traceId = crypto.randomUUID();
+  const startedAt = Date.now();
+  console.log(`[${traceId}] --- New Request Received --- method=${req.method}`);
 
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -225,7 +227,7 @@ serve(async (req) => {
 
   try {
     const bodyText = await req.text();
-    console.log("Raw request body:", bodyText);
+    console.log(`[${traceId}] Raw request body length: ${bodyText?.length ?? 0}`);
 
     if (!bodyText) {
       throw new Error("Request body is empty.");
@@ -235,30 +237,32 @@ serve(async (req) => {
     try {
       input = JSON.parse(bodyText);
     } catch (parseError) {
-      console.error("Failed to parse JSON body:", parseError);
-      throw new Error(`Invalid JSON format in request body. Raw body: ${bodyText}`);
+      console.error(`[${traceId}] Failed to parse JSON body:`, parseError);
+      throw new Error(`Invalid JSON format in request body.`);
     }
 
-    // Basic normalization
-    const companyDomain = (input.companyDomain || "example.com").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
-    const companyDisplayName = input.companyDisplayName?.trim() || "The Company";
+    const normDomain = (input.companyDomain || "example.com").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+    const display = input.companyDisplayName?.trim() || "The Company";
     const locale = input.locale === "fr" ? "fr" : "en";
 
     const formattedDate = formatDateISOToLocale(input.purchaseDateISO, locale);
     const formattedValue = formatCurrency(input.productValue, locale);
 
-    const { bestEmail, ranked, forms, links } = emailFallbacks(companyDomain);
-
+    const { bestEmail, ranked, forms, links } = emailFallbacks(normDomain);
     const phones = getMockPhones(input.country);
     const premiumContacts = getPremiumPhoneMasks(input.country);
 
     const messages = buildMessages(
-      { ...input, companyDomain, companyDisplayName, locale },
+      { ...input, companyDomain: normDomain, companyDisplayName: display, locale },
       formattedDate,
       formattedValue,
     );
 
-    const { subject, body } = await generateWithOpenAI(messages);
+    console.log(`[${traceId}] Calling OpenAI...`);
+    const tOpenAI0 = Date.now();
+    const { subject, body, chars } = await generateWithOpenAI(messages);
+    const tOpenAI1 = Date.now();
+    console.log(`[${traceId}] OpenAI responded. chars=${chars} durationMs=${tOpenAI1 - tOpenAI0}`);
 
     const payload: GenerateRefundResult = {
       bestEmail,
@@ -270,8 +274,23 @@ serve(async (req) => {
       hasImage: input.hasImage,
       phones,
       premiumContacts,
-      companyDisplayName,
+      companyDisplayName: display,
       countryCode: input.country,
+      meta: {
+        traceId,
+        timings: {
+          totalMs: Date.now() - startedAt,
+          openAIMs: tOpenAI1 - tOpenAI0,
+        },
+        received: {
+          companyDomain: normDomain,
+          companyDisplayName: display,
+          locale,
+          country: input.country,
+          issueCategory: input.issueCategory,
+          hasImage: input.hasImage,
+        },
+      },
     };
 
     return new Response(JSON.stringify(payload), {
@@ -279,8 +298,8 @@ serve(async (req) => {
       headers: { "Content-Type": "application/json", ...corsHeaders() },
     });
   } catch (error) {
-    console.error("Error in generate-refund function:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error(`[${traceId}] Error in generate-refund:`, error);
+    return new Response(JSON.stringify({ error: error.message, traceId }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders() },
     });
