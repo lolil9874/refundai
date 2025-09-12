@@ -14,65 +14,65 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 
-// Comprehensive list of world currencies with their symbols
+// Comprehensive list of world currencies with their symbols and associated countries
 const currencies = [
-  { code: "USD", symbol: "$", name: "US Dollar", display: "$USD" },
-  { code: "EUR", symbol: "€", name: "Euro", display: "€EUR" },
-  { code: "GBP", symbol: "£", name: "British Pound", display: "£GBP" },
-  { code: "JPY", symbol: "¥", name: "Japanese Yen", display: "¥JPY" },
-  { code: "CNY", symbol: "¥", name: "Chinese Yuan", display: "¥CNY" },
-  { code: "CAD", symbol: "C$", name: "Canadian Dollar", display: "C$CAD" },
-  { code: "AUD", symbol: "A$", name: "Australian Dollar", display: "A$AUD" },
-  { code: "CHF", symbol: "CHF", name: "Swiss Franc", display: "CHF" },
-  { code: "HKD", symbol: "HK$", name: "Hong Kong Dollar", display: "HK$HKD" },
-  { code: "SGD", symbol: "S$", name: "Singapore Dollar", display: "S$SGD" },
-  { code: "SEK", symbol: "kr", name: "Swedish Krona", display: "krSEK" },
-  { code: "NOK", symbol: "kr", name: "Norwegian Krone", display: "krNOK" },
-  { code: "DKK", symbol: "kr", name: "Danish Krone", display: "krDKK" },
-  { code: "PLN", symbol: "zł", name: "Polish Złoty", display: "złPLN" },
-  { code: "CZK", symbol: "Kč", name: "Czech Koruna", display: "KčCZK" },
-  { code: "HUF", symbol: "Ft", name: "Hungarian Forint", display: "FtHUF" },
-  { code: "RON", symbol: "lei", name: "Romanian Leu", display: "leiRON" },
-  { code: "BGN", symbol: "лв", name: "Bulgarian Lev", display: "лвBGN" },
-  { code: "HRK", symbol: "kn", name: "Croatian Kuna", display: "knHRK" },
-  { code: "RUB", symbol: "₽", name: "Russian Ruble", display: "₽RUB" },
-  { code: "TRY", symbol: "₺", name: "Turkish Lira", display: "₺TRY" },
-  { code: "BRL", symbol: "R$", name: "Brazilian Real", display: "R$BRL" },
-  { code: "MXN", symbol: "$", name: "Mexican Peso", display: "$MXN" },
-  { code: "ARS", symbol: "$", name: "Argentine Peso", display: "$ARS" },
-  { code: "CLP", symbol: "$", name: "Chilean Peso", display: "$CLP" },
-  { code: "COP", symbol: "$", name: "Colombian Peso", display: "$COP" },
-  { code: "PEN", symbol: "S/", name: "Peruvian Sol", display: "S/PEN" },
-  { code: "UYU", symbol: "$U", name: "Uruguayan Peso", display: "$UUYU" },
-  { code: "KRW", symbol: "₩", name: "South Korean Won", display: "₩KRW" },
-  { code: "TWD", symbol: "NT$", name: "Taiwan Dollar", display: "NT$TWD" },
-  { code: "THB", symbol: "฿", name: "Thai Baht", display: "฿THB" },
-  { code: "MYR", symbol: "RM", name: "Malaysian Ringgit", display: "RMMYR" },
-  { code: "IDR", symbol: "Rp", name: "Indonesian Rupiah", display: "RpIDR" },
-  { code: "PHP", symbol: "₱", name: "Philippine Peso", display: "₱PHP" },
-  { code: "VND", symbol: "₫", name: "Vietnamese Dong", display: "₫VND" },
-  { code: "INR", symbol: "₹", name: "Indian Rupee", display: "₹INR" },
-  { code: "PKR", symbol: "₨", name: "Pakistani Rupee", display: "₨PKR" },
-  { code: "BDT", symbol: "৳", name: "Bangladeshi Taka", display: "৳BDT" },
-  { code: "LKR", symbol: "Rs", name: "Sri Lankan Rupee", display: "RsLKR" },
-  { code: "NPR", symbol: "Rs", name: "Nepalese Rupee", display: "RsNPR" },
-  { code: "ZAR", symbol: "R", name: "South African Rand", display: "RZAR" },
-  { code: "NGN", symbol: "₦", name: "Nigerian Naira", display: "₦NGN" },
-  { code: "KES", symbol: "KSh", name: "Kenyan Shilling", display: "KShKES" },
-  { code: "GHS", symbol: "₵", name: "Ghanaian Cedi", display: "₵GHS" },
-  { code: "EGP", symbol: "E£", name: "Egyptian Pound", display: "E£EGP" },
-  { code: "MAD", symbol: "DH", name: "Moroccan Dirham", display: "DHMAD" },
-  { code: "TND", symbol: "DT", name: "Tunisian Dinar", display: "DTTND" },
-  { code: "DZD", symbol: "DA", name: "Algerian Dinar", display: "DADZD" },
-  { code: "ILS", symbol: "₪", name: "Israeli Shekel", display: "₪ILS" },
-  { code: "SAR", symbol: "﷼", name: "Saudi Riyal", display: "﷼SAR" },
-  { code: "AED", symbol: "DH", name: "UAE Dirham", display: "DHAED" },
-  { code: "QAR", symbol: "QR", name: "Qatari Riyal", display: "QRQAR" },
-  { code: "KWD", symbol: "KD", name: "Kuwaiti Dinar", display: "KDKWD" },
-  { code: "BHD", symbol: "BD", name: "Bahraini Dinar", display: "BDBHD" },
-  { code: "OMR", symbol: "RO", name: "Omani Rial", display: "ROOMR" },
-  { code: "JOD", symbol: "JD", name: "Jordanian Dinar", display: "JDJOD" },
-  { code: "LBP", symbol: "L£", name: "Lebanese Pound", display: "L£LBP" },
+  { code: "USD", symbol: "$", name: "US Dollar", countries: ["United States", "USA"], display: "$USD" },
+  { code: "EUR", symbol: "€", name: "Euro", countries: ["Germany", "France", "Italy", "Spain", "Netherlands", "Belgium", "Austria", "Portugal", "Finland", "Greece", "Ireland", "Luxembourg", "Slovenia", "Cyprus", "Malta", "Slovakia", "Estonia", "Latvia", "Lithuania"], display: "€EUR" },
+  { code: "GBP", symbol: "£", name: "British Pound", countries: ["United Kingdom", "UK", "England", "Scotland", "Wales", "Northern Ireland"], display: "£GBP" },
+  { code: "JPY", symbol: "¥", name: "Japanese Yen", countries: ["Japan"], display: "¥JPY" },
+  { code: "CNY", symbol: "¥", name: "Chinese Yuan", countries: ["China"], display: "¥CNY" },
+  { code: "CAD", symbol: "C$", name: "Canadian Dollar", countries: ["Canada"], display: "C$CAD" },
+  { code: "AUD", symbol: "A$", name: "Australian Dollar", countries: ["Australia"], display: "A$AUD" },
+  { code: "CHF", symbol: "CHF", name: "Swiss Franc", countries: ["Switzerland"], display: "CHF" },
+  { code: "HKD", symbol: "HK$", name: "Hong Kong Dollar", countries: ["Hong Kong"], display: "HK$HKD" },
+  { code: "SGD", symbol: "S$", name: "Singapore Dollar", countries: ["Singapore"], display: "S$SGD" },
+  { code: "SEK", symbol: "kr", name: "Swedish Krona", countries: ["Sweden"], display: "krSEK" },
+  { code: "NOK", symbol: "kr", name: "Norwegian Krone", countries: ["Norway"], display: "krNOK" },
+  { code: "DKK", symbol: "kr", name: "Danish Krone", countries: ["Denmark"], display: "krDKK" },
+  { code: "PLN", symbol: "zł", name: "Polish Złoty", countries: ["Poland"], display: "złPLN" },
+  { code: "CZK", symbol: "Kč", name: "Czech Koruna", countries: ["Czech Republic"], display: "KčCZK" },
+  { code: "HUF", symbol: "Ft", name: "Hungarian Forint", countries: ["Hungary"], display: "FtHUF" },
+  { code: "RON", symbol: "lei", name: "Romanian Leu", countries: ["Romania"], display: "leiRON" },
+  { code: "BGN", symbol: "лв", name: "Bulgarian Lev", countries: ["Bulgaria"], display: "лвBGN" },
+  { code: "HRK", symbol: "kn", name: "Croatian Kuna", countries: ["Croatia"], display: "knHRK" },
+  { code: "RUB", symbol: "₽", name: "Russian Ruble", countries: ["Russia"], display: "₽RUB" },
+  { code: "TRY", symbol: "₺", name: "Turkish Lira", countries: ["Turkey"], display: "₺TRY" },
+  { code: "BRL", symbol: "R$", name: "Brazilian Real", countries: ["Brazil"], display: "R$BRL" },
+  { code: "MXN", symbol: "$", name: "Mexican Peso", countries: ["Mexico"], display: "$MXN" },
+  { code: "ARS", symbol: "$", name: "Argentine Peso", countries: ["Argentina"], display: "$ARS" },
+  { code: "CLP", symbol: "$", name: "Chilean Peso", countries: ["Chile"], display: "$CLP" },
+  { code: "COP", symbol: "$", name: "Colombian Peso", countries: ["Colombia"], display: "$COP" },
+  { code: "PEN", symbol: "S/", name: "Peruvian Sol", countries: ["Peru"], display: "S/PEN" },
+  { code: "UYU", symbol: "$U", name: "Uruguayan Peso", countries: ["Uruguay"], display: "$UUYU" },
+  { code: "KRW", symbol: "₩", name: "South Korean Won", countries: ["South Korea", "Korea"], display: "₩KRW" },
+  { code: "TWD", symbol: "NT$", name: "Taiwan Dollar", countries: ["Taiwan"], display: "NT$TWD" },
+  { code: "THB", symbol: "฿", name: "Thai Baht", countries: ["Thailand"], display: "฿THB" },
+  { code: "MYR", symbol: "RM", name: "Malaysian Ringgit", countries: ["Malaysia"], display: "RMMYR" },
+  { code: "IDR", symbol: "Rp", name: "Indonesian Rupiah", countries: ["Indonesia"], display: "RpIDR" },
+  { code: "PHP", symbol: "₱", name: "Philippine Peso", countries: ["Philippines"], display: "₱PHP" },
+  { code: "VND", symbol: "₫", name: "Vietnamese Dong", countries: ["Vietnam"], display: "₫VND" },
+  { code: "INR", symbol: "₹", name: "Indian Rupee", countries: ["India"], display: "₹INR" },
+  { code: "PKR", symbol: "₨", name: "Pakistani Rupee", countries: ["Pakistan"], display: "₨PKR" },
+  { code: "BDT", symbol: "৳", name: "Bangladeshi Taka", countries: ["Bangladesh"], display: "৳BDT" },
+  { code: "LKR", symbol: "Rs", name: "Sri Lankan Rupee", countries: ["Sri Lanka"], display: "RsLKR" },
+  { code: "NPR", symbol: "Rs", name: "Nepalese Rupee", countries: ["Nepal"], display: "RsNPR" },
+  { code: "ZAR", symbol: "R", name: "South African Rand", countries: ["South Africa"], display: "RZAR" },
+  { code: "NGN", symbol: "₦", name: "Nigerian Naira", countries: ["Nigeria"], display: "₦NGN" },
+  { code: "KES", symbol: "KSh", name: "Kenyan Shilling", countries: ["Kenya"], display: "KShKES" },
+  { code: "GHS", symbol: "₵", name: "Ghanaian Cedi", countries: ["Ghana"], display: "₵GHS" },
+  { code: "EGP", symbol: "E£", name: "Egyptian Pound", countries: ["Egypt"], display: "E£EGP" },
+  { code: "MAD", symbol: "DH", name: "Moroccan Dirham", countries: ["Morocco"], display: "DHMAD" },
+  { code: "TND", symbol: "DT", name: "Tunisian Dinar", countries: ["Tunisia"], display: "DTTND" },
+  { code: "DZD", symbol: "DA", name: "Algerian Dinar", countries: ["Algeria"], display: "DADZD" },
+  { code: "ILS", symbol: "₪", name: "Israeli Shekel", countries: ["Israel"], display: "₪ILS" },
+  { code: "SAR", symbol: "﷼", name: "Saudi Riyal", countries: ["Saudi Arabia"], display: "﷼SAR" },
+  { code: "AED", symbol: "DH", name: "UAE Dirham", countries: ["UAE", "Dubai", "Abu Dhabi"], display: "DHAED" },
+  { code: "QAR", symbol: "QR", name: "Qatari Riyal", countries: ["Qatar"], display: "QRQAR" },
+  { code: "KWD", symbol: "KD", name: "Kuwaiti Dinar", countries: ["Kuwait"], display: "KDKWD" },
+  { code: "BHD", symbol: "BD", name: "Bahraini Dinar", countries: ["Bahrain"], display: "BDBHD" },
+  { code: "OMR", symbol: "RO", name: "Omani Rial", countries: ["Oman"], display: "ROOMR" },
+  { code: "JOD", symbol: "JD", name: "Jordanian Dinar", countries: ["Jordan"], display: "JDJOD" },
+  { code: "LBP", symbol: "L£", name: "Lebanese Pound", countries: ["Lebanon"], display: "L£LBP" },
 ];
 
 const countryCurrencyMap: Record<string, string> = {
@@ -100,6 +100,21 @@ export function OrderDetailsForm() {
       toast.info(t("refundForm.currencyHint"));
     }
   }, [watchProductValue, form, t]);
+
+  // Custom filter function for searching - returns number (1 for match, 0 for no match)
+  const filterCurrency = (value: string, search: string) => {
+    const searchTerm = search.toLowerCase();
+    const currency = currencies.find(c => c.code === value);
+    if (!currency) return 0;
+    
+    const matches = 
+      currency.code.toLowerCase().includes(searchTerm) ||
+      currency.symbol.toLowerCase().includes(searchTerm) ||
+      currency.name.toLowerCase().includes(searchTerm) ||
+      currency.countries.some(country => country.toLowerCase().includes(searchTerm));
+    
+    return matches ? 1 : 0;
+  };
 
   return (
     <div className="space-y-6">
@@ -159,9 +174,9 @@ export function OrderDetailsForm() {
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[300px] p-0">
-                      <Command>
-                        <CommandInput placeholder="Search currency..." />
+                    <PopoverContent className="w-[350px] p-0">
+                      <Command filter={filterCurrency}>
+                        <CommandInput placeholder="Search currency or country..." />
                         <CommandList>
                           <CommandEmpty>No currency found.</CommandEmpty>
                           <CommandGroup>
@@ -174,9 +189,15 @@ export function OrderDetailsForm() {
                                   setOpen(false);
                                 }}
                               >
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium">{currency.display}</span>
-                                  <span className="text-muted-foreground text-sm">({currency.name})</span>
+                                <div className="flex flex-col gap-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium text-base">{currency.display}</span>
+                                    <span className="text-muted-foreground text-sm">({currency.name})</span>
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {currency.countries.slice(0, 3).join(", ")}
+                                    {currency.countries.length > 3 && ` +${currency.countries.length - 3} more`}
+                                  </div>
                                 </div>
                               </CommandItem>
                             ))}
