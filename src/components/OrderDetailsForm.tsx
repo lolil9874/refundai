@@ -15,13 +15,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 
 const currencies = [
-  { code: "USD", symbol: "🇺🇸 $", name: "USD" },
-  { code: "EUR", symbol: "🇪🇺 €", name: "EUR" },
-  { code: "GBP", symbol: "🇬🇧 £", name: "GBP" },
-  { code: "CAD", symbol: "🇨🇦 CA$", name: "CAD" },
-  { code: "CHF", symbol: "🇨🇭 CHF", name: "CHF" },
-  { code: "JPY", symbol: "🇯🇵 ¥", name: "JPY" },
-  { code: "AUD", symbol: "🇦🇺 A$", name: "AUD" },
+  { code: "USD", symbol: "$", display: "$USD" },
+  { code: "EUR", symbol: "€", display: "€EUR" },
+  { code: "GBP", symbol: "£", display: "£GBP" },
+  { code: "CAD", symbol: "C$", display: "C$CAD" },
+  { code: "CHF", symbol: "CHF", display: "CHF" },
+  { code: "JPY", symbol: "¥", display: "¥JPY" },
+  { code: "AUD", symbol: "A$", display: "A$AUD" },
 ];
 
 const countryCurrencyMap: Record<string, string> = {
@@ -90,17 +90,17 @@ export function OrderDetailsForm() {
               control={form.control}
               name="currency"
               render={({ field }) => (
-                <FormItem className="w-32">
+                <FormItem className="w-20">
                   <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-10 px-2 text-sm">
                         <SelectValue placeholder={t("refundForm.currencyPlaceholder")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {currencies.map((curr) => (
-                        <SelectItem key={curr.code} value={curr.code}>
-                          {curr.symbol}
+                        <SelectItem key={curr.code} value={curr.code} className="text-sm">
+                          {curr.display}
                         </SelectItem>
                       ))}
                     </SelectContent>
