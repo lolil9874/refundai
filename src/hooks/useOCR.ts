@@ -1,10 +1,9 @@
-"use client";
-
 import { useState, useCallback } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import Tesseract from "tesseract.js";
 import { toast } from "sonner";
 import { preprocessImageFileForOCR } from "@/utils/imagePreprocess";
+import { parseOCRTextWithLLM } from "@/services/openrouter";
 
 // Use a locally bundled PDF.js worker with Vite
 import PdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?worker";
@@ -23,10 +22,12 @@ const OCR_OPTIONS: any = {
 export function useOCR() {
   const [isExtracting, setIsExtracting] = useState(false);
   const [fullExtractedText, setFullExtractedText] = useState<string>("");
+  const [parsedData, setParsedData] = useState<any>(null);
 
   const extractTextFromFile = useCallback(async (file: File) => {
     setIsExtracting(true);
     setFullExtractedText("");
+    setParsedData(null);
     const loadingToast = toast.loading("Extracting text from file...");
 
     try {
@@ -71,7 +72,16 @@ export function useOCR() {
       }
 
       setFullExtractedText(text.trim() || "No text could be extracted from the file.");
-      toast.success("Text extraction complete!");
+      
+      // Send to LLM for parsing
+      if (text.trim()) {
+        toast.update(loadingToast, { description: "Parsing with AI..." });
+        const parsed = await parseOCRTextWithLLM(text.trim());
+        setParsedData(parsed);
+        toast.success("Text extracted and parsed successfully!");
+      } else {
+        toast.success("Text extraction complete!");
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "An unknown error occurred during OCR.";
       console.error("OCR Error:", error);
@@ -83,5 +93,5 @@ export function useOCR() {
     }
   }, []);
 
-  return { extractTextFromFile, isExtracting, fullExtractedText };
+  return { extractTextFromFile, isExtracting, fullExtractedText, parsedData };
 }

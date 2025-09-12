@@ -86,109 +86,150 @@ export function RefundForm({
 
   const methods = useForm<RefundFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      company: "",
-      otherCompany: "",
-      country: "US",
-      firstName: "",
-      lastName: "",
-      productName: "",
-      productValue: undefined,
-      currency: "USD",
-      orderNumber: "",
-      purchaseDate: undefined,
-      issueCategory: "product",
-      issueType: "",
-      description: "",
-      tone: 50,
-    },
-  });
+I'll help you integrate OpenRouter with the nvidia/nemotron-nano-9b-v2:free model to parse OCR text and fill form fields. Let me create the necessary components and update the existing ones.
 
-  const { handleSubmit, reset, setValue } = methods;
-  const isUploading = isLoading;
+First, I'll create a new hook for OpenRouter integration:
 
-  // Test fill
-  const fillAndGenerate = () => {
-    const values: RefundFormValues = {
-      company: "Amazon",
-      otherCompany: "",
-      country: "US",
-      firstName: "John",
-      lastName: "Doe",
-      productName: "Wireless Headphones",
-      productValue: 49.99,
-      currency: "USD",
-      orderNumber: "123-4567890-1234567",
-      purchaseDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12),
-      issueCategory: "product",
-      issueType: t("refundForm.issue.reasons.product.not_received"),
-      description:
-        "Package never arrived. Tracking shows no movement since dispatch. Requesting a full refund.",
-      image: undefined,
-      tone: 60,
-    };
-    reset(values);
-    toast.info(t("refundForm.testFillToast"));
-    requestAnimationFrame(() => handleSubmit(onSubmit)());
+<dyad-write path="src/hooks/useOpenRouter.ts" description="Hook for OpenRouter API integration">
+"use client";
+
+import { useState } from "react";
+import { useFormContext } from "react-hook-form";
+import { toast } from "sonner";
+
+interface ParsedFormData {
+  productName?: string;
+  productValue?: number;
+  currency?: string;
+  orderNumber?: string;
+  purchaseDate?: string;
+  company?: string;
+  otherCompany?: string;
+  firstName?: string;
+  lastName?: string;
+  country?: string;
+  issueCategory?: string;
+  issueType?: string;
+  description?: string;
+}
+
+export function useOpenRouter() {
+  const [isParsing, setIsParsing] = useState(false);
+  const form = useFormContext();
+
+  const parseOCRText = async (ocrText: string) => {
+    setIsParsing(true);
+    const loadingToast = toast.loading("Parsing receipt with AI...");
+
+    try {
+      const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
+      if (!OPENROUTER_API_KEY) {
+        throw new Error("OpenRouter API key is not configured");
+      }
+
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+          "HTTP-Referer": window.location.origin,
+          "X-Title": "REFUND.AI",
+        },
+        body: JSON.stringify({
+          model: "nvidia/nemotron-nano-9b-v2:free",
+          messages: [
+            {
+              role: "system",
+              content: `You are a receipt parser for a refund request form. Extract the following information from the OCR text and return it as a JSON object:
+
+{
+  "productName": "string or null",
+  "productValue": "number or null",
+  "currency": "string (USD, EUR, GBP, etc.) or null",
+  "orderNumber": "string or null",
+  "purchaseDate": "string (YYYY-MM-DD format) or null",
+  "company": "string (Amazon, eBay, etc.) or null",
+  "otherCompany": "string (domain name) or null",
+  "firstName": "string or null",
+  "lastName": "string or null",
+  "country": "string (US, FR, GB, etc.) or null",
+  "issueCategory": "string (product, service, subscription) or null",
+  "issueType": "string or null",
+  "description": "string or null"
+}
+
+Rules:
+- Extract only information that is clearly present in the text
+- Use null for missing information
+- For purchaseDate, convert any date format to YYYY-MM-DD
+- For currency, use standard currency codes (USD, EUR, GBP, etc.)
+- For country, use ISO country codes (US, FR, GB, etc.)
+- For company, use common company names if recognizable
+- For issueCategory and issueType, infer from the context if possible
+- Return ONLY the JSON object, no other text`
+            },
+            {
+              role: "user",
+              content: `Please parse this receipt text:\n\n${ocrText}`
+            }
+          ],
+          temperature: 0.1,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      const content = data.choices[0]?.message?.content;
+
+      if (!content) {
+        throw new Error("No response from OpenRouter");
+      }
+
+      // Parse the JSON response
+      let parsedData: ParsedFormData;
+      try {
+        // Extract JSON from the response (in case there's extra text)
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error("No JSON found in response");
+        }
+        parsedData = JSON.parse(jsonMatch[0]);
+      } catch (error) {
+        console.error("Failed to parse OpenRouter response:", content);
+        throw new Error("Failed to parse AI response");
+      }
+
+      // Update form fields with parsed data
+      Object.entries(parsedData).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          if (key === "purchaseDate" && value) {
+            // Convert string date to Date object
+            const date = new Date(value);
+            if (!isNaN(date.getTime())) {
+              form.setValue(key as any, date);
+            }
+          } else {
+            form.setValue(key as any, value);
+          }
+        }
+      });
+
+      toast.success("Receipt parsed successfully!");
+      return parsedData;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "An unknown error occurred";
+      console.error("OpenRouter parsing error:", error);
+      toast.error(`Failed to parse receipt: ${message}`);
+      throw error;
+    } finally {
+      setIsParsing(false);
+      toast.dismiss(loadingToast);
+    }
   };
 
-  return (
-    <div>
-      <div className="text-center mb-10">
-        <h2 className="text-2xl font-bold tracking-tight">{t("refundForm.title")}</h2>
-        <p className="text-muted-foreground mt-2">{t("refundForm.subtitle")}</p>
-      </div>
-      <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-xl border-white/20 shadow-lg">
-            <CardHeader>
-              <CardTitle>
-                {t("refundForm.companySectionTitle")} &amp; {t("refundForm.personalInfoSectionTitle")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-              <div className="space-y-6">
-                <CompanySelector />
-                <CountrySelector />
-              </div>
-              <PersonalInfoForm />
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-xl border-white/20 shadow-lg">
-            <CardHeader>
-              <CardTitle>{t("refundForm.orderDetailsSectionTitle")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <ImageUpload isLoading={isUploading} />
-              <OrderDetailsForm />
-              <IssueSelector />
-              <DescriptionField />
-              <ToneSlider />
-            </CardContent>
-          </Card>
-
-          <OffsetButton type="submit" className="w-full text-lg" loading={isUploading} disabled={isUploading}>
-            {isUploading ? (
-              <>
-                <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                {t("refundForm.submitButtonLoading")}
-              </>
-            ) : (
-              t("refundForm.submitButton")
-            )}
-          </OffsetButton>
-
-          <LiquidGlassButton
-            type="button"
-            className="w-full"
-            onClick={fillAndGenerate}
-            disabled={isUploading}
-          >
-            {t("refundForm.testFillButton")}
-          </LiquidGlassButton>
-        </form>
-      </FormProvider>
-    </div>
-  );
+  return { parseOCRText, isParsing };
 }
