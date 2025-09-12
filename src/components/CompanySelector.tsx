@@ -15,15 +15,31 @@ export function CompanySelector() {
   const watchCompany = useWatch({ control: form.control, name: "company" });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      <FormLabel>{t("refundForm.companyLabel")}</FormLabel>
+
+      {watchCompany === "other" && (
+        <FormField
+          control={form.control}
+          name="otherCompany"
+          render={({ field }) => (
+            <FormItem className="animate-in fade-in duration-300">
+              <FormControl>
+                <Input placeholder={t("refundForm.otherCompanyPlaceholder")} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
+
       <FormField
         control={form.control}
         name="company"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t("refundForm.companyLabel")}</FormLabel>
             <FormControl>
-              <div className="flex flex-wrap justify-center gap-2 pt-2">
+              <div className="flex flex-wrap justify-center gap-2">
                 {popularCompanies.map((company) => (
                   <Button
                     key={company.name}
@@ -33,12 +49,15 @@ export function CompanySelector() {
                       "flex items-center justify-center gap-2",
                       field.value !== company.name && "bg-white/50 dark:bg-black/20",
                     )}
-                    onClick={() => field.onChange(company.name)}
+                    onClick={() => {
+                      field.onChange(company.name);
+                      form.setValue("otherCompany", "", { shouldValidate: false });
+                    }}
                   >
                     <img
                       src={`https://logo.clearbit.com/${company.domain}`}
                       alt={`${company.name} logo`}
-                      className={cn("h-5 w-5", field.value === company.name && "brightness-0 invert")}
+                      className="h-5 w-5"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = "none";
                       }}
@@ -57,26 +76,10 @@ export function CompanySelector() {
                 </Button>
               </div>
             </FormControl>
-            <FormMessage />
+            <FormMessage className="pt-2" />
           </FormItem>
         )}
       />
-
-      {watchCompany === "other" && (
-        <FormField
-          control={form.control}
-          name="otherCompany"
-          render={({ field }) => (
-            <FormItem className="animate-in fade-in duration-300">
-              <FormLabel>{t("refundForm.otherCompanyLabel")}</FormLabel>
-              <FormControl>
-                <Input placeholder={t("refundForm.otherCompanyPlaceholder")} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      )}
     </div>
   );
 }
