@@ -6,8 +6,14 @@ import Tesseract from "tesseract.js";
 import { toast } from "sonner";
 import { useFormContext } from "react-hook-form";
 
-// Set up pdf.js worker from jsDelivr CDN (matching library version for compatibility)
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.149/build/pdf.worker.min.js`;
+// Set up pdf.js worker from jsDelivr CDN (stable version matching library)
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@4.5.136/build/pdf.worker.min.js`;
+
+// Test worker load (optional, for debugging)
+if (typeof window !== 'undefined') {
+  // In browser, log if worker loads successfully
+  console.log('pdf.js worker configured:', pdfjsLib.GlobalWorkerOptions.workerSrc);
+}
 
 type ExtractedData = {
   orderNumber?: string;
@@ -23,26 +29,31 @@ export function useOCR() {
   const form = useFormContext();
 
   const extractTextFromPDFPage = async (pageNum: number, pdf: any): Promise<string> => {
-    const page = await pdf.getPage(pageNum);
-    const viewport = page.getViewport({ scale: 2.0 }); // Higher scale for better OCR if needed
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d")!;
-    canvas.height = viewport.height;
-    canvas.width = viewport.width;
+    try {
+      const page = await pdf.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 2.0 }); // Higher scale for better OCR if needed
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d")!;
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
 
-    await page.render({
-      canvasContext: context,
-      viewport: viewport,
-    }).promise;
+      await page.render({
+        canvasContext: context,
+        viewport: viewport,
+      }).promise;
 
-    // Run Tesseract on the rendered image
-    const { data: { text } } = await Tesseract.recognize(canvas, "eng", {
-      workerPath: "https://esm.sh/tesseract.js@5.1.0/dist/worker.min.js",
-      corePath: "https://esm.sh/tesseract.js-core@5.1.0/tesseract-core.wasm.js",
-      langPath: "https://tessdata.projectnaptha.com/4.0.0",
-    });
+      // Run Tesseract on the rendered image
+      const { data: { text } } = await Tesseract.recognize(canvas, "eng", {
+        workerPath: "https://esm.sh/tesseract.js@5.1.0/dist/worker.min.js",
+        corePath: "https://esm.sh/tesseract.js-core@5.1.0/tesseract-core.wasm.js",
+        langPath: "https://tessdata.projectnaptha.com/4.0.0",
+      });
 
-    return text;
+      return text;
+    } catch (error) {
+      console.error(`OCR failed for PDF page ${pageNum}:`, error);
+      return "";
+    }
   };
 
   const extractFromImage = useCallback(async (file: File): Promise<ExtractedData | null> => {
@@ -93,7 +104,11 @@ export function useOCR() {
     setFullExtractedText(""); // Reset display
     try {
       const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+      const loadingTask = pdfjsLib.getDocument(arrayBuffer);
+      const pdf = await loadingTask.promise;
+      
+      console.log(`PDF loaded successfully: ${pdf.numPages} pages`); // Debug log
+
       let fullText = "";
 
       // First, try direct text extraction (for text-based PDFs)
@@ -102,6 +117,8 @@ export function useOCR() {
         const textContent = await page.getTextContent();
         fullText += textContent.items.map((item: any) => item.str).join(" ") + "\n";
       }
+
+      console.log(`Direct text extraction yielded ${fullText.trim().length} characters`); // Debug
 
       // If little/no text extracted, fallback to OCR on rendered pages (for scanned PDFs)
       const textLength = fullText.trim().length;
@@ -135,9 +152,9 @@ export function useOCR() {
 
       return Object.keys(extracted).length > 0 ? extracted : null;
     } catch (error) {
-      console.error("PDF extraction failed:", error);
+      console.error("PDF extraction failed (check worker load):", error);
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      setFullExtractedText(`Error during PDF text extraction: ${errorMsg}. Check console for details.`);
+      setFullExtractedText(`Error during PDF text extraction: ${errorMsg}. Check console for details (e.g., worker 404).`);
       return null;
     } finally {
       setIsExtracting(false);
