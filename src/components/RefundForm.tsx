@@ -339,6 +339,26 @@ export function RefundForm({
               <CardTitle>{t("refundForm.orderDetailsSectionTitle")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              <FormField
+                control={form.control}
+                name="image"
+                render={({ field: { onChange, value, ...rest } }) => (
+                  <FormItem>
+                    <FormLabel>{t("refundForm.imageLabel")}</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)}
+                        {...rest}
+                      />
+                    </FormControl>
+                    <FormDescription>{t("refundForm.imageDescription")}</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
@@ -546,26 +566,6 @@ export function RefundForm({
                     </FormItem>
                   );
                 }}
-              />
-
-              <FormField
-                control={form.control}
-                name="image"
-                render={({ field: { onChange, value, ...rest } }) => (
-                  <FormItem>
-                    <FormLabel>{t("refundForm.imageLabel")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)}
-                        {...rest}
-                      />
-                    </FormControl>
-                    <FormDescription>{t("refundForm.imageDescription")}</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
               />
             </CardContent>
           </Card>
