@@ -2,43 +2,21 @@
 
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, FormProvider } from "react-hook-form";
 import * as z from "zod";
-import { format } from "date-fns";
-import { Calendar as CalendarIcon, Loader2, Image as ImageIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
-
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { popularCompanies } from "@/lib/companies";
 import OffsetButton from "@/components/OffsetButton";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import { toast } from "sonner";
 import LiquidGlassButton from "./LiquidGlassButton";
-import { useOCR, type ExtractedData } from "@/hooks/useOCR";
+import { toast } from "sonner";
+import { CompanySelector } from "./CompanySelector";
+import { PersonalInfoForm } from "./PersonalInfoForm";
+import { OrderDetailsForm } from "./OrderDetailsForm";
+import { IssueSelector } from "./IssueSelector";
+import { DescriptionField } from "./DescriptionField";
+import { ToneSlider } from "./ToneSlider";
+import { ImageUpload } from "./ImageUpload";
+import { Loader2 } from "lucide-react";
 
 const formSchema = z
   .object({
@@ -95,32 +73,9 @@ export function RefundForm({
   onSubmit: (values: RefundFormValues) => void;
   isLoading: boolean;
 }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
-  // Motifs par catégorie
-  const productReasons = [
-    t("refundForm.issue.reasons.product.not_received"),
-    t("refundForm.issue.reasons.product.late_delivery"),
-    t("refundForm.issue.reasons.product.wrong_or_not_as_described"),
-    t("refundForm.issue.reasons.product.damaged_or_defective"),
-    t("refundForm.issue.reasons.product.other"),
-  ];
-  const serviceReasons = [
-    t("refundForm.issue.reasons.service.not_provided"),
-    t("refundForm.issue.reasons.service.delayed_or_rescheduled"),
-    t("refundForm.issue.reasons.service.not_as_described_or_poor_quality"),
-    t("refundForm.issue.reasons.service.access_issues"),
-    t("refundForm.issue.reasons.service.other"),
-  ];
-  const subscriptionReasons = [
-    t("refundForm.issue.reasons.subscription.unwanted_renewal"),
-    t("refundForm.issue.reasons.subscription.service_inaccessible"),
-    t("refundForm.issue.reasons.subscription.features_missing"),
-    t("refundForm.issue.reasons.subscription.incorrect_billing"),
-    t("refundForm.issue.reasons.subscription.other"),
-  ];
-
-  const form = useForm<RefundFormValues>({
+  const methods = useForm<RefundFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       company: "",
@@ -139,50 +94,8 @@ export function RefundForm({
     },
   });
 
-  const watchCompany = form.watch("company");
-  const watchCategory = form.watch("issueCategory");
-  const watchTone = form.watch("tone");
-
-  const currentReasons = React.useMemo(() => {
-    switch (watchCategory) {
-      case "service":
-        return serviceReasons;
-      case "subscription":
-        return subscriptionReasons;
-      default:
-        return productReasons;
-    }
-  }, [watchCategory, i18n.language]);
-
-  React.useEffect(() => {
-    form.setValue("issueType", "");
-  }, [watchCategory]);
-
-  // OCR Integration
-  const { extractFromImage, isExtracting, error: ocrError, resetError: resetOcrError } = useOCR(i18n.language);
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    resetOcrError();
-    form.setValue("image", file); // Always attach original file
-
-    if (!isExtracting) {
-      const extracted = await extractFromImage(file);
-      if (extracted) {
-        // Auto-fill matching fields
-        if (extracted.company) form.setValue("company", extracted.company);
-        if (extracted.productName) form.setValue("productName", extracted.productName);
-        if (extracted.productValue !== undefined) form.setValue("productValue", extracted.productValue);
-        if (extracted.orderNumber) form.setValue("orderNumber", extracted.orderNumber);
-        if (extracted.purchaseDate) form.setValue("purchaseDate", extracted.purchaseDate);
-        if (extracted.description) form.setValue("description", extracted.description);
-
-        // UX toast handled in parseText
-      }
-    }
-  };
+  const { handleSubmit, reset } = methods;
+  const isUploading = isLoading;
 
   // Test: Remplir et générer automatiquement
   const fillAndGenerate = () => {
@@ -203,12 +116,10 @@ export function RefundForm({
       image: undefined,
       tone: 60,
     };
-    form.reset(values);
+    reset(values);
     toast.info(t("refundForm.testFillToast"));
-    requestAnimationFrame(() => form.handleSubmit(onSubmit)());
+    requestAnimationFrame(() => handleSubmit(onSubmit)());
   };
-
-  const isUploading = isLoading || isExtracting;
 
   return (
     <div>
@@ -216,8 +127,8 @@ export function RefundForm({
         <h2 className="text-2xl font-bold tracking-tight">{t("refundForm.title")}</h2>
         <p className="text-muted-foreground mt-2">{t("refundForm.subtitle")}</p>
       </div>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <FormProvider {...methods}>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-xl border-white/20 shadow-lg">
             <CardHeader>
               <CardTitle>
@@ -225,141 +136,8 @@ export function RefundForm({
               </CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-              {/* Left column */}
-              <div className="space-y-6 flex flex-col">
-                <FormField
-                  control={form.control}
-                  name="company"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("refundForm.companyLabel")}</FormLabel>
-                      <FormControl>
-                        <div className="flex flex-wrap justify-center gap-2 pt-2">
-                          {popularCompanies.map((company) => (
-                            <Button
-                              key={company.name}
-                              type="button"
-                              variant={field.value === company.name ? "default" : "outline"}
-                              className={cn(
-                                "flex items-center justify-center gap-2",
-                                field.value !== company.name && "bg-white/50 dark:bg-black/20",
-                              )}
-                              onClick={() => field.onChange(company.name)}
-                            >
-                              <img
-                                src={`https://logo.clearbit.com/${company.domain}`}
-                                alt={`${company.name} logo`}
-                                className={cn("h-5 w-5", field.value === company.name && "brightness-0 invert")}
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display = "none";
-                                }}
-                              />
-                              {company.name}
-                            </Button>
-                          ))}
-                          <Button
-                            key="other"
-                            type="button"
-                            variant={field.value === "other" ? "default" : "outline"}
-                            className={cn(field.value !== "other" && "bg-white/50 dark:bg-black/20")}
-                            onClick={() => field.onChange("other")}
-                          >
-                            {t("refundForm.otherButton")}
-                          </Button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {watchCompany === "other" && (
-                  <FormField
-                    control={form.control}
-                    name="otherCompany"
-                    render={({ field }) => (
-                      <FormItem className="animate-in fade-in duration-300">
-                        <FormLabel>{t("refundForm.otherCompanyLabel")}</FormLabel>
-                        <FormControl>
-                          <Input placeholder={t("refundForm.otherCompanyPlaceholder")} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-
-                <FormField
-                  control={form.control}
-                  name="country"
-                  render={({ field }) => {
-                    const selectedCountry = countries.find((c) => c.code === field.value);
-                    return (
-                      <FormItem>
-                        <FormLabel>{t("refundForm.countryLabel")}</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={t("refundForm.countryPlaceholder")}>
-                                {selectedCountry ? (
-                                  <div className="flex items-center gap-2">
-                                    <span>{selectedCountry.flag}</span>
-                                    <span>{selectedCountry.name}</span>
-                                    <span className="text-muted-foreground">{selectedCountry.code}</span>
-                                  </div>
-                                ) : (
-                                  t("refundForm.countryPlaceholder")
-                                )}
-                              </SelectValue>
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {countries.map((country) => (
-                              <SelectItem key={country.code} value={country.code}>
-                                <div className="flex items-center gap-2">
-                                  <span>{country.flag}</span>
-                                  <span>{country.name}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    );
-                  }}
-                />
-              </div>
-
-              {/* Right column */}
-              <div className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("refundForm.firstNameLabel")}</FormLabel>
-                      <FormControl>
-                        <Input placeholder={t("refundForm.firstNamePlaceholder")} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("refundForm.lastNameLabel")}</FormLabel>
-                      <FormControl>
-                        <Input placeholder={t("refundForm.lastNamePlaceholder")} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <CompanySelector />
+              <PersonalInfoForm />
             </CardContent>
           </Card>
 
@@ -368,256 +146,11 @@ export function RefundForm({
               <CardTitle>{t("refundForm.orderDetailsSectionTitle")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="productName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("refundForm.productNameLabel")}</FormLabel>
-                      <FormControl>
-                        <Input placeholder={t("refundForm.productNamePlaceholder")} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="productValue"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("refundForm.productValueLabel")}</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          placeholder={t("refundForm.productValuePlaceholder")}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="orderNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("refundForm.orderNumberLabel")}</FormLabel>
-                      <FormControl>
-                        <Input placeholder={t("refundForm.orderNumberPlaceholder")} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="purchaseDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col pt-2">
-                      <FormLabel>{t("refundForm.purchaseDateLabel")}</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full justify-start text-left font-normal",
-                                !field.value && "text-muted-foreground",
-                              )}
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {field.value ? format(field.value, "PPP") : <span>{t("refundForm.purchaseDatePlaceholder")}</span>}
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Category (match height to other inputs) */}
-                <FormField
-                  control={form.control}
-                  name="issueCategory"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("refundForm.issueCategoryLabel")}</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          className="flex flex-wrap gap-3"
-                        >
-                          <div className="flex items-center space-x-3 rounded-md border h-10 px-3">
-                            <RadioGroupItem id="cat-product" value="product" className="h-4 w-4" />
-                            <Label htmlFor="cat-product">{t("refundForm.issue.categories.product")}</Label>
-                          </div>
-                          <div className="flex items-center space-x-3 rounded-md border h-10 px-3">
-                            <RadioGroupItem id="cat-service" value="service" className="h-4 w-4" />
-                            <Label htmlFor="cat-service">{t("refundForm.issue.categories.service")}</Label>
-                          </div>
-                          <div className="flex items-center space-x-3 rounded-md border h-10 px-3">
-                            <RadioGroupItem id="cat-subscription" value="subscription" className="h-4 w-4" />
-                            <Label htmlFor="cat-subscription">{t("refundForm.issue.categories.subscription")}</Label>
-                          </div>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Dynamic reason */}
-                <FormField
-                  control={form.control}
-                  name="issueType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("refundForm.issueTypeLabel")}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t("refundForm.issueTypePlaceholder")} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {currentReasons.map((issue) => (
-                            <SelectItem key={issue} value={issue}>
-                              {issue}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Description */}
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("refundForm.descriptionLabel")}</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder={t("refundForm.descriptionPlaceholder")}
-                        className="resize-none"
-                        rows={4}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Tone */}
-              <FormField
-                control={form.control}
-                name="tone"
-                render={({ field }) => {
-                  const value = typeof field.value === "number" ? field.value : 50;
-                  return (
-                    <FormItem>
-                      <FormLabel>{t("refundForm.tone.label")}</FormLabel>
-                      <FormControl>
-                        <div className="relative mt-3 pt-8">
-                          <div
-                            className="absolute top-0 left-0 -translate-y-1/2 -translate-x-1/2"
-                            style={{ left: `${value}%` }}
-                          >
-                            <span className="px-2 py-1 text-xs font-medium rounded bg-muted text-foreground shadow">
-                              {value}%
-                            </span>
-                          </div>
-                          <div
-                            className="pointer-events-none absolute top-1/2 -translate-y-1/2"
-                            style={{ left: "50%" }}
-                          >
-                            <div className="h-4 w-[2px] bg-muted-foreground/40 rounded" />
-                          </div>
-                          <Slider
-                            value={[value]}
-                            min={0}
-                            max={100}
-                            step={1}
-                            onValueChange={(vals) => field.onChange(vals[0] ?? 0)}
-                            aria-label={t("refundForm.tone.label") as string}
-                          />
-                          <div className="mt-2 grid grid-cols-3 text-[11px] text-muted-foreground">
-                            <span className="justify-self-start">{t("refundForm.tone.empathic")}</span>
-                            <span className="justify-self-center">{t("refundForm.tone.formal")}</span>
-                            <span className="justify-self-end">{t("refundForm.tone.firm")}</span>
-                          </div>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  );
-                }}
-              />
-
-              <FormField
-                control={form.control}
-                name="image"
-                render={({ field: { onChange, value, ...rest } }) => (
-                  <FormItem>
-                    <FormLabel>{t("refundForm.imageLabel")}</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={async (e) => {
-                            await handleImageUpload(e);
-                            onChange(e.target.files ? e.target.files[0] : null);
-                          }}
-                          disabled={isUploading}
-                          {...rest}
-                        />
-                        {isExtracting && (
-                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
-                    </FormControl>
-                    <FormDescription>
-                      {t("refundForm.imageDescription")}{" "}
-                      <span className="text-xs text-muted-foreground">
-                        ({t("ocr.guidance")}) {/* "Upload clear printed receipts for auto-fill." */}
-                      </span>
-                    </FormDescription>
-                    {ocrError && (
-                      <FormMessage className="text-destructive">
-                        {ocrError} <Button variant="link" size="sm" onClick={resetOcrError} className="h-auto p-0 text-destructive">
-                          Retry
-                        </Button>
-                      </FormMessage>
-                    )}
-                  </FormItem>
-                )}
-              />
+              <OrderDetailsForm />
+              <IssueSelector />
+              <DescriptionField />
+              <ToneSlider />
+              <ImageUpload isLoading={isUploading} />
             </CardContent>
           </Card>
 
@@ -641,7 +174,7 @@ export function RefundForm({
             {t("refundForm.testFillButton")}
           </LiquidGlassButton>
         </form>
-      </Form>
+      </FormProvider>
     </div>
   );
 }
