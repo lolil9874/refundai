@@ -157,7 +157,7 @@ export function OrderDetailsForm() {
               control={form.control}
               name="currency"
               render={({ field }) => (
-                <FormItem className="w-24">
+                <FormItem className="w-20">
                   <Popover open={open} onOpenChange={setOpen}>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -174,9 +174,9 @@ export function OrderDetailsForm() {
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[350px] p-0">
+                    <PopoverContent className="w-[280px] p-0">
                       <Command filter={filterCurrency}>
-                        <CommandInput placeholder="Search currency or country..." />
+                        <CommandInput placeholder="Search currency..." />
                         <CommandList>
                           <CommandEmpty>No currency found.</CommandEmpty>
                           <CommandGroup>
@@ -189,15 +189,9 @@ export function OrderDetailsForm() {
                                   setOpen(false);
                                 }}
                               >
-                                <div className="flex flex-col gap-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium text-base">{currency.display}</span>
-                                    <span className="text-muted-foreground text-sm">({currency.name})</span>
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {currency.countries.slice(0, 3).join(", ")}
-                                    {currency.countries.length > 3 && ` +${currency.countries.length - 3} more`}
-                                  </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">{currency.display}</span>
+                                  <span className="text-muted-foreground text-sm">({currency.name})</span>
                                 </div>
                               </CommandItem>
                             ))}
