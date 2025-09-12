@@ -1,11 +1,11 @@
 // @ts-nocheck
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
-/* Supabase Edge Function: generate-refund (Responses API)
-   - Uses the OpenAI Responses API (gpt-5-nano-2025-08-07).
-   - Requests a strict JSON schema via `text.format` to guarantee {"subject","body"} output.
-   - Uses store: false to avoid persisting request state (stateless).
-   - Returns the same structure the frontend expects.
+/* Supabase Edge Function: generate-refund (Responses API - Step A)
+   - Minimal migration to the Responses API (same pattern as test-openai).
+   - Uses model gpt-5-nano-2025-08-07 with { instructions, input }.
+   - No Structured Outputs yet; we parse output_text and return it as the email body.
+   - Subject is generated locally as a simple, localized fallback.
 */
 
 type GenerateRefundInput = {
@@ -118,94 +118,97 @@ function formatCurrency(value: number | undefined, locale: "en" | "fr"): string 
   return new Intl.NumberFormat(loc, { maximumFractionDigits: 2 }).format(value);
 }
 
-function buildMessages(input: GenerateRefundInput, formattedDate: string, formattedValue: string): ChatMessage[] {
-  const style = mapToneToStyle(input.tone);
-  const language = input.locale;
-
-  const system = `
-You are a Customer Service assistant specialized in writing refund request emails for consumers.
-Objectives:
-- Maximize the chance of response and refund while staying polite, professional, and precise.
-- Output MUST be in the target language and ONLY as JSON with two fields: "subject" and "body".
-- Do not invent data; use only the provided information.
-- No legal threats or internal references that were not provided.
-Language:
-- Target language: ${language}.
-Tone:
-- Style: ${style}. (0–33 empathic, 34–66 formal, 67–100 firm)
-Content requirements:
-- Include order context: product, value, order number, purchase date (already localized).
-- Include the issue category and specific reason (already human-readable).
-- Make a clear refund request or appropriate resolution.
-- Mention that evidence can be provided upon request (if hasImage is true, remind politely that a screenshot is available).
-- Use short paragraphs and optionally 3–5 bullet points for facts.
-- Keep the subject concise (~70–90 chars), informative, without excessive capitalization.
-Output:
-- JSON only, exactly: {"subject":"...","body":"..."}
-No extra keys, no preamble, no code fences.`;
-
-  const user = `
-Data:
-- Company: ${input.companyDisplayName} (${input.companyDomain})
-- Country: ${input.country}
-- First/Last name: ${input.firstName} ${input.lastName}
-- Product: ${input.productName}
-- Product value (localized): ${formattedValue}
-- Order number: ${input.orderNumber}
-- Purchase date (localized): ${formattedDate}
-- Issue category: ${input.issueCategory}
-- Issue type: ${input.issueType}
-- Description: ${input.description}
-- Has image: ${input.hasImage}
-- Tone (0-100): ${input.tone}
-- Locale: ${input.locale}
-
-Please return JSON with "subject" and "body" for an email the user will send to the company’s support team in ${language}.`;
-
-  return [
-    { role: "system", content: system.trim() },
-    { role: "user", content: user.trim() },
-  ];
+function makeFallbackSubject(
+  locale: "en" | "fr",
+  companyDisplayName: string,
+  productName?: string,
+  orderNumber?: string,
+): string {
+  if (locale === "fr") {
+    if (orderNumber) return `Problème avec la commande n°${orderNumber}`;
+    if (productName) return `Demande de remboursement — ${productName}`;
+    return `Demande de remboursement — ${companyDisplayName}`;
+  }
+  // en
+  if (orderNumber) return `Issue with Order #${orderNumber}`;
+  if (productName) return `Refund request — ${productName}`;
+  return `Refund request — ${companyDisplayName}`;
 }
 
-async function generateWithOpenAI(messages: ChatMessage[]): Promise<{ subject: string; body: string }> {
-  const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-  if (!OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY is not set. Please add it as a secret in your Supabase project.");
+function buildInstructions(locale: "en" | "fr", toneStyle: "empathic" | "formal" | "firm") {
+  if (locale === "fr") {
+    return `Vous êtes un assistant de service client. Rédigez UNIQUEMENT le corps d’un e-mail de demande de remboursement, en ${toneStyle} et en français, clair, poli et concis. Pas d’en-tête "Sujet:". Pas d’autres sorties.`;
+  }
+  return `You are a customer service assistant. Write ONLY the body of a refund request email in a ${toneStyle} tone, in English, clear, polite, and concise. Do not include a "Subject:" line. No extra output.`;
+}
+
+function buildInput(
+  input: GenerateRefundInput,
+  formattedDate: string,
+  formattedValue: string,
+): string {
+  const lang = input.locale;
+  if (lang === "fr") {
+    return [
+      `Contexte:`,
+      `- Société: ${input.companyDisplayName} (${input.companyDomain})`,
+      `- Pays: ${input.country}`,
+      `- Nom: ${input.firstName} ${input.lastName}`,
+      `- Produit/Service: ${input.productName}`,
+      `- Valeur: ${formattedValue}`,
+      `- N° de commande: ${input.orderNumber}`,
+      `- Date d’achat/prestation: ${formattedDate}`,
+      `- Catégorie: ${input.issueCategory}`,
+      `- Motif: ${input.issueType}`,
+      `- Description courte: ${input.description}`,
+      input.hasImage ? `- Note: une capture d’écran est disponible.` : ``,
+      ``,
+      `Rédigez le corps de l’e-mail que j’enverrai au support.`,
+    ]
+      .filter(Boolean)
+      .join("\n");
   }
 
-  const instructions = messages.find((m) => m.role === "system")?.content || "";
-  const input = messages.find((m) => m.role === "user")?.content || "";
+  return [
+    `Context:`,
+    `- Company: ${input.companyDisplayName} (${input.companyDomain})`,
+    `- Country: ${input.country}`,
+    `- Name: ${input.firstName} ${input.lastName}`,
+    `- Product/Service: ${input.productName}`,
+    `- Value: ${formattedValue}`,
+    `- Order number: ${input.orderNumber}`,
+    `- Purchase/Service date: ${formattedDate}`,
+    `- Category: ${input.issueCategory}`,
+    `- Issue: ${input.issueType}`,
+    `- Short description: ${input.description}`,
+    input.hasImage ? `- Note: a screenshot is available.` : ``,
+    ``,
+    `Write the email body that I will send to support.`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
 
-  // Request a strict JSON schema via `text.format` to make the model return structured JSON.
+async function generateEmailBodyWithOpenAI(
+  instructions: string,
+  input: string,
+): Promise<string> {
+  const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+  if (!OPENAI_API_KEY) {
+    throw new Error("OPENAI_API_KEY is not set in Supabase secrets.");
+  }
+
   const payload = {
     model: "gpt-5-nano-2025-08-07",
     instructions,
     input,
-    // Make this request stateless (do not store)
     store: false,
-    text: {
-      format: {
-        type: "json_schema",
-        name: "refund_email",
-        strict: true,
-        schema: {
-          type: "object",
-          properties: {
-            subject: { type: "string", minLength: 1 },
-            body: { type: "string", minLength: 1 },
-          },
-          required: ["subject", "body"],
-          additionalProperties: false,
-        },
-      },
-    },
   };
 
   const resp = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${OPENAI_API_KEY}`,
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
@@ -217,90 +220,28 @@ async function generateWithOpenAI(messages: ChatMessage[]): Promise<{ subject: s
   }
 
   const data = await resp.json();
-  const outputItems = Array.isArray(data?.output) ? data.output : [];
 
-  // Try to extract JSON text from output items. Prefer output_text inside a message.
-  let contentText = "";
+  // Same extraction style as test-openai
+  const messageItem = data?.output?.find((item: any) => item.type === "message");
+  const outputTextItem = messageItem?.content?.find((item: any) => item.type === "output_text");
+  const text = outputTextItem?.text;
 
-  for (const item of outputItems) {
-    if (item?.type === "message" && Array.isArray(item.content)) {
-      // Common case: content includes { type: "output_text", text: "..." }
-      const outText = item.content.find((c: any) => c?.type === "output_text" && typeof c?.text === "string");
-      if (outText?.text) {
-        contentText = outText.text;
-        break;
-      }
-      // Responses with structured_output may include direct structured JSON
-      const structured = item.content.find((c: any) => c?.type === "structured_output");
-      if (structured) {
-        // Attempt to extract JSON as string or object
-        if (typeof structured?.value === "string") {
-          contentText = structured.value;
-          break;
-        } else if (structured?.value) {
-          contentText = JSON.stringify(structured.value);
-          break;
-        } else if (structured?.data) {
-          contentText = JSON.stringify(structured.data);
-          break;
-        }
-      }
-    }
-
-    // Fallback: scan any content array entries for output_text
-    if (Array.isArray(item?.content)) {
-      const outEntry = item.content.find((c: any) => c?.type === "output_text" && typeof c?.text === "string");
-      if (outEntry?.text) {
-        contentText = outEntry.text;
-        break;
-      }
-    }
+  if (typeof text === "string" && text.trim().length > 0) {
+    return text;
   }
 
-  if (!contentText) {
-    // As a last resort, try response.output_text top-level helper if present
-    if (typeof data?.output_text === "string" && data.output_text.trim().length > 0) {
-      contentText = data.output_text;
-    } else {
-      throw new Error("OpenAI returned no usable text output.");
-    }
+  // Fallback to helper if present
+  if (typeof data?.output_text === "string" && data.output_text.trim().length > 0) {
+    return data.output_text;
   }
 
-  // The model was asked to return strict JSON matching our schema.
-  let parsed: any;
-  try {
-    parsed = JSON.parse(contentText);
-  } catch (err) {
-    // Some models may wrap JSON in triple backticks or whitespace—try to extract JSON substring
-    const m = contentText.match(/\{[\s\S]*\}/);
-    if (m) {
-      try {
-        parsed = JSON.parse(m[0]);
-      } catch (err2) {
-        throw new Error("Failed to parse JSON output from OpenAI.");
-      }
-    } else {
-      throw new Error("OpenAI returned non-JSON output and no JSON could be extracted.");
-    }
-  }
-
-  if (!parsed?.subject || !parsed?.body) {
-    throw new Error("Invalid OpenAI response structure. Could not find subject/body in JSON.");
-  }
-
-  return {
-    subject: String(parsed.subject).trim(),
-    body: String(parsed.body).trim(),
-  };
+  throw new Error("OpenAI returned no usable text output.");
 }
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders() });
   }
-
-  console.log("--- New Request Received ---");
-  console.log(`Request method: ${req.method}`);
 
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -311,39 +252,36 @@ serve(async (req) => {
 
   try {
     const bodyText = await req.text();
-    console.log("Raw request body:", bodyText);
-
-    if (!bodyText) {
-      throw new Error("Request body is empty.");
-    }
+    if (!bodyText) throw new Error("Request body is empty.");
 
     let input: GenerateRefundInput;
     try {
       input = JSON.parse(bodyText);
-    } catch (parseError) {
-      console.error("Failed to parse JSON body:", parseError);
-      throw new Error(`Invalid JSON format in request body. Raw body: ${bodyText}`);
+    } catch {
+      throw new Error(`Invalid JSON format in request body.`);
     }
 
-    const companyDomain = (input.companyDomain || "example.com").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+    const companyDomain = (input.companyDomain || "example.com")
+      .trim()
+      .toLowerCase()
+      .replace(/^https?:\/\//, "")
+      .replace(/\/.*$/, "");
     const companyDisplayName = input.companyDisplayName?.trim() || "The Company";
-    const locale = input.locale === "fr" ? "fr" : "en";
+    const locale: "en" | "fr" = input.locale === "fr" ? "fr" : "en";
 
     const formattedDate = formatDateISOToLocale(input.purchaseDateISO, locale);
     const formattedValue = formatCurrency(input.productValue, locale);
 
     const { bestEmail, ranked, forms, links } = emailFallbacks(companyDomain);
-
     const phones = getMockPhones(input.country);
     const premiumContacts = getPremiumPhoneMasks(input.country);
 
-    const messages = buildMessages(
-      { ...input, companyDomain, companyDisplayName, locale },
-      formattedDate,
-      formattedValue,
-    );
+    const toneStyle = mapToneToStyle(input.tone);
+    const instructions = buildInstructions(locale, toneStyle);
+    const promptInput = buildInput({ ...input, companyDomain, companyDisplayName, locale }, formattedDate, formattedValue);
 
-    const { subject, body } = await generateWithOpenAI(messages);
+    const body = await generateEmailBodyWithOpenAI(instructions, promptInput);
+    const subject = makeFallbackSubject(locale, companyDisplayName, input.productName, input.orderNumber);
 
     const payload: GenerateRefundResult = {
       bestEmail,
@@ -364,7 +302,6 @@ serve(async (req) => {
       headers: { "Content-Type": "application/json", ...corsHeaders() },
     });
   } catch (error) {
-    console.error("Error in generate-refund function:", error);
     return new Response(JSON.stringify({ error: error?.message || String(error) }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders() },
