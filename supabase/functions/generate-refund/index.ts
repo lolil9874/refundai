@@ -1,3 +1,5 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+
 /* Supabase Edge Function: generate-refund
    - Expects JSON body with normalized companyDomain, companyDisplayName, locale ('en'|'fr'), and form data.
    - Calls OpenAI to generate subject/body with a robust generalist prompt.
@@ -205,7 +207,7 @@ async function generateWithOpenAI(messages: ChatMessage[]): Promise<{ subject: s
   };
 }
 
-Deno.serve(async (req) => {
+serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders() });
   }
