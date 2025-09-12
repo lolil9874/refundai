@@ -19,18 +19,22 @@ type ExtractedData = {
 
 export function useOCR() {
   const [isExtracting, setIsExtracting] = useState(false);
+  const [fullExtractedText, setFullExtractedText] = useState<string>("");
   const form = useFormContext();
 
   const extractFromImage = useCallback(async (file: File): Promise<ExtractedData | null> => {
     if (!file.type.startsWith("image/")) return null;
 
     setIsExtracting(true);
+    setFullExtractedText(""); // Reset display
     try {
       const { data: { text } } = await Tesseract.recognize(file, "eng", {
         workerPath: "https://esm.sh/tesseract.js@5.1.0/dist/worker.min.js",
         corePath: "https://esm.sh/tesseract.js-core@5.1.0/tesseract-core.wasm.js",
         langPath: "https://tessdata.projectnaptha.com/4.0.0",
       });
+
+      setFullExtractedText(text); // Store full text for display
 
       // Simple regex-based extraction (improve with ML if needed)
       const orderMatch = text.match(/(order|inv|receipt|#)\s*[:\-]?\s*([A-Z0-9\-]+)/i);
@@ -52,6 +56,7 @@ export function useOCR() {
       return Object.keys(extracted).length > 0 ? extracted : null;
     } catch (error) {
       console.error("OCR extraction failed:", error);
+      setFullExtractedText("Error during OCR extraction. Check console for details.");
       return null;
     } finally {
       setIsExtracting(false);
@@ -62,6 +67,7 @@ export function useOCR() {
     if (!file.name.toLowerCase().endsWith(".pdf")) return null;
 
     setIsExtracting(true);
+    setFullExtractedText(""); // Reset display
     try {
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
@@ -72,6 +78,8 @@ export function useOCR() {
         const textContent = await page.getTextContent();
         fullText += textContent.items.map((item: any) => item.str).join(" ") + "\n";
       }
+
+      setFullExtractedText(fullText); // Store full text for display
 
       // Reuse the same regex extraction as for images
       const orderMatch = fullText.match(/(order|inv|receipt|#)\s*[:\-]?\s*([A-Z0-9\-]+)/i);
@@ -92,6 +100,7 @@ export function useOCR() {
       return Object.keys(extracted).length > 0 ? extracted : null;
     } catch (error) {
       console.error("PDF extraction failed:", error);
+      setFullExtractedText("Error during PDF text extraction. Check console for details.");
       return null;
     } finally {
       setIsExtracting(false);
@@ -115,12 +124,14 @@ export function useOCR() {
       if (extracted.purchaseDate) form.setValue("purchaseDate", extracted.purchaseDate);
 
       toast.success("Auto-filled details from your receipt! Review and edit as needed. ✨");
+    } else if (fullExtractedText && fullExtractedText !== "") {
+      toast.info("File processed, but auto-fill couldn't extract key details. Check the raw text below for testing.");
     } else {
-      toast.info("File uploaded, but auto-fill couldn't extract details. You can fill manually.");
+      toast.info("File uploaded, but no text could be extracted. You can fill manually.");
     }
 
     return extracted;
-  }, [form, extractFromImage, extractFromPDF]);
+  }, [form, extractFromImage, extractFromPDF, fullExtractedText]);
 
-  return { autoFillFromFile, isExtracting };
+  return { autoFillFromFile, isExtracting, fullExtractedText };
 }

@@ -89,6 +89,8 @@
     },
     "imageLabel": "Optional: Let our AI auto-fill from your receipt! ✨",
     "imageDescription": "Upload a receipt or invoice screenshot to auto-fill details of your order",
+    "ocrTestBoxTitle": "Raw OCR Text (for testing)",
+    "ocrTestBoxNote": "(This is for testing OCR output. Auto-fill uses this text to parse details.)",
     "submitButton": "Generate Email & Find Contacts",
     "submitButtonLoading": "Generating...",
     "testFillButton": "Fill and generate (TEST)",
