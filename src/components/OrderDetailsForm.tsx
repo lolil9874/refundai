@@ -66,49 +66,50 @@ export function OrderDetailsForm() {
           )}
         />
         <div className="space-y-2">
-          <FormField
-            control={form.control}
-            name="productValue"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t("refundForm.productValueLabel")}</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder={t("refundForm.productValuePlaceholder")}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="currency"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t("refundForm.currencyLabel")}</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || ""}>
+          <FormLabel>{t("refundForm.productValueLabel")}</FormLabel>
+          <div className="flex gap-2">
+            <FormField
+              control={form.control}
+              name="productValue"
+              render={({ field }) => (
+                <FormItem className="flex-1">
                   <FormControl>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder={t("refundForm.currencyPlaceholder")} />
-                    </SelectTrigger>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder={t("refundForm.productValuePlaceholder")}
+                      {...field}
+                    />
                   </FormControl>
-                  <SelectContent>
-                    {currencies.map((curr) => (
-                      <SelectItem key={curr.code} value={curr.code}>
-                        {curr.symbol} {curr.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="currency"
+              render={({ field }) => (
+                <FormItem className="w-32">
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t("refundForm.currencyPlaceholder")} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {currencies.map((curr) => (
+                        <SelectItem key={curr.code} value={curr.code}>
+                          {curr.symbol}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
         <FormField
           control={form.control}
