@@ -17,7 +17,8 @@ export function ImageUpload({ isLoading }: { isLoading: boolean }) {
   const { autoFillFromFile, isExtracting, fullExtractedText } = useOCR();
   const [isTextBoxOpen, setIsTextBoxOpen] = React.useState(true);
 
-  const hasExtractedText = fullExtractedText && fullExtractedText.trim() !== "" && !fullExtractedText.startsWith("Error");
+  const hasExtractedText = fullExtractedText && fullExtractedText.trim() !== "" && !fullExtractedText.startsWith("Error") && fullExtractedText !== "No text extracted from PDF.";
+  const isFallbackMessage = fullExtractedText?.includes("Scanned PDF detected") || fullExtractedText?.includes("using OCR fallback");
 
   return (
     <FormField
@@ -66,6 +67,7 @@ export function ImageUpload({ isLoading }: { isLoading: boolean }) {
                   <Card className="bg-muted/50 border-muted">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium">Extracted Text Preview</CardTitle>
+                      {isFallbackMessage && <p className="text-xs text-muted-foreground">Note: OCR fallback used for scanned PDF.</p>}
                     </CardHeader>
                     <CardContent>
                       <pre className="text-xs font-mono overflow-auto max-h-40 p-3 bg-background rounded-md border text-muted-foreground whitespace-pre-wrap">
@@ -73,7 +75,9 @@ export function ImageUpload({ isLoading }: { isLoading: boolean }) {
                           ? fullExtractedText 
                           : fullExtractedText.startsWith("Error") 
                             ? fullExtractedText 
-                            : "No text extracted. Try a clearer image/PDF."
+                            : fullExtractedText === "No text extracted from PDF." 
+                              ? "No text extracted. Try a clearer image/PDF or check if it's scanned." 
+                              : "No text extracted. Try a clearer image/PDF."
                         }
                       </pre>
                       <p className="text-xs text-muted-foreground mt-2">

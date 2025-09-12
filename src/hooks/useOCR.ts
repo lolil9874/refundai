@@ -6,8 +6,8 @@ import Tesseract from "tesseract.js";
 import { toast } from "sonner";
 import { useFormContext } from "react-hook-form";
 
-// Set up pdf.js worker from jsDelivr CDN (reliable fallback)
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.worker.min.js`;
+// Set up pdf.js worker from jsDelivr CDN (matching library version for compatibility)
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.149/build/pdf.worker.min.js`;
 
 type ExtractedData = {
   orderNumber?: string;
@@ -21,6 +21,29 @@ export function useOCR() {
   const [isExtracting, setIsExtracting] = useState(false);
   const [fullExtractedText, setFullExtractedText] = useState<string>("");
   const form = useFormContext();
+
+  const extractTextFromPDFPage = async (pageNum: number, pdf: any): Promise<string> => {
+    const page = await pdf.getPage(pageNum);
+    const viewport = page.getViewport({ scale: 2.0 }); // Higher scale for better OCR if needed
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d")!;
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+
+    await page.render({
+      canvasContext: context,
+      viewport: viewport,
+    }).promise;
+
+    // Run Tesseract on the rendered image
+    const { data: { text } } = await Tesseract.recognize(canvas, "eng", {
+      workerPath: "https://esm.sh/tesseract.js@5.1.0/dist/worker.min.js",
+      corePath: "https://esm.sh/tesseract.js-core@5.1.0/tesseract-core.wasm.js",
+      langPath: "https://tessdata.projectnaptha.com/4.0.0",
+    });
+
+    return text;
+  };
 
   const extractFromImage = useCallback(async (file: File): Promise<ExtractedData | null> => {
     if (!file.type.startsWith("image/")) return null;
@@ -55,8 +78,8 @@ export function useOCR() {
 
       return Object.keys(extracted).length > 0 ? extracted : null;
     } catch (error) {
-      console.error("OCR extraction failed:", error);
-      setFullExtractedText("Error during OCR extraction. Check console for details.");
+      console.error("OCR extraction failed for image:", error);
+      setFullExtractedText(`Error during image OCR extraction: ${error instanceof Error ? error.message : 'Unknown error'}. Check console for details.`);
       return null;
     } finally {
       setIsExtracting(false);
@@ -73,19 +96,32 @@ export function useOCR() {
       const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
       let fullText = "";
 
-      for (let i = 1; i <= pdf.numPages; i++) {
+      // First, try direct text extraction (for text-based PDFs)
+      for (let i = 1; i <= Math.min(pdf.numPages, 3); i++) { // Limit to first 3 pages for perf
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
         fullText += textContent.items.map((item: any) => item.str).join(" ") + "\n";
       }
 
-      setFullExtractedText(fullText); // Store full text for display
+      // If little/no text extracted, fallback to OCR on rendered pages (for scanned PDFs)
+      const textLength = fullText.trim().length;
+      if (textLength < 50) { // Threshold: if too short, assume scanned
+        console.log("Low text content detected—falling back to OCR for PDF pages.");
+        setFullExtractedText("Scanned PDF detected—using OCR fallback on page 1...");
+        fullText = await extractTextFromPDFPage(1, pdf); // OCR first page
+        if (pdf.numPages > 1 && fullText.trim().length < 100) {
+          // If still low, try page 2
+          fullText += "\n\n--- Page 2 ---\n" + await extractTextFromPDFPage(2, pdf);
+        }
+      }
+
+      setFullExtractedText(fullText || "No text extracted from PDF."); // Store full text for display
 
       // Reuse the same regex extraction as for images
       const orderMatch = fullText.match(/(order|inv|receipt|#)\s*[:\-]?\s*([A-Z0-9\-]+)/i);
       const productMatch = fullText.match(/product|item|description[:\-]?\s*(.+?)(?=\n|$)/i);
       const valueMatch = fullText.match(/total|amount|value[:\-]?\s*\$?(\d+\.?\d*)/i);
-      const dateMatch = fullText.match(/(\d{1,2}\/\d{2}\/\d{2,4}|\d{4}-\d{2}-\d{2})/);
+      const dateMatch = fullText.match(/(\d{1,2}\/\d{1,2}\/\d{2,4}|\d{4}-\d{2}-\d{2})/);
 
       const extracted: ExtractedData = {};
 
@@ -100,7 +136,8 @@ export function useOCR() {
       return Object.keys(extracted).length > 0 ? extracted : null;
     } catch (error) {
       console.error("PDF extraction failed:", error);
-      setFullExtractedText("Error during PDF text extraction. Check console for details.");
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      setFullExtractedText(`Error during PDF text extraction: ${errorMsg}. Check console for details.`);
       return null;
     } finally {
       setIsExtracting(false);
