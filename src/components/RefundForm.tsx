@@ -34,7 +34,7 @@ const formSchema = z
       const n = Number(val);
       return isNaN(n) ? undefined : n;
     }, z.number().positive("Value must be a positive number.").optional()),
-    currency: z.enum(["USD", "EUR", "GBP", "CAD", "CHF", "JPY", "AUD"]).optional(),
+    currency: z.string().length(3, "Currency must be a 3-letter code.").optional(),
     orderNumber: z.string().min(1, "Order number is required."),
     purchaseDate: z.date({ required_error: "Purchase date is required." }),
     issueCategory: z.enum(["product", "service", "subscription"], {

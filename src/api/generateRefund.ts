@@ -9,7 +9,7 @@ export type GenerateRefundPayload = {
   lastName: string;
   productName: string;
   productValue?: number;
-  currency?: "USD" | "EUR" | "GBP" | "CAD" | "CHF" | "JPY" | "AUD"; // New
+  currency?: string;
   orderNumber: string;
   purchaseDateISO: string;
   issueCategory: "product" | "service" | "subscription";
