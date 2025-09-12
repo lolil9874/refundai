@@ -1,9 +1,6 @@
 // @ts-nocheck
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
-// Simple function to test the OpenAI API connection and key using the new Responses API.
-// It takes a { prompt: "..." } and returns the raw text response.
-
 function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": "*",
@@ -19,12 +16,14 @@ async function callOpenAI(prompt: string): Promise<string> {
   }
 
   const payload = {
-    model: "gpt-5",
-    instructions: "You are a helpful assistant. Respond concisely.",
-    input: prompt,
+    model: "gpt-4o-mini",
+    messages: [
+      { role: "system", content: "You are a helpful assistant. Respond concisely." },
+      { role: "user", content: prompt },
+    ],
   };
 
-  const resp = await fetch("https://api.openai.com/v1/responses", {
+  const resp = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${OPENAI_API_KEY}`,
@@ -39,11 +38,7 @@ async function callOpenAI(prompt: string): Promise<string> {
   }
 
   const data = await resp.json();
-
-  // Extract text from the new response structure
-  const messageItem = data?.output?.find((item: any) => item.type === "message");
-  const outputTextItem = messageItem?.content?.find((item: any) => item.type === "output_text");
-  const text = outputTextItem?.text;
+  const text = data.choices?.[0]?.message?.content;
 
   return text ?? "No valid text content returned from OpenAI.";
 }

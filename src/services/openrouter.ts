@@ -3,6 +3,10 @@ import OpenAI from 'openai';
 const openrouter = new OpenAI({
   baseURL: 'https://openrouter.ai/api/v1',
   apiKey: import.meta.env.VITE_OPENROUTER_API_KEY || '',
+  defaultHeaders: {
+    'HTTP-Referer': window.location.origin,
+    'X-Title': 'REFUND.AI',
+  },
   dangerouslyAllowBrowser: true, // Allow browser usage
 });
 
@@ -37,10 +41,6 @@ export async function parseOCRTextWithLLM(ocrText: string): Promise<ParsedFormDa
           content: `Extract information from this text:\n\n${ocrText}`
         }
       ],
-      extra_headers: {
-        'HTTP-Referer': window.location.origin,
-        'X-Title': 'REFUND.AI',
-      },
       temperature: 0.1,
     });
 
