@@ -87,8 +87,8 @@
       "empathic": "Empathic",
       "help": "Choose the tone you want. The bar reflects your selection."
     },
-    "imageLabel": "Optional: Upload your receipt or invoice",
-    "imageDescription": "Attach a clear image or PDF of your receipt/invoice (for manual use in your email).",
+    "imageLabel": "Optional: Let our AI auto-fill from your receipt! ✨",
+    "imageDescription": "Upload a receipt or invoice screenshot to auto-fill details of your order",
     "submitButton": "Generate Email & Find Contacts",
     "submitButtonLoading": "Generating...",
     "testFillButton": "Fill and generate (TEST)",

@@ -87,8 +87,8 @@
       "empathic": "Empathique",
       "help": "Choisissez le ton souhaité. La barre reflète visuellement votre choix."
     },
-    "imageLabel": "Optionnel : Téléchargez votre reçu ou facture",
-    "imageDescription": "Joignez une image claire ou un PDF de votre reçu/facture (pour utilisation manuelle dans votre e-mail).",
+    "imageLabel": "Optionnel : Laissez notre IA auto-remplir depuis votre reçu ! ✨",
+    "imageDescription": "Téléchargez une capture d'écran de votre reçu ou facture pour auto-remplir les détails de votre commande",
     "submitButton": "Générer l'e-mail & Trouver les contacts",
     "submitButtonLoading": "Génération en cours...",
     "testFillButton": "Remplir et générer (TEST)",
