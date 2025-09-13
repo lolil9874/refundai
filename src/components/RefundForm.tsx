@@ -66,7 +66,7 @@ export function RefundForm({
   const methods = useForm<RefundFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      company: "Amazon",
+      company: "",
       country: "US",
       firstName: "",
       lastName: "",
@@ -106,11 +106,11 @@ export function RefundForm({
           <CardContent className="space-y-8">
             <div className="space-y-6">
               <OrderDetailsForm />
+              <ImageUpload isLoading={isLoading} />
             </div>
             <div className="space-y-6">
               <IssueSelector />
               <DescriptionField />
-              <ImageUpload isLoading={isLoading} />
               <ToneSlider />
             </div>
           </CardContent>

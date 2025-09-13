@@ -24,12 +24,20 @@ export function CompanySelector() {
   const [searchResults, setSearchResults] = React.useState<CompanySearchResult[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
+  const [selectedCompany, setSelectedCompany] = React.useState<CompanySearchResult | null>(null);
+
+  React.useEffect(() => {
+    // Clear selected company if input text doesn't match
+    if (companyValue !== selectedCompany?.name) {
+      setSelectedCompany(null);
+    }
+  }, [companyValue, selectedCompany]);
 
   React.useEffect(() => {
     const performSearch = async () => {
       if (debouncedCompanyValue && debouncedCompanyValue.length > 1) {
         const isPopular = popularCompanies.some(c => c.name.toLowerCase() === debouncedCompanyValue.toLowerCase());
-        if (isPopular) {
+        if (isPopular || debouncedCompanyValue === selectedCompany?.name) {
           setSearchResults([]);
           setIsDropdownOpen(false);
           return;
@@ -54,10 +62,11 @@ export function CompanySelector() {
     };
 
     performSearch();
-  }, [debouncedCompanyValue]);
+  }, [debouncedCompanyValue, selectedCompany]);
 
-  const handleSelectCompany = (companyName: string) => {
-    form.setValue("company", companyName, { shouldValidate: true });
+  const handleSelectCompany = (company: CompanySearchResult) => {
+    form.setValue("company", company.name, { shouldValidate: true });
+    setSelectedCompany(company);
     setIsDropdownOpen(false);
     setSearchResults([]);
   };
@@ -74,10 +83,19 @@ export function CompanySelector() {
               <PopoverTrigger asChild>
                 <FormControl>
                   <div className="relative">
+                    {selectedCompany?.logo && (
+                      <Avatar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5">
+                        <AvatarImage src={selectedCompany.logo} alt={`${selectedCompany.name} logo`} />
+                        <AvatarFallback className="text-[10px] bg-muted">
+                          {selectedCompany.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
                     <Input
                       placeholder={t("refundForm.otherCompanyPlaceholder")}
                       {...field}
                       autoComplete="off"
+                      className={cn(selectedCompany && "pl-10")}
                     />
                     {isLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin" />}
                   </div>
@@ -95,7 +113,7 @@ export function CompanySelector() {
                       {searchResults.map((company) => (
                         <CommandItem
                           key={company.domain}
-                          onSelect={() => handleSelectCompany(company.name)}
+                          onSelect={() => handleSelectCompany(company)}
                           className="flex items-center gap-2 cursor-pointer"
                         >
                           <Avatar className="h-5 w-5">
@@ -124,7 +142,11 @@ export function CompanySelector() {
             type="button"
             variant={companyValue === company.name ? "default" : "outline"}
             className={cn("gap-2", companyValue !== company.name && "bg-white/50 dark:bg-black/20")}
-            onClick={() => handleSelectCompany(company.name)}
+            onClick={() => handleSelectCompany({
+              name: company.name,
+              domain: company.domain,
+              logo: `https://logo.clearbit.com/${company.domain}`
+            })}
           >
             <Avatar className="h-5 w-5">
               <AvatarImage src={`https://logo.clearbit.com/${company.domain}`} alt={`${company.name} logo`} />
