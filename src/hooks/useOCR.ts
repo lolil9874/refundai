@@ -3,7 +3,8 @@ import * as pdfjsLib from "pdfjs-dist";
 import Tesseract from "tesseract.js";
 import { toast } from "sonner";
 import { preprocessImageFileForOCR } from "@/utils/imagePreprocess";
-import { parseOCRTextWithLLM } from "@/services/openrouter";
+import { parseOcrText } from "@/api/parseOcr";
+import { ParsedFormData } from "@/api/types";
 
 // Use a locally bundled PDF.js worker with Vite
 import PdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?worker";
@@ -18,7 +19,7 @@ const OCR_OPTIONS: any = {
 export function useOCR() {
   const [isExtracting, setIsExtracting] = useState(false);
   const [fullExtractedText, setFullExtractedText] = useState<string>("");
-  const [parsedData, setParsedData] = useState<any>(null);
+  const [parsedData, setParsedData] = useState<ParsedFormData | null>(null);
 
   const extractTextFromFile = useCallback(async (file: File) => {
     setIsExtracting(true);
@@ -59,7 +60,7 @@ export function useOCR() {
       
       if (text.trim()) {
         toast.loading("Parsing with AI...", { id: loadingToast });
-        const parsed = await parseOCRTextWithLLM(text.trim());
+        const parsed = await parseOcrText(text.trim());
         setParsedData(parsed);
         toast.success("Text extracted and parsed successfully!", { id: loadingToast });
       } else {
