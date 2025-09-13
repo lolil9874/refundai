@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { testOpenai } from "@/api/testOpenai";
 import { Loader2 } from "lucide-react";
+import { useOCR } from "@/hooks/useOCR";
+import { Input } from "@/components/ui/input";
 
 type Check = {
   name: string;
@@ -23,6 +25,51 @@ type Meta = {
     openAIMs?: number;
   };
   received?: Record<string, unknown>;
+};
+
+const OcrSandbox = () => {
+  const { extractTextFromFile, isExtracting, fullExtractedText, parsedData } = useOCR();
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      await extractTextFromFile(selectedFile);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>OCR & Parsing Test</CardTitle>
+        <CardDescription>
+          Upload a receipt (image or PDF) to test the full OCR and AI parsing pipeline.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Input type="file" accept="image/*,application/pdf" onChange={handleFileChange} disabled={isExtracting} />
+        {isExtracting && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Processing file... This may take a moment.
+          </div>
+        )}
+        {fullExtractedText && (
+          <div>
+            <Label>Raw Extracted Text (OCR)</Label>
+            <Textarea readOnly value={fullExtractedText} rows={8} className="font-mono text-xs" />
+          </div>
+        )}
+        {parsedData && (
+          <div>
+            <Label>AI Parsed Data (JSON)</Label>
+            <pre className="text-xs bg-muted/50 p-3 rounded-md overflow-auto">
+              {JSON.stringify(parsedData, null, 2)}
+            </pre>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 };
 
 const OpenAISandbox = () => {
@@ -204,6 +251,7 @@ export default function Diagnostics() {
 
   return (
     <div className="container mx-auto p-4 max-w-3xl space-y-6">
+      <OcrSandbox />
       <OpenAISandbox />
 
       <Card>
