@@ -105,8 +105,8 @@ export function RefundForm({
           </CardHeader>
           <CardContent className="space-y-8">
             <div className="space-y-6">
-              <OrderDetailsForm />
               <ImageUpload isLoading={isLoading} />
+              <OrderDetailsForm />
             </div>
             <div className="space-y-6">
               <IssueSelector />
