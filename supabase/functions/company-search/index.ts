@@ -25,7 +25,8 @@ serve(async (req) => {
       throw new Error("LOGO_DEV_API_KEY is not set in Supabase secrets.");
     }
 
-    const searchUrl = new URL("https://api.logo.dev/v1/search");
+    // Using the autocomplete endpoint for debugging
+    const searchUrl = new URL("https://api.logo.dev/v1/autocomplete");
     searchUrl.searchParams.set("query", query);
 
     const response = await fetch(searchUrl.toString(), {
