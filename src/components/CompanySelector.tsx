@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Loader2 } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function CompanySelector() {
   const { t } = useTranslation();
@@ -27,8 +28,7 @@ export function CompanySelector() {
   React.useEffect(() => {
     const performSearch = async () => {
       if (debouncedCompanyValue && debouncedCompanyValue.length > 1) {
-        // Avoid searching if the user just selected a popular company
-        const isPopular = popularCompanies.some(c => c.name === debouncedCompanyValue);
+        const isPopular = popularCompanies.some(c => c.name.toLowerCase() === debouncedCompanyValue.toLowerCase());
         if (isPopular) {
           setSearchResults([]);
           setIsDropdownOpen(false);
@@ -39,10 +39,11 @@ export function CompanySelector() {
         try {
           const results = await searchCompanies(debouncedCompanyValue);
           setSearchResults(results);
-          setIsDropdownOpen(true);
+          setIsDropdownOpen(results.length > 0);
         } catch (error) {
           console.error("Failed to search companies:", error);
           setSearchResults([]);
+          setIsDropdownOpen(false);
         } finally {
           setIsLoading(false);
         }
@@ -76,21 +77,17 @@ export function CompanySelector() {
                     <Input
                       placeholder={t("refundForm.otherCompanyPlaceholder")}
                       {...field}
-                      onChange={(e) => {
-                        field.onChange(e);
-                        if (e.target.value.length > 1) {
-                          setIsDropdownOpen(true);
-                        } else {
-                          setIsDropdownOpen(false);
-                        }
-                      }}
                       autoComplete="off"
                     />
                     {isLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin" />}
                   </div>
                 </FormControl>
               </PopoverTrigger>
-              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+              <PopoverContent 
+                className="w-[--radix-popover-trigger-width] p-0" 
+                align="start"
+                onOpenAutoFocus={(e) => e.preventDefault()}
+              >
                 <Command>
                   <CommandList>
                     <CommandEmpty>No results found.</CommandEmpty>
@@ -99,9 +96,14 @@ export function CompanySelector() {
                         <CommandItem
                           key={company.domain}
                           onSelect={() => handleSelectCompany(company.name)}
-                          className="flex items-center gap-2"
+                          className="flex items-center gap-2 cursor-pointer"
                         >
-                          <img src={company.logo} alt={`${company.name} logo`} className="h-5 w-5" />
+                          <Avatar className="h-5 w-5">
+                            <AvatarImage src={company.logo} alt={`${company.name} logo`} />
+                            <AvatarFallback className="text-[10px] bg-muted">
+                              {company.name.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
                           <span>{company.name}</span>
                         </CommandItem>
                       ))}
@@ -121,17 +123,15 @@ export function CompanySelector() {
             key={company.name}
             type="button"
             variant={companyValue === company.name ? "default" : "outline"}
-            className={cn(companyValue !== company.name && "bg-white/50 dark:bg-black/20")}
+            className={cn("gap-2", companyValue !== company.name && "bg-white/50 dark:bg-black/20")}
             onClick={() => handleSelectCompany(company.name)}
           >
-            <img
-              src={`https://logo.clearbit.com/${company.domain}`}
-              alt={`${company.name} logo`}
-              className="h-5 w-5"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
-            />
+            <Avatar className="h-5 w-5">
+              <AvatarImage src={`https://logo.clearbit.com/${company.domain}`} alt={`${company.name} logo`} />
+              <AvatarFallback className="text-[10px] bg-muted">
+                {company.name.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
             {company.name}
           </Button>
         ))}
