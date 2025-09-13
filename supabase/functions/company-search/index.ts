@@ -20,29 +20,44 @@ serve(async (req) => {
       });
     }
 
-    const LOGO_DEV_API_KEY = Deno.env.get("LOGO_DEV_API_KEY");
-    if (!LOGO_DEV_API_KEY) {
-      throw new Error("LOGO_DEV_API_KEY is not set in Supabase secrets.");
+    // IMPORTANT: User needs to set this secret in Supabase project settings
+    const CLEAROUT_API_KEY = Deno.env.get("CLEAROUT_API_KEY");
+    if (!CLEAROUT_API_KEY) {
+      throw new Error("CLEAROUT_API_KEY is not set in Supabase secrets.");
     }
 
-    // Using the autocomplete endpoint for debugging
-    const searchUrl = new URL("https://api.logo.dev/v1/autocomplete");
-    searchUrl.searchParams.set("query", query);
-
-    const response = await fetch(searchUrl.toString(), {
+    const response = await fetch("https://api.clearout.io/v2/company/autocomplete", {
+      method: "POST",
       headers: {
-        Authorization: `Bearer ${LOGO_DEV_API_KEY}`,
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${CLEAROUT_API_KEY}`,
       },
+      body: JSON.stringify({ name: query }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Logo.dev API error: ${response.status} ${errorText}`);
+      // Try to parse JSON error from Clearout
+      try {
+        const errorJson = JSON.parse(errorText);
+        throw new Error(`Clearout API error: ${response.status} - ${errorJson.error?.message || errorText}`);
+      } catch {
+        throw new Error(`Clearout API error: ${response.status} ${errorText}`);
+      }
     }
 
     const data = await response.json();
+    
+    // The API returns a `data` object which contains a `results` array.
+    // We need to map this to the format our frontend expects: { name, domain, logo }[]
+    const results = data?.data?.results || [];
+    const formattedResults = results.map(item => ({
+      name: item.name,
+      domain: item.domain,
+      logo: item.logo,
+    }));
 
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify(formattedResults), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });

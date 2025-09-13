@@ -135,7 +135,7 @@ const OpenAISandbox = () => {
 };
 
 const CompanySearchSandbox = () => {
-  const [query, setQuery] = React.useState("Nike");
+  const [query, setQuery] = React.useState("Apple");
   const [results, setResults] = React.useState<CompanySearchResult[]>([]);
   const [error, setError] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
@@ -158,9 +158,9 @@ const CompanySearchSandbox = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Company Search Test (Logo.dev)</CardTitle>
+        <CardTitle>Company Search Test (Clearout.io)</CardTitle>
         <CardDescription>
-          Test the `company-search` edge function. If this fails, please double-check that your `LOGO_DEV_API_KEY` secret is set correctly in your Supabase project settings.
+          Test the `company-search` edge function which now uses Clearout.io. If this fails, please double-check that your `CLEAROUT_API_KEY` secret is set correctly in your Supabase project settings.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
