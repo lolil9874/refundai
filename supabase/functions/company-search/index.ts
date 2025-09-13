@@ -13,57 +13,62 @@ serve(async (req) => {
 
   try {
     const { query } = await req.json();
-    if (!query || typeof query !== "string" || query.trim().length < 2) {
-      return new Response(JSON.stringify([]), {
-        status: 200,
+
+    // 1. Input Validation
+    if (!query || typeof query !== "string" || query.trim().length === 0) {
+      return new Response(JSON.stringify({ error: "Query parameter is required." }), {
+        status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
-    // IMPORTANT: User needs to set this secret in Supabase project settings
-    const CLEAROUT_API_KEY = Deno.env.get("CLEAROUT_API_KEY");
-    if (!CLEAROUT_API_KEY) {
-      throw new Error("CLEAROUT_API_KEY is not set in Supabase secrets.");
+    const trimmedQuery = query.trim();
+    if (trimmedQuery.length < 2 || trimmedQuery.length > 64) {
+      return new Response(JSON.stringify({ error: "Query must be between 2 and 64 characters." }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
-    const response = await fetch("https://api.clearout.io/v2/company/autocomplete", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${CLEAROUT_API_KEY}`,
-      },
-      body: JSON.stringify({ name: query }),
-    });
+    // 2. Fetch from Clearbit with a 3-second timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+    const clearbitUrl = `https://autocomplete.clearbit.com/v1/companies/suggest?query=${encodeURIComponent(trimmedQuery)}`;
+    
+    let response;
+    try {
+      response = await fetch(clearbitUrl, {
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
-      const errorText = await response.text();
-      // Try to parse JSON error from Clearout
-      try {
-        const errorJson = JSON.parse(errorText);
-        throw new Error(`Clearout API error: ${response.status} - ${errorJson.error?.message || errorText}`);
-      } catch {
-        throw new Error(`Clearout API error: ${response.status} ${errorText}`);
-      }
+      throw new Error(`Upstream Clearbit API responded with status: ${response.status}`);
     }
 
     const data = await response.json();
-    
-    // The API returns a `data` object which contains a `results` array.
-    // We need to map this to the format our frontend expects: { name, domain, logo }[]
-    const results = data?.data?.results || [];
-    const formattedResults = results.map(item => ({
-      name: item.name,
-      domain: item.domain,
-      logo: item.logo,
-    }));
 
-    return new Response(JSON.stringify(formattedResults), {
+    // 3. Return the data from Clearbit
+    // The format is already { name, domain, logo }[], which is perfect.
+    return new Response(JSON.stringify(data || []), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
+
   } catch (error) {
+    // Handle specific errors for better client-side feedback
+    if (error.name === 'AbortError') {
+      return new Response(JSON.stringify({ error: "Upstream error: The request to Clearbit timed out." }), {
+        status: 502, // Bad Gateway
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
     console.error("Error in company-search function:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: "An internal server error occurred." }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });

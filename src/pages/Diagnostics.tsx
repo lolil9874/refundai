@@ -158,9 +158,9 @@ const CompanySearchSandbox = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Company Search Test (Clearout.io)</CardTitle>
+        <CardTitle>Company Search Test (Clearbit Public API)</CardTitle>
         <CardDescription>
-          Test the `company-search` edge function which now uses Clearout.io. If this fails, please double-check that your `CLEAROUT_API_KEY` secret is set correctly in your Supabase project settings.
+          Test the `company-search` edge function, which acts as a proxy to Clearbit's public, key-less autocomplete API. If this fails, it may indicate an issue with the Supabase function itself or a problem with the upstream Clearbit service.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -332,7 +332,7 @@ export default function Diagnostics() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button onClick={runChecks} className="w-full sm:w-auto">
+          <Button onClick={runChecks} className="w-full sm-w-auto">
             Run E2E checks
           </Button>
 
