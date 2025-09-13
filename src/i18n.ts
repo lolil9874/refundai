@@ -25,9 +25,9 @@ i18n
     supportedLngs: ["en", "fr"],
     nonExplicitSupportedLngs: true,
     load: "languageOnly",
-    // Only detect from storage/cookies; do not auto-detect from browser
+    // Detect from browser first, then fall back to storage
     detection: {
-      order: ["localStorage", "cookie"],
+      order: ["navigator", "localStorage", "cookie"],
       caches: ["localStorage", "cookie"],
     },
     interpolation: {
