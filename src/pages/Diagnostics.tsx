@@ -10,6 +10,7 @@ import { testOpenai } from "@/api/testOpenai";
 import { Loader2 } from "lucide-react";
 import { useOCR } from "@/hooks/useOCR";
 import { Input } from "@/components/ui/input";
+import { searchCompanies, type CompanySearchResult } from "@/api/searchCompanies";
 
 type Check = {
   name: string;
@@ -120,6 +121,74 @@ const OpenAISandbox = () => {
           <div className="space-y-2">
             <Label>OpenAI Response</Label>
             <Textarea readOnly value={response} rows={4} className="font-mono text-sm" />
+          </div>
+        )}
+        {error && (
+          <div className="space-y-2">
+            <Label className="text-destructive">Error</Label>
+            <pre className="text-xs text-destructive bg-destructive/10 p-3 rounded-md overflow-auto">{error}</pre>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+const CompanySearchSandbox = () => {
+  const [query, setQuery] = React.useState("Nike");
+  const [results, setResults] = React.useState<CompanySearchResult[]>([]);
+  const [error, setError] = React.useState("");
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const handleSearch = async () => {
+    setIsLoading(true);
+    setError("");
+    setResults([]);
+    try {
+      const searchResult = await searchCompanies(query);
+      setResults(searchResult);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "An unknown error occurred.";
+      setError(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Company Search Test (Logo.dev)</CardTitle>
+        <CardDescription>
+          Test the `company-search` edge function. If this fails, please double-check that your `LOGO_DEV_API_KEY` secret is set correctly in your Supabase project settings.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex gap-2">
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Enter a company name..."
+          />
+          <Button onClick={handleSearch} disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Search
+          </Button>
+        </div>
+        {results.length > 0 && (
+          <div>
+            <Label>Search Results</Label>
+            <ul className="mt-2 space-y-2">
+              {results.map((company) => (
+                <li key={company.domain} className="flex items-center gap-3 text-sm border p-2 rounded-md">
+                  <img src={company.logo} alt={`${company.name} logo`} className="h-6 w-6" />
+                  <div>
+                    <div className="font-medium">{company.name}</div>
+                    <div className="text-muted-foreground">{company.domain}</div>
+                  </div>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
         {error && (
@@ -251,6 +320,7 @@ export default function Diagnostics() {
 
   return (
     <div className="container mx-auto p-4 max-w-3xl space-y-6">
+      <CompanySearchSandbox />
       <OcrSandbox />
       <OpenAISandbox />
 
