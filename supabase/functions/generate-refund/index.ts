@@ -121,20 +121,36 @@ function makeFallbackSubject(
   orderNumber?: string,
 ): string {
   if (locale === "fr") {
-    if (orderNumber) return `Problème avec la commande n°${orderNumber}`;
-    if (productName) return `Demande de remboursement — ${productName}`;
-    return `Demande de remboursement — ${companyDisplayName}`;
+    if (orderNumber) return `Relance concernant la commande n°${orderNumber}`;
+    if (productName) return `Relance : Demande de remboursement pour ${productName}`;
+    return `Relance : Demande de remboursement auprès de ${companyDisplayName}`;
   }
-  if (orderNumber) return `Issue with Order #${orderNumber}`;
-  if (productName) return `Refund request — ${productName}`;
-  return `Refund request — ${companyDisplayName}`;
+  if (orderNumber) return `Follow-up regarding Order #${orderNumber}`;
+  if (productName) return `Follow-up: Refund request for ${productName}`;
+  return `Follow-up: Refund request with ${companyDisplayName}`;
 }
 
 function buildSystemPrompt(locale: "en" | "fr", toneStyle: "empathic" | "formal" | "firm") {
   if (locale === "fr") {
-    return `Vous êtes un assistant expert en service client. Rédigez UNIQUEMENT le corps d'un e-mail de demande de remboursement. Le ton doit être ${toneStyle}, en français, clair, poli et concis. N'incluez PAS de ligne "Sujet:". Ne produisez aucune autre sortie que le corps de l'e-mail.`;
+    return `Vous êtes un expert en droits des consommateurs et en résolution de litiges. Votre mission est de rédiger le corps d'un e-mail de relance, formel et ferme, pour une demande de remboursement. L'utilisateur a déjà tenté de contacter l'entreprise sans succès.
+
+Votre réponse doit être UNIQUEMENT le corps de l'e-mail.
+- Le ton doit être professionnel et assertif, tout en reflétant le style général demandé : ${toneStyle}.
+- Faites référence aux lois générales sur la protection des consommateurs et à l'obligation légale de l'entreprise de fournir un produit/service conforme, sans citer de codes de loi spécifiques (par ex., "conformément à la réglementation sur la protection des consommateurs", "selon mes droits statutaires").
+- Indiquez clairement qu'il s'agit d'une relance suite à de précédentes tentatives de contact restées sans réponse.
+- Exigez une résolution claire (un remboursement complet) et fixez un délai raisonnable pour la réponse de l'entreprise (par ex., 7-10 jours ouvrables).
+- N'incluez PAS de ligne "Sujet:".
+- Rédigez en français.`;
   }
-  return `You are an expert customer service assistant. Write ONLY the body of a refund request email. The tone must be ${toneStyle}, in English, clear, polite, and concise. Do NOT include a "Subject:" line. Do not produce any other output besides the email body.`;
+  return `You are an expert assistant specializing in consumer rights and dispute resolution. Your task is to draft a formal and firm follow-up email for a refund request. The user has already attempted to contact the company with no success.
+
+Your response must be ONLY the body of the email.
+- The tone should be professional and assertive, reflecting the user's general choice of tone: ${toneStyle}.
+- Reference general consumer protection laws and the company's legal obligation to provide the product/service as described, without citing specific law codes (e.g., "under consumer protection regulations," "as per my statutory rights").
+- Clearly state that this is a follow-up to previous, unanswered attempts to resolve the issue.
+- Demand a clear resolution (a full refund) and specify a reasonable deadline for the company to respond (e.g., 7-10 business days).
+- Do NOT include a "Subject:" line.
+- Write in English.`;
 }
 
 function buildUserPrompt(
@@ -145,38 +161,42 @@ function buildUserPrompt(
   const lang = input.locale;
   if (lang === "fr") {
     return `
-Contexte de la demande :
-- Société: ${input.companyDisplayName}
-- Pays: ${input.country}
-- Client: ${input.firstName} ${input.lastName}
-- Produit/Service: ${input.productName}
-- Valeur: ${formattedValue}
-- N° de commande: ${input.orderNumber}
-- Date d’achat: ${formattedDate}
-- Catégorie du problème: ${input.issueCategory}
-- Motif: ${input.issueType}
-- Description par le client: ${input.description}
-${input.hasImage ? "- Note: une pièce jointe (image/reçu) est disponible." : ""}
+Ceci est une demande de relance. Mes précédentes tentatives pour contacter le service client ont été ignorées.
 
-Rédigez le corps de l'e-mail que j'enverrai au support client en utilisant ces informations.
+Veuillez rédiger le corps de l'e-mail en vous basant sur ce contexte :
+- Société : ${input.companyDisplayName}
+- Localisation du client (pour le contexte juridique) : ${input.country}
+- Nom du client : ${input.firstName} ${input.lastName}
+- Produit/Service : ${input.productName}
+- Valeur : ${formattedValue}
+- Numéro de commande : ${input.orderNumber}
+- Date d'achat : ${formattedDate}
+- Catégorie du problème : ${input.issueCategory}
+- Motif du remboursement : ${input.issueType}
+- Résumé du problème par le client : ${input.description}
+${input.hasImage ? "- Note : Je dispose d'un reçu/preuve d'achat en pièce jointe." : ""}
+
+Rappelez-vous d'être ferme et de faire référence à mes droits de consommateur.
 `;
   }
 
   return `
-Request context:
+This is a follow-up request. My previous attempts to contact customer service have been ignored.
+
+Please draft the email body based on this context:
 - Company: ${input.companyDisplayName}
-- Country: ${input.country}
-- Customer: ${input.firstName} ${input.lastName}
+- Customer's Location (for legal context): ${input.country}
+- Customer Name: ${input.firstName} ${input.lastName}
 - Product/Service: ${input.productName}
 - Value: ${formattedValue}
-- Order number: ${input.orderNumber}
-- Purchase date: ${formattedDate}
+- Order Number: ${input.orderNumber}
+- Purchase Date: ${formattedDate}
 - Issue Category: ${input.issueCategory}
-- Reason: ${input.issueType}
-- Customer description: ${input.description}
-${input.hasImage ? "- Note: An attachment (image/receipt) is available." : ""}
+- Reason for Refund: ${input.issueType}
+- Customer's Summary of the Problem: ${input.description}
+${input.hasImage ? "- Note: I have a receipt/proof of purchase available as an attachment." : ""}
 
-Write the email body that I will send to customer support using this information.
+Remember to be firm and reference my consumer rights.
 `;
 }
 
