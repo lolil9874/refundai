@@ -15,6 +15,9 @@ import { Loader2 } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const getLogoProxyUrl = (domain: string) => `${supabaseUrl}/functions/v1/logo-proxy?domain=${domain}`;
+
 export function CompanySelector() {
   const { t } = useTranslation();
   const form = useFormContext();
@@ -27,7 +30,6 @@ export function CompanySelector() {
   const [selectedCompany, setSelectedCompany] = React.useState<CompanySearchResult | null>(null);
 
   React.useEffect(() => {
-    // Clear selected company if input text doesn't match
     if (companyValue !== selectedCompany?.name) {
       setSelectedCompany(null);
     }
@@ -145,11 +147,11 @@ export function CompanySelector() {
             onClick={() => handleSelectCompany({
               name: company.name,
               domain: company.domain,
-              logo: `https://logo.clearbit.com/${company.domain}`
+              logo: getLogoProxyUrl(company.domain)
             })}
           >
             <Avatar className="h-5 w-5">
-              <AvatarImage src={`https://logo.clearbit.com/${company.domain}`} alt={`${company.name} logo`} />
+              <AvatarImage src={getLogoProxyUrl(company.domain)} alt={`${company.name} logo`} />
               <AvatarFallback className="text-[10px] bg-muted">
                 {company.name.charAt(0)}
               </AvatarFallback>

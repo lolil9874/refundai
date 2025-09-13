@@ -14,7 +14,6 @@ serve(async (req) => {
   try {
     const { query } = await req.json();
 
-    // 1. Input Validation
     if (!query || typeof query !== "string" || query.trim().length === 0) {
       return new Response(JSON.stringify({ error: "Query parameter is required." }), {
         status: 400,
@@ -30,7 +29,6 @@ serve(async (req) => {
       });
     }
 
-    // 2. Fetch from Clearbit with a 3-second timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000);
 
@@ -50,19 +48,23 @@ serve(async (req) => {
     }
 
     const data = await response.json();
+    
+    // Rewrite the logo URLs to use our proxy
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const rewrittenData = (data || []).map(company => ({
+      ...company,
+      logo: `${supabaseUrl}/functions/v1/logo-proxy?domain=${company.domain}`
+    }));
 
-    // 3. Return the data from Clearbit
-    // The format is already { name, domain, logo }[], which is perfect.
-    return new Response(JSON.stringify(data || []), {
+    return new Response(JSON.stringify(rewrittenData), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
 
   } catch (error) {
-    // Handle specific errors for better client-side feedback
     if (error.name === 'AbortError') {
       return new Response(JSON.stringify({ error: "Upstream error: The request to Clearbit timed out." }), {
-        status: 502, // Bad Gateway
+        status: 502,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
