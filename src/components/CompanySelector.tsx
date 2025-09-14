@@ -28,6 +28,7 @@ export function CompanySelector() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const [selectedCompany, setSelectedCompany] = React.useState<CompanySearchResult | null>(null);
+  const [isInputFocused, setIsInputFocused] = React.useState(false);
 
   React.useEffect(() => {
     if (companyValue !== selectedCompany?.name) {
@@ -37,6 +38,11 @@ export function CompanySelector() {
 
   React.useEffect(() => {
     const performSearch = async () => {
+      if (!isInputFocused) {
+        setIsDropdownOpen(false);
+        return;
+      }
+
       if (debouncedCompanyValue && debouncedCompanyValue.length > 1) {
         const isPopular = popularCompanies.some(c => c.name.toLowerCase() === debouncedCompanyValue.toLowerCase());
         if (isPopular || debouncedCompanyValue === selectedCompany?.name) {
@@ -64,7 +70,7 @@ export function CompanySelector() {
     };
 
     performSearch();
-  }, [debouncedCompanyValue, selectedCompany]);
+  }, [debouncedCompanyValue, selectedCompany, isInputFocused]);
 
   const handleSelectCompany = (company: CompanySearchResult) => {
     form.setValue("company", company.name, { shouldValidate: true });
@@ -98,6 +104,8 @@ export function CompanySelector() {
                       {...field}
                       autoComplete="off"
                       className={cn(selectedCompany && "pl-10")}
+                      onFocus={() => setIsInputFocused(true)}
+                      onBlur={() => setIsInputFocused(false)}
                     />
                     {isLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin" />}
                   </div>
