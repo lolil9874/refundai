@@ -16,14 +16,11 @@ import { DescriptionField } from "./DescriptionField";
 import { ToneSlider } from "./ToneSlider";
 import { ImageUpload } from "./ImageUpload";
 import { Loader2 } from "lucide-react";
-import { getUserLocation } from "@/api/getUserLocation";
-
-const supportedCountries = ["US", "FR", "GB", "CA", "DE", "ES", "IT"] as const;
 
 const formSchema = z
   .object({
     company: z.string().min(1, "Please enter a company name or domain."),
-    country: z.enum(supportedCountries, { required_error: "Country is required." }),
+    country: z.enum(["US", "FR", "GB", "CA", "DE", "ES", "IT"], { required_error: "Country is required." }),
     firstName: z.string().min(1, "First name is required."),
     lastName: z.string().min(1, "Last name is required."),
     productName: z.string().min(1, "Product/Service name is required."),
@@ -80,25 +77,6 @@ export function RefundForm({
       tone: 50,
     },
   });
-
-  React.useEffect(() => {
-    const fetchAndSetLocation = async () => {
-      try {
-        // Only fetch if the user hasn't manually changed the country
-        if (!methods.formState.dirtyFields.country) {
-          const { country } = await getUserLocation();
-          // Check if the detected country is in our supported list
-          if (supportedCountries.includes(country as any)) {
-            methods.setValue("country", country as typeof supportedCountries[number], { shouldValidate: true });
-          }
-        }
-      } catch (error) {
-        console.warn("Could not auto-detect user country:", error);
-      }
-    };
-
-    fetchAndSetLocation();
-  }, [methods]);
 
   return (
     <FormProvider {...methods}>

@@ -88,11 +88,9 @@ export function OrderDetailsForm() {
 
   // Auto-select currency based on country
   React.useEffect(() => {
-    // If the country changes, and the user hasn't manually edited the currency field,
-    // update the currency to the default for that country.
-    if (watchCountry && !form.formState.dirtyFields.currency) {
+    if (watchCountry && !form.getValues("currency")) {
       const defaultCurrency = countryCurrencyMap[watchCountry] || "USD";
-      form.setValue("currency", defaultCurrency, { shouldValidate: true });
+      form.setValue("currency", defaultCurrency);
     }
   }, [watchCountry, form]);
 
