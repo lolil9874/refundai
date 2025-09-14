@@ -91,6 +91,7 @@
     "imageDescription": "Téléchargez une capture d'écran de votre reçu ou facture pour auto-remplir les détails de votre commande",
     "ocrTestBoxTitle": "Texte OCR brut (pour test)",
     "ocrTestBoxNote": "(Ceci est pour tester la sortie OCR. L'auto-remplissage utilise ce texte pour analyser les détails.)",
+    "ocrSuccess": "Informations extraites ! Votre formulaire a été pré-rempli.",
     "submitButton": "Générer l'e-mail & Trouver les contacts",
     "submitButtonLoading": "Génération en cours...",
     "testFillButton": "Remplir et générer (TEST)",

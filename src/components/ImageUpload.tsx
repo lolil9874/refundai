@@ -7,8 +7,6 @@ import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessa
 import { Input } from "@/components/ui/input";
 import { useOCR } from "@/hooks/useOCR";
 import { Loader2, CheckCircle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 export function ImageUpload({ isLoading }: { isLoading: boolean }) {
   const { t } = useTranslation();
@@ -19,53 +17,52 @@ export function ImageUpload({ isLoading }: { isLoading: boolean }) {
   React.useEffect(() => {
     if (parsedData) {
       const { setValue } = form;
-      
+
       // Auto-fill company
       if (parsedData.company) {
-        setValue("company", parsedData.company);
+        setValue("company", parsedData.company, { shouldValidate: true });
       } else if (parsedData.otherCompany) {
-        setValue("company", "other");
-        setValue("otherCompany", parsedData.otherCompany);
+        setValue("company", parsedData.otherCompany, { shouldValidate: true });
       }
-      
+
       // Auto-fill product info
       if (parsedData.productName) {
         setValue("productName", parsedData.productName);
       }
-      
+
       if (parsedData.productValue) {
         setValue("productValue", parsedData.productValue);
       }
-      
+
       if (parsedData.currency) {
         setValue("currency", parsedData.currency);
       }
-      
+
       if (parsedData.orderNumber) {
         setValue("orderNumber", parsedData.orderNumber);
       }
-      
+
       if (parsedData.purchaseDate) {
         const date = new Date(parsedData.purchaseDate);
         if (!isNaN(date.getTime())) {
           setValue("purchaseDate", date);
         }
       }
-      
+
       // Auto-fill personal info if available
       if (parsedData.firstName) {
         setValue("firstName", parsedData.firstName);
       }
-      
+
       if (parsedData.lastName) {
         setValue("lastName", parsedData.lastName);
       }
-      
+
       // Auto-fill issue info
       if (parsedData.issueType) {
         setValue("issueType", parsedData.issueType);
       }
-      
+
       if (parsedData.description) {
         setValue("description", parsedData.description);
       }
@@ -105,65 +102,11 @@ export function ImageUpload({ isLoading }: { isLoading: boolean }) {
           </FormDescription>
           <FormMessage />
 
-          {/* Show parsed data if available */}
           {parsedData && (
-            <Card className="mt-4 border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  Extracted Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                  {parsedData.productName && (
-                    <div>
-                      <span className="font-medium">Product:</span> {parsedData.productName}
-                    </div>
-                  )}
-                  {parsedData.productValue && (
-                    <div>
-                      <span className="font-medium">Value:</span> {parsedData.currency || '$'}{parsedData.productValue}
-                    </div>
-                  )}
-                  {parsedData.orderNumber && (
-                    <div>
-                      <span className="font-medium">Order:</span> {parsedData.orderNumber}
-                    </div>
-                  )}
-                  {parsedData.purchaseDate && (
-                    <div>
-                      <span className="font-medium">Date:</span> {parsedData.purchaseDate}
-                    </div>
-                  )}
-                  {parsedData.company && (
-                    <div>
-                      <span className="font-medium">Company:</span> {parsedData.company}
-                    </div>
-                  )}
-                  {parsedData.otherCompany && (
-                    <div>
-                      <span className="font-medium">Company:</span> {parsedData.otherCompany}
-                    </div>
-                  )}
-                  {parsedData.firstName && (
-                    <div>
-                      <span className="font-medium">Name:</span> {parsedData.firstName} {parsedData.lastName}
-                    </div>
-                  )}
-                  {parsedData.issueType && (
-                    <div className="md:col-span-2">
-                      <span className="font-medium">Issue:</span> {parsedData.issueType}
-                    </div>
-                  )}
-                </div>
-                <div className="mt-2">
-                  <Badge variant="secondary" className="text-xs">
-                    Form fields have been auto-filled
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="mt-4 flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-3 rounded-md animate-in fade-in duration-300">
+              <CheckCircle className="h-5 w-5" />
+              <p className="font-medium">{t("refundForm.ocrSuccess")}</p>
+            </div>
           )}
         </FormItem>
       )}

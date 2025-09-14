@@ -88,6 +88,9 @@ export function RefundForm({
           </CardHeader>
           <CardContent className="space-y-8">
             <div className="space-y-6">
+              <ImageUpload isLoading={isLoading} />
+            </div>
+            <div className="space-y-6">
               <h3 className="text-lg font-medium">{t("refundForm.companySectionTitle")}</h3>
               <CompanySelector />
               <CountrySelector />
@@ -105,7 +108,6 @@ export function RefundForm({
           </CardHeader>
           <CardContent className="space-y-8">
             <div className="space-y-6">
-              <ImageUpload isLoading={isLoading} />
               <OrderDetailsForm />
             </div>
             <div className="space-y-6">
