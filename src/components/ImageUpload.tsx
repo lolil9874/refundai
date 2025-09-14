@@ -7,15 +7,19 @@ import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessa
 import { Input } from "@/components/ui/input";
 import { useOCR } from "@/hooks/useOCR";
 import { Loader2, CheckCircle } from "lucide-react";
+import { ParsedFormData } from "@/api/types";
 
 export function ImageUpload({ isLoading }: { isLoading: boolean }) {
   const { t } = useTranslation();
   const form = useFormContext();
   const { extractTextFromFile, isExtracting, parsedData } = useOCR();
+  const appliedDataRef = React.useRef<ParsedFormData | null>(null);
 
-  // Auto-fill form when parsed data is available
+  // Auto-fill form when new parsed data is available
   React.useEffect(() => {
-    if (parsedData) {
+    // Only apply new data. This prevents re-applying on every render,
+    // which was causing the form to freeze and overwrite user edits.
+    if (parsedData && parsedData !== appliedDataRef.current) {
       const { setValue } = form;
 
       // Auto-fill company
@@ -27,45 +31,48 @@ export function ImageUpload({ isLoading }: { isLoading: boolean }) {
 
       // Auto-fill product info
       if (parsedData.productName) {
-        setValue("productName", parsedData.productName);
+        setValue("productName", parsedData.productName, { shouldValidate: true });
       }
 
       if (parsedData.productValue) {
-        setValue("productValue", parsedData.productValue);
+        setValue("productValue", parsedData.productValue, { shouldValidate: true });
       }
 
       if (parsedData.currency) {
-        setValue("currency", parsedData.currency);
+        setValue("currency", parsedData.currency, { shouldValidate: true });
       }
 
       if (parsedData.orderNumber) {
-        setValue("orderNumber", parsedData.orderNumber);
+        setValue("orderNumber", parsedData.orderNumber, { shouldValidate: true });
       }
 
       if (parsedData.purchaseDate) {
         const date = new Date(parsedData.purchaseDate);
         if (!isNaN(date.getTime())) {
-          setValue("purchaseDate", date);
+          setValue("purchaseDate", date, { shouldValidate: true });
         }
       }
 
       // Auto-fill personal info if available
       if (parsedData.firstName) {
-        setValue("firstName", parsedData.firstName);
+        setValue("firstName", parsedData.firstName, { shouldValidate: true });
       }
 
       if (parsedData.lastName) {
-        setValue("lastName", parsedData.lastName);
+        setValue("lastName", parsedData.lastName, { shouldValidate: true });
       }
 
       // Auto-fill issue info
       if (parsedData.issueType) {
-        setValue("issueType", parsedData.issueType);
+        setValue("issueType", parsedData.issueType, { shouldValidate: true });
       }
 
       if (parsedData.description) {
-        setValue("description", parsedData.description);
+        setValue("description", parsedData.description, { shouldValidate: true });
       }
+
+      // Mark this data as applied to prevent re-application
+      appliedDataRef.current = parsedData;
     }
   }, [parsedData, form]);
 
@@ -83,6 +90,9 @@ export function ImageUpload({ isLoading }: { isLoading: boolean }) {
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (file) {
+                  // When a new file is uploaded, reset the applied data ref
+                  // so that the new OCR results can be applied.
+                  appliedDataRef.current = null;
                   await extractTextFromFile(file);
                   onChange(file);
                 }
@@ -102,7 +112,7 @@ export function ImageUpload({ isLoading }: { isLoading: boolean }) {
           </FormDescription>
           <FormMessage />
 
-          {parsedData && (
+          {parsedData && appliedDataRef.current === parsedData && (
             <div className="mt-4 flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-3 rounded-md animate-in fade-in duration-300">
               <CheckCircle className="h-5 w-5" />
               <p className="font-medium">{t("refundForm.ocrSuccess")}</p>
