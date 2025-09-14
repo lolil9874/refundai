@@ -16,6 +16,7 @@ The JSON object should have the following possible keys: "productName", "product
 - Use the "company" key for well-known company names.
 - If you find a website domain instead of a name, use the "otherCompany" key for the domain (e.g., "example.com").
 - The "issueType" and "description" fields are unlikely to be on a standard receipt. Only populate them if the document explicitly describes a problem or reason for return.
+- Pay close attention to shipping or billing address sections, as they often contain the customer's "firstName" and "lastName". Extract these if present.
 If a piece of information is not found, omit the key from the JSON object.
 Your response must be ONLY the valid JSON object, with no extra text, explanations, or markdown formatting.`;
 
