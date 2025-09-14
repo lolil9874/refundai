@@ -31,10 +31,27 @@ export function CompanySelector() {
   const [isInputFocused, setIsInputFocused] = React.useState(false);
 
   React.useEffect(() => {
-    if (companyValue !== selectedCompany?.name) {
+    // Syncs the selectedCompany state with the form's companyValue.
+    if (companyValue) {
+      // If the current value doesn't match the selected company, try to find a new match.
+      if (companyValue !== selectedCompany?.name) {
+        const popularMatch = popularCompanies.find(c => c.name.toLowerCase() === companyValue.toLowerCase());
+        if (popularMatch) {
+          setSelectedCompany({
+            name: popularMatch.name,
+            domain: popularMatch.domain,
+            logo: getLogoProxyUrl(popularMatch.domain)
+          });
+        } else {
+          // It's a custom value, so clear any selection.
+          setSelectedCompany(null);
+        }
+      }
+    } else {
+      // The field is empty, so clear any selection.
       setSelectedCompany(null);
     }
-  }, [companyValue, selectedCompany]);
+  }, [companyValue]);
 
   React.useEffect(() => {
     const performSearch = async () => {
