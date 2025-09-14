@@ -6,9 +6,8 @@ import { preprocessImageFileForOCR } from "@/utils/imagePreprocess";
 import { parseOcrText } from "@/api/parseOcr";
 import { ParsedFormData } from "@/api/types";
 
-// Use a locally bundled PDF.js worker with Vite
-import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+// Use a CDN for the PDF.js worker for better reliability
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 const OCR_OPTIONS: any = {
   tessedit_pageseg_mode: "6",
