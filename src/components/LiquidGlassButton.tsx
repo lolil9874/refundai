@@ -30,6 +30,7 @@ const highlightClass =
   "before:bg-[radial-gradient(circle_at_15%_25%,rgba(255,255,255,0.4),transparent_60%)] " +
   "before:opacity-0 hover:before:opacity-100 " +
   "before:transition-opacity before:duration-300 before:ease-in-out";
+  
 
 export default function LiquidGlassButton({ className, children, ...rest }: LiquidGlassButtonProps) {
   const classes = cn(baseClasses, highlightClass, className);
