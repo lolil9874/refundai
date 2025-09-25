@@ -19,13 +19,14 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    // Default to English
+    // Set English as the default language
+    lng: "en",
+    // Fallback to English if a translation is missing
     fallbackLng: "en",
-    // Only support 'en' and 'fr'; normalize 'en-US' -> 'en', 'fr-FR' -> 'fr'
     supportedLngs: ["en", "fr"],
     nonExplicitSupportedLngs: true,
     load: "languageOnly",
-    // Only detect from storage/cookies; do not auto-detect from browser
+    // Allow language to be saved in localStorage/cookie
     detection: {
       order: ["localStorage", "cookie"],
       caches: ["localStorage", "cookie"],

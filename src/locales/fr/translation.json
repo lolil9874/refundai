@@ -89,6 +89,9 @@
     },
     "imageLabel": "Optionnel : Laissez notre IA auto-remplir depuis votre reçu ! ✨",
     "imageDescription": "Téléchargez une capture d'écran de votre reçu ou facture pour auto-remplir les détails de votre commande",
+    "imageUpload": {
+      "buttonText": "Choisir un fichier"
+    },
     "ocrTestBoxTitle": "Texte OCR brut (pour test)",
     "ocrTestBoxNote": "(Ceci est pour tester la sortie OCR. L'auto-remplissage utilise ce texte pour analyser les détails.)",
     "ocrSuccess": "Informations extraites ! Votre formulaire a été pré-rempli.",

@@ -89,6 +89,9 @@
     },
     "imageLabel": "Optional: Let our AI auto-fill from your receipt! ✨",
     "imageDescription": "Upload a receipt or invoice screenshot to auto-fill your order details.",
+    "imageUpload": {
+      "buttonText": "Choose File"
+    },
     "ocrTestBoxTitle": "Raw OCR Text (for testing)",
     "ocrTestBoxNote": "(This is for testing OCR output. Auto-fill uses this text to parse details.)",
     "ocrSuccess": "Information extracted! Your form has been auto-filled.",

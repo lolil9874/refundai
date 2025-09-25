@@ -4,10 +4,10 @@ import * as React from "react";
 import { useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { useOCR } from "@/hooks/useOCR";
 import { Loader2, CheckCircle } from "lucide-react";
 import { ParsedFormData } from "@/api/types";
+import { CustomFileInput } from "./CustomFileInput";
 
 export function ImageUpload({ isLoading }: { isLoading: boolean }) {
   const { t } = useTranslation();
@@ -80,25 +80,27 @@ export function ImageUpload({ isLoading }: { isLoading: boolean }) {
     <FormField
       control={form.control}
       name="image"
-      render={({ field: { onChange, value, ...rest } }) => (
+      render={({ field: { onChange, value, onBlur, name } }) => (
         <FormItem>
           <FormLabel>{t("refundForm.imageLabel")}</FormLabel>
           <FormControl>
-            <Input
-              type="file"
+            <CustomFileInput
               accept="image/*,application/pdf"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
+              onChange={async (file) => {
                 if (file) {
                   // When a new file is uploaded, reset the applied data ref
                   // so that the new OCR results can be applied.
                   appliedDataRef.current = null;
                   await extractTextFromFile(file);
                   onChange(file);
+                } else {
+                  onChange(null);
                 }
               }}
+              value={value}
+              onBlur={onBlur}
+              name={name}
               disabled={isLoading || isExtracting}
-              {...rest}
             />
           </FormControl>
           <FormDescription>
