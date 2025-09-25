@@ -136,7 +136,8 @@ function buildSystemPrompt(locale: "en" | "fr", toneStyle: "empathic" | "formal"
 
 Votre réponse doit être UNIQUEMENT le corps de l'e-mail.
 - Le ton doit être professionnel et assertif, tout en reflétant le style général demandé : ${toneStyle}.
-- Faites référence aux lois générales sur la protection des consommateurs et à l'obligation légale de l'entreprise de fournir un produit/service conforme, sans citer de codes de loi spécifiques (par ex., "conformément à la réglementation sur la protection des consommateurs", "selon mes droits statutaires").
+- Faites référence à la politique de remboursement officielle et aux conditions de service de l'entreprise.
+- Faites référence aux lois de protection des consommateurs spécifiques et pertinentes pour le pays de l'utilisateur (par exemple, pour la France, mentionnez la "garantie légale de conformité" ; pour le Canada, la Loi sur la protection du consommateur).
 - Indiquez clairement qu'il s'agit d'une relance suite à de précédentes tentatives de contact restées sans réponse.
 - Exigez une résolution claire (un remboursement complet) et fixez un délai raisonnable pour la réponse de l'entreprise (par ex., 7-10 jours ouvrables).
 - N'incluez PAS de ligne "Sujet:".
@@ -146,7 +147,8 @@ Votre réponse doit être UNIQUEMENT le corps de l'e-mail.
 
 Your response must be ONLY the body of the email.
 - The tone should be professional and assertive, reflecting the user's general choice of tone: ${toneStyle}.
-- Reference general consumer protection laws and the company's legal obligation to provide the product/service as described, without citing specific law codes (e.g., "under consumer protection regulations," "as per my statutory rights").
+- Reference the company's official refund policy and terms of service.
+- Reference specific, relevant consumer protection laws for the user's country (e.g., for the US, mention the Consumer Bill of Rights or state-specific regulations; for the UK, the Consumer Rights Act 2015).
 - Clearly state that this is a follow-up to previous, unanswered attempts to resolve the issue.
 - Demand a clear resolution (a full refund) and specify a reasonable deadline for the company to respond (e.g., 7-10 business days).
 - Do NOT include a "Subject:" line.
